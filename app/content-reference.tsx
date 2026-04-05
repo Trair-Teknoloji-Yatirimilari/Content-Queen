@@ -1,0 +1,141 @@
+import React, { useState } from "react";
+import { ScrollView, Text, View, Pressable, Image, Alert } from "react-native";
+import { ScreenContainer } from "@/components/screen-container";
+import * as ImagePicker from "expo-image-picker";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
+
+interface ContentReference {
+  uri: string;
+  name: string;
+}
+
+export default function ContentReferenceScreen() {
+  const router = useRouter();
+  const [contentImage, setContentImage] = useState<ContentReference | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const pickImage = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setContentImage({
+          uri: result.assets[0].uri,
+          name: "Secilen Gorsel",
+        });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      Alert.alert("Hata", "Fotograf secilirken hata olustu");
+    }
+  };
+
+  const handleContinue = () => {
+    if (!contentImage) {
+      Alert.alert("Hata", "Lutfen bir icerik referansi secin");
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/select-reference",
+      params: { contentImageUri: contentImage.uri },
+    });
+  };
+
+  const clearImage = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setContentImage(null);
+  };
+
+  return (
+    <ScreenContainer className="bg-background">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <View className="px-6 py-6 gap-6">
+          {/* Header */}
+          <View className="gap-2">
+            <Text className="text-2xl font-bold text-foreground">Icerik Referansi</Text>
+            <Text className="text-sm text-muted">
+              Pinterest veya baska bir kaynaktan indirdigin sik bir fotografyi yukle
+            </Text>
+          </View>
+
+          {/* Upload Area */}
+          {!contentImage ? (
+            <Pressable
+              onPress={pickImage}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed ? "#F0F0F0" : "#F5F5F5",
+                  borderWidth: 2,
+                  borderColor: "#E94B8F",
+                  borderStyle: "dashed",
+                  borderRadius: 12,
+                  paddingVertical: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
+            >
+              <Text className="text-4xl mb-2">📷</Text>
+              <Text className="text-base font-semibold text-foreground mb-1">Fotograf Yukle</Text>
+              <Text className="text-xs text-muted">Galeriden bir fotograf sec</Text>
+            </Pressable>
+          ) : (
+            <View className="gap-3">
+              <View className="rounded-lg overflow-hidden bg-surface border border-border">
+                <Image source={{ uri: contentImage.uri }} className="w-full aspect-square" />
+              </View>
+              <Pressable
+                onPress={clearImage}
+                style={({ pressed }) => [
+                  {
+                    backgroundColor: pressed ? "#FF5252" : "#FF3B30",
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: "center",
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Text className="text-white font-semibold text-sm">Degistir</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Instructions */}
+          <View className="bg-surface rounded-lg p-4 border border-border gap-2">
+            <Text className="text-sm font-semibold text-foreground">Ipuclari:</Text>
+            <Text className="text-xs text-muted leading-relaxed">
+              - Temiz ve iyi aydinlatilmis fotograflar secin{"\n"}- Pozun net ve belirgin olmasi onemli{"\n"}- Kiyafet ve aksesuar detaylari gorulmeli{"\n"}- En az 1080x1080 cozunurluk oneriliyor
+            </Text>
+          </View>
+
+          {/* Continue Button */}
+          {contentImage && (
+            <Pressable
+              onPress={handleContinue}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed ? "#D93B7F" : "#E94B8F",
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                },
+              ]}
+            >
+              <Text className="text-white font-semibold text-base">Devam Et</Text>
+            </Pressable>
+          )}
+        </View>
+      </ScrollView>
+    </ScreenContainer>
+  );
+}
