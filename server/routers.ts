@@ -1,10 +1,13 @@
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { z } from "zod";
+import * as db from "./db";
+import { replicateService } from "./replicate-service";
+import { storagePut } from "./storage";
 
 export const appRouter = router({
-  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
@@ -17,12 +20,184 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  // Content Queen Features
+  credits: router({
+    getCredits: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserCredits(ctx.user.id);
+    }),
+
+    initializeCredits: protectedProcedure.mutation(async ({ ctx }) => {
+      const existing = await db.getUserCredits(ctx.user.id);
+      if (existing) return existing;
+
+      return db.createUserCredits({
+        userId: ctx.user.id,
+        totalCredits: 1, // Ücretsiz deneme: 1 kredi
+        usedCredits: 0,
+        subscriptionTier: "free",
+      });
+    }),
+
+    addCredits: protectedProcedure
+      .input(z.object({ amount: z.number().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const credits = await db.getUserCredits(ctx.user.id);
+        if (!credits) {
+          return db.createUserCredits({
+            userId: ctx.user.id,
+            totalCredits: input.amount,
+            usedCredits: 0,
+            subscriptionTier: "pro",
+          });
+        }
+
+        return db.updateUserCredits(ctx.user.id, {
+          totalCredits: credits.totalCredits + input.amount,
+        });
+      }),
+  }),
+
+  referencePhotos: router({
+    list: protectedProcedure
+      .input(z.object({ photoType: z.enum(["face", "content"]).optional() }))
+      .query(async ({ ctx, input }) => {
+        return db.getUserReferencePhotos(ctx.user.id, input.photoType);
+      }),
+
+    upload: protectedProcedure
+      .input(
+        z.object({
+          base64: z.string(),
+          photoType: z.enum(["face", "content"]),
+          fileName: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        try {
+          // Base64'ı buffer'a çevir
+          const buffer = Buffer.from(input.base64, "base64");
+
+          // S3'e yükle
+          const fileKey = `${ctx.user.id}/reference-photos/${input.photoType}-${Date.now()}.jpg`;
+          const { url } = await storagePut(fileKey, buffer, "image/jpeg");
+
+          // Veritabanına kaydet
+          const photoId = await db.createReferencePhoto({
+            userId: ctx.user.id,
+            photoUrl: url,
+            photoType: input.photoType as any,
+            analysis: null,
+          });
+
+          return {
+            id: photoId,
+            photoUrl: url,
+            photoType: input.photoType,
+          };
+        } catch (error) {
+          console.error("Fotoğraf yükleme hatası:", error);
+          throw new Error("Fotoğraf yüklenemedi");
+        }
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteReferencePhoto(input.id);
+        return { success: true };
+      }),
+  }),
+
+  generatedImages: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserGeneratedImages(ctx.user.id);
+    }),
+
+    create: protectedProcedure
+      .input(
+        z.object({
+          contentImageUrl: z.string(),
+          faceImageUrl: z.string(),
+          prompt: z.string(),
+          style: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        try {
+          // Kredi kontrolü
+          const credits = await db.getUserCredits(ctx.user.id);
+          if (!credits || credits.totalCredits - credits.usedCredits < 1) {
+            throw new Error("Yeterli kredi yok");
+          }
+
+          // Replicate API'ye gönder
+          const result = await replicateService.generateImage({
+            prompt: input.prompt,
+            imageUrl: input.contentImageUrl,
+            width: 1024,
+            height: 1024,
+            steps: 50,
+            guidance: 7.5,
+          });
+
+          if (result.status === "failed") {
+            throw new Error(result.error || "Görsel oluşturulamadı");
+          }
+
+          // Veritabanına kaydet
+          const imageId = await db.createGeneratedImage({
+            userId: ctx.user.id,
+            contentImageUrl: input.contentImageUrl,
+            faceImageUrl: input.faceImageUrl,
+            generatedImageUrl: result.imageUrl || "",
+            prompt: input.prompt,
+            style: input.style,
+            replicateJobId: result.jobId,
+            status: result.status as any,
+            creditsUsed: 1,
+          });
+
+          // Kredi düş
+          await db.deductCredits(ctx.user.id, 1);
+
+          return {
+            id: imageId,
+            jobId: result.jobId,
+            status: result.status,
+          };
+        } catch (error) {
+          console.error("Görsel oluşturma hatası:", error);
+          throw error;
+        }
+      }),
+
+    checkStatus: protectedProcedure
+      .input(z.object({ jobId: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const result = await replicateService.checkJobStatus(input.jobId);
+
+        // Veritabanını güncelle
+        const image = await db.getGeneratedImageByReplicateJobId(input.jobId);
+        if (image && result.status !== image.status) {
+          await db.updateGeneratedImage(image.id, {
+            status: result.status as any,
+            generatedImageUrl: result.imageUrl || image.generatedImageUrl,
+          });
+        }
+
+        return result;
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const image = await db.getGeneratedImage(input.id);
+        if (!image || image.userId !== ctx.user.id) {
+          throw new Error("Görsel bulunamadı");
+        }
+        return image;
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

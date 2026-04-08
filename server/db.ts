@@ -1,7 +1,9 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { userCredits, generatedImages, referencePhotos } from "../drizzle/schema";
+import type { InsertUserCredit, InsertGeneratedImage, InsertReferencePhoto } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -89,4 +91,160 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * User Credits
+ */
+
+export async function getUserCredits(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(userCredits)
+    .where(eq(userCredits.userId, userId));
+
+  return result[0] || null;
+}
+
+export async function createUserCredits(data: InsertUserCredit) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(userCredits).values(data);
+  return getUserCredits(data.userId);
+}
+
+export async function updateUserCredits(userId: number, data: Partial<InsertUserCredit>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(userCredits).set(data).where(eq(userCredits.userId, userId));
+  return getUserCredits(userId);
+}
+
+export async function deductCredits(userId: number, amount: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const credits = await getUserCredits(userId);
+  if (!credits) throw new Error("User credits not found");
+
+  const available = credits.totalCredits - credits.usedCredits;
+  if (available < amount) {
+    throw new Error("Insufficient credits");
+  }
+
+  await db
+    .update(userCredits)
+    .set({ usedCredits: credits.usedCredits + amount })
+    .where(eq(userCredits.userId, userId));
+
+  return getUserCredits(userId);
+}
+
+/**
+ * Generated Images
+ */
+export async function createGeneratedImage(data: InsertGeneratedImage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(generatedImages).values(data);
+  return (result as any).insertId;
+}
+
+export async function getGeneratedImage(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(generatedImages)
+    .where(eq(generatedImages.id, id));
+
+  return result[0] || null;
+}
+
+export async function getUserGeneratedImages(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(generatedImages)
+    .where(eq(generatedImages.userId, userId));
+}
+
+export async function updateGeneratedImage(
+  id: number,
+  data: Partial<InsertGeneratedImage>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(generatedImages).set(data).where(eq(generatedImages.id, id));
+  return getGeneratedImage(id);
+}
+
+export async function getGeneratedImageByReplicateJobId(jobId: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(generatedImages)
+    .where(eq(generatedImages.replicateJobId, jobId));
+
+  return result[0] || null;
+}
+
+/**
+ * Reference Photos
+ */
+export async function createReferencePhoto(data: InsertReferencePhoto) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(referencePhotos).values(data);
+  return (result as any).insertId;
+}
+
+export async function getUserReferencePhotos(userId: number, photoType?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(referencePhotos.userId, userId)];
+  if (photoType) {
+    conditions.push(eq(referencePhotos.photoType, photoType as any));
+  }
+
+  return db
+    .select()
+    .from(referencePhotos)
+    .where(conditions.length > 1 ? and(...conditions) : conditions[0]);
+}
+
+export async function deleteReferencePhoto(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(referencePhotos).where(eq(referencePhotos.id, id));
+}
+
+export async function updateReferencePhoto(
+  id: number,
+  data: Partial<InsertReferencePhoto>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(referencePhotos).set(data).where(eq(referencePhotos.id, id));
+
+  const result = await db
+    .select()
+    .from(referencePhotos)
+    .where(eq(referencePhotos.id, id));
+
+  return result[0] || null;
+}

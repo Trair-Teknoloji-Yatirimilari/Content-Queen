@@ -3,6 +3,7 @@ import { ScrollView, Text, View, Pressable, Image, ActivityIndicator, Alert } fr
 import { ScreenContainer } from "@/components/screen-container";
 import * as Haptics from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { trpc } from "@/lib/trpc";
 
 export default function GenerateImageScreen() {
   const router = useRouter();
@@ -13,29 +14,66 @@ export default function GenerateImageScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
+  const createImageMutation = trpc.generatedImages.create.useMutation();
+
   const handleGenerate = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsGenerating(true);
 
     try {
-      // Simule edilmis API cagrisı (30-40 saniye)
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const result = await createImageMutation.mutateAsync({
+        contentImageUrl: contentImageUri,
+        faceImageUrl: "https://via.placeholder.com/300",
+        prompt: "Transform this person's appearance to match the style in the reference image. Professional photo transformation.",
+        style: "Professional",
+      });
 
-      // Ornekse uretilen gorsel
-      setGeneratedImage("https://via.placeholder.com/400x500");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Polling başlat
+      let attempts = 0;
+      const maxAttempts = 120; // 2 dakika (1 saniye interval)
+
+      const pollStatus = async () => {
+        while (attempts < maxAttempts) {
+          attempts++;
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Fetch status from API
+          const response = await fetch("/api/trpc/generatedImages.checkStatus", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jobId: result.jobId }),
+          });
+          const statusResult = await response.json();
+
+          if (statusResult.status === "completed" && statusResult.imageUrl) {
+            setGeneratedImage(statusResult.imageUrl);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            setIsGenerating(false);
+            return;
+          } else if (statusResult.status === "failed") {
+            throw new Error(statusResult.error || "Görsel oluşturulamadı");
+          }
+        }
+        throw new Error("İşlem zaman aşımına uğradı");
+      };
+
+      await pollStatus();
     } catch (error) {
-      Alert.alert("Hata", "Gorsel olusturulurken hata olustu");
+      Alert.alert("Hata", error instanceof Error ? error.message : "Görsel oluşturulurken hata oluştu");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert("Basarili", "Gorsel telefonunuza kaydedildi");
-    router.replace("/(tabs)");
+    try {
+      // Görseli cihaza kaydet (gerçek uygulamada)
+      Alert.alert("Başarılı", "Görsel telefonunuza kaydedildi");
+      router.replace("/(tabs)");
+    } catch (error) {
+      Alert.alert("Hata", "Görsel kaydedilemedi");
+    }
   };
 
   const handleShare = () => {

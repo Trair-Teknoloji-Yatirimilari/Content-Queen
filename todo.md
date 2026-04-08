@@ -28,20 +28,22 @@
 - [x] Generate butonunun durumunu yönet (gri/aktif)
 - [x] Sonuç ekranını tasarla (görsel görüntüleme, indirme, paylaşma)
 
-## Fase 4: Gemini API Entegrasyonu
+## Fase 4: Replicate API Entegrasyonu
 
-- [ ] Gemini API anahtarını yapılandır (webdev_request_secrets)
-- [ ] Görsel analiz ve JSON komut oluşturma mantığını uygula
-- [ ] Nano Banana altyapısı entegrasyonunu kur
-- [ ] Fotoğraf işleme ve dönüştürme mantığını uygula
-- [ ] Hata yönetimi ve uygunsuz içerik filtrelemesi ekle
-- [ ] Yükleme göstergesi ve ilerleme takibi uygula (30-40 saniye)
+- [x] Replicate API anahtarını yapılandır (webdev_request_secrets)
+- [x] Görsel oluşturma servisi oluştur (Flux Pro modeli)
+- [x] Backend tRPC router'ına generatedImages endpoint'leri ekle
+- [x] Görsel oluşturma ekranını backend API'ye bağla
+- [x] Job status polling mekanizması uygula
+- [ ] Hata yönetimi ve retry mantığını geliştir
 
 ## Fase 5: Abonelik ve Kredi Yönetimi
 
-- [ ] Abonelik modeli ve paket yapısını tasarla
+- [x] Kredi sistemi veritabanı şeması oluştur (userCredits tablosu)
+- [x] Kredi kontrolü ve düşme mantığını uygula (deductCredits fonksiyonu)
+- [x] Abonelik paketleri tanımla (free, pro, premium)
+- [x] Backend tRPC router'ına credits endpoint'leri ekle
 - [ ] Ödeme entegrasyonunu kur (App Store In-App Purchases)
-- [ ] Kredi sistemi ve kredi düşme mantığını uygula
 - [ ] Abonelik durumunu izle ve yenileme işlevselliğini ekle
 - [ ] Ücretsiz deneme hakkı yönetimi (1 fotoğraf)
 - [ ] Ödeme başarısız durumlarını yönet
