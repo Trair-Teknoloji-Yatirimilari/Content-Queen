@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { replicateService } from "./replicate-service";
 import { storagePut } from "./storage";
+import { notificationService } from "./notification-service";
 
 export const appRouter = router({
   system: systemRouter,
@@ -183,6 +184,20 @@ export const appRouter = router({
             status: result.status as any,
             generatedImageUrl: result.imageUrl || image.generatedImageUrl,
           });
+
+          // İşlem tamamlandığında bildirim gönder
+          if (result.status === "completed") {
+            await notificationService.notifyImageGenerated(
+              ctx.user.id,
+              image.id,
+              image.style || "Profesyonel"
+            );
+          } else if (result.status === "failed") {
+            await notificationService.notifyImageFailed(
+              ctx.user.id,
+              result.error || "Bilinmeyen hata"
+            );
+          }
         }
 
         return result;
@@ -196,6 +211,14 @@ export const appRouter = router({
           throw new Error("Görsel bulunamadı");
         }
         return image;
+      }),
+  }),
+
+  notifications: router({
+    registerFCMToken: protectedProcedure
+      .input(z.object({ token: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        return notificationService.saveFCMToken(ctx.user.id, input.token);
       }),
   }),
 });

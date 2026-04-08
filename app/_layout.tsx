@@ -8,6 +8,7 @@ import "react-native-reanimated";
 import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { NotificationProvider } from "@/lib/notification-provider";
 import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
@@ -102,12 +103,14 @@ export default function RootLayout() {
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <RootLayoutNav />
-            <StatusBar style="auto" />
-          </QueryClientProvider>
-        </trpc.Provider>
+        <NotificationProvider>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <QueryClientProvider client={queryClient}>
+              <RootLayoutNav />
+              <StatusBar style="auto" />
+            </QueryClientProvider>
+          </trpc.Provider>
+        </NotificationProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

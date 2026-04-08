@@ -59,7 +59,10 @@
 
 ## Fase 7: Push Bildirimleri ve Analitikler
 
-- [ ] Push bildirim sistemini kur (expo-notifications)
+- [x] Push bildirim sistemini kur (expo-notifications)
+- [x] Görsel oluşturma tamamlandığında bildirim gönder
+- [x] Bildirim tıklandığında ekrana yönlendir
+- [x] Firebase Admin SDK entegrasyonu
 - [ ] Teşvik edici mesajlar ve kampanya bildirimleri ekle
 - [ ] Bildirim zamanlaması mantığını uygula (7 gün sonra haftada 2x)
 - [ ] Analitik takibi kur (kullanıcı davranışı, yaş aralığı, satın alma)
