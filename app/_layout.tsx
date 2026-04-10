@@ -20,6 +20,8 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { I18nProvider, useI18n } from "@/lib/i18n-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -30,11 +32,39 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const { isSignedIn } = useAuth();
+  const [kvkkAccepted, setKvkkAccepted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkKvkkStatus();
+  }, []);
+
+  const checkKvkkStatus = async () => {
+    try {
+      const accepted = await AsyncStorage.getItem("content_queen_kvkk_accepted");
+      setKvkkAccepted(accepted === "true");
+    } catch (error) {
+      console.error("KVKK durumu kontrol hatası:", error);
+      setKvkkAccepted(false);
+    }
+  };
+
+  if (kvkkAccepted === null) {
+    return null;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {isSignedIn ? (
-        <Stack.Screen name="(tabs)" />
+        <>
+          {!kvkkAccepted ? (
+            <>
+              <Stack.Screen name="splash" />
+              <Stack.Screen name="kvkk" />
+            </>
+          ) : (
+            <Stack.Screen name="(tabs)" />
+          )}
+        </>
       ) : (
         <Stack.Screen name="login" />
       )}
@@ -102,16 +132,18 @@ export default function RootLayout() {
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <NotificationProvider>
-          <trpc.Provider client={trpcClient} queryClient={queryClient}>
-            <QueryClientProvider client={queryClient}>
-              <RootLayoutNav />
-              <StatusBar style="auto" />
-            </QueryClientProvider>
-          </trpc.Provider>
-        </NotificationProvider>
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <trpc.Provider client={trpcClient} queryClient={queryClient}>
+              <QueryClientProvider client={queryClient}>
+                <RootLayoutNav />
+                <StatusBar style="auto" />
+              </QueryClientProvider>
+            </trpc.Provider>
+          </NotificationProvider>
+        </AuthProvider>
+      </I18nProvider>
     </GestureHandlerRootView>
   );
 

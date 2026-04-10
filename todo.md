@@ -7,8 +7,8 @@
 - [x] Apple ID ve Gmail giriş entegrasyonunu kur
 - [x] Kullanıcı oturumu yönetimi (AsyncStorage/SecureStore)
 - [x] Temel navigasyon yapısını kur (Tab Bar)
-- [ ] Splash ekranı ve onboarding tasarla
-- [ ] KVKK/Gizlilik metinleri ve onay ekranını ekle
+- [x] Splash ekranı ve onboarding tasarla
+- [x] KVKK/Gizlilik metinleri ve onay ekranını ekle
 
 ## Fase 2: Referans Fotoğraf Yönetimi
 
