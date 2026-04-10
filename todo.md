@@ -17,7 +17,7 @@
 - [x] Fotoğraf silme ve düzenleme işlevselliğini ekle
 - [x] Fotoğraf önizleme ve grid görünümünü uygula
 - [x] Talimatlar ve rehberlik mesajlarını ekle (çözünürlük, yüz hatları vb.)
-- [ ] Yüklenen fotoğrafları yerel depolama alanında sakla (AsyncStorage)
+- [x] Yüklenen fotoğrafları yerel depolama alanında sakla (AsyncStorage)
 
 ## Fase 3: İçerik Referansı ve Görsel Oluşturma Akışı
 
