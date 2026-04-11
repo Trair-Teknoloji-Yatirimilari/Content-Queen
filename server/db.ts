@@ -21,8 +21,8 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
+  if (!user.phone) {
+    throw new Error("User phone is required for upsert");
   }
 
   const db = await getDb();
@@ -33,7 +33,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   try {
     const values: InsertUser = {
-      openId: user.openId,
+      phone: user.phone,
     };
     const updateSet: Record<string, unknown> = {};
 
@@ -50,6 +50,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
     textFields.forEach(assignNullable);
 
+    if (user.openId !== undefined) {
+      values.openId = user.openId;
+      updateSet.openId = user.openId;
+    }
+
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;
       updateSet.lastSignedIn = user.lastSignedIn;
@@ -57,9 +62,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = "admin";
-      updateSet.role = "admin";
     }
 
     if (!values.lastSignedIn) {
@@ -89,6 +91,32 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByPhone(phone: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(users).where(eq(users.phone, phone)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function upsertUserByPhone(phone: string): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getUserByPhone(phone);
+  if (existing) {
+    await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, existing.id));
+    return existing.id;
+  }
+
+  const result = await db.insert(users).values({
+    phone,
+    loginMethod: "phone",
+    lastSignedIn: new Date(),
+  });
+  return (result as any).insertId;
 }
 
 /**

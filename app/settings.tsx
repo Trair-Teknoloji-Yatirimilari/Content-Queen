@@ -218,13 +218,8 @@ export default function SettingsScreen() {
               HESAP
             </Text>
             <SettingItem
-              label="E-posta"
-              value={user?.email || "Yükleniyor..."}
-            />
-            <View className="h-px bg-border" />
-            <SettingItem
-              label="Üyelik Tarihi"
-              value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString("tr-TR") : "-"}
+              label="Telefon"
+              value={user?.phone || "-"}
             />
           </View>
 

@@ -7,6 +7,9 @@ import * as db from "./db";
 import { replicateService } from "./replicate-service";
 import { storagePut } from "./storage";
 import { notificationService } from "./notification-service";
+import { sendOtp, verifyOtp, normalizePhone } from "./_core/otp";
+import { sdk } from "./_core/sdk";
+import { ONE_YEAR_MS } from "../shared/const.js";
 
 export const appRouter = router({
   system: systemRouter,
@@ -15,10 +18,53 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
+
+    sendOtp: publicProcedure
+      .input(z.object({ phone: z.string().min(10) }))
+      .mutation(async ({ input }) => {
+        return sendOtp(input.phone);
+      }),
+
+    verifyOtp: publicProcedure
+      .input(z.object({ phone: z.string().min(10), code: z.string().length(6) }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await verifyOtp(input.phone, input.code);
+        if (!result.success) {
+          return result;
+        }
+
+        // Kullanıcıyı bul veya oluştur
+        const phone = normalizePhone(input.phone);
+        const userId = await db.upsertUserByPhone(phone);
+        const user = await db.getUserByPhone(phone);
+
+        if (!user) {
+          return { success: false, error: "Kullanıcı oluşturulamadı" };
+        }
+
+        // Session token oluştur
+        const sessionToken = await sdk.createSessionToken(phone, {
+          name: user.name || phone,
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Cookie set et (web için)
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+        return {
+          success: true,
+          sessionToken,
+          user: {
+            id: user.id,
+            phone: user.phone,
+            name: user.name,
+            role: user.role,
+          },
+        };
+      }),
   }),
 
   // Content Queen Features

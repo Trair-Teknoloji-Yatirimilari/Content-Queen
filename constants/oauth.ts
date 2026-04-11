@@ -45,7 +45,13 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Fallback to empty (will use relative URL)
+  // Fallback: on native (iOS simulator), use the machine's local IP
+  // localhost doesn't work from iOS simulator for the API server
+  if (ReactNative.Platform.OS !== "web") {
+    return "http://localhost:3000";
+  }
+
+  // Fallback to empty (will use relative URL on web)
   return "";
 }
 

@@ -40,17 +40,11 @@ export default function ProfileScreen() {
           <View className="bg-surface rounded-2xl p-6 border border-border gap-4">
             <View className="gap-2">
               <Text className="text-xs text-muted uppercase">Ad</Text>
-              <Text className="text-lg font-semibold text-foreground">{user?.name || "Kullanici"}</Text>
+              <Text className="text-lg font-semibold text-foreground">{user?.name || "Kullanıcı"}</Text>
             </View>
             <View className="gap-2">
-              <Text className="text-xs text-muted uppercase">Email</Text>
-              <Text className="text-lg font-semibold text-foreground">{user?.email || "email@example.com"}</Text>
-            </View>
-            <View className="gap-2">
-              <Text className="text-xs text-muted uppercase">Uye Olma Tarihi</Text>
-              <Text className="text-lg font-semibold text-foreground">
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("tr-TR") : "-"}
-              </Text>
+              <Text className="text-xs text-muted uppercase">Telefon</Text>
+              <Text className="text-lg font-semibold text-foreground">{user?.phone || "-"}</Text>
             </View>
           </View>
 

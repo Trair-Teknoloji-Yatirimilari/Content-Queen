@@ -73,6 +73,8 @@ function RootLayoutNav() {
       <Stack.Screen name="select-reference" />
       <Stack.Screen name="generate-image" />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="privacy-policy" />
+      <Stack.Screen name="terms-of-service" />
       <Stack.Screen name="oauth/callback" />
     </Stack>
   );
@@ -134,14 +136,14 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nProvider>
         <AuthProvider>
-          <NotificationProvider>
-            <trpc.Provider client={trpcClient} queryClient={queryClient}>
-              <QueryClientProvider client={queryClient}>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <QueryClientProvider client={queryClient}>
+              <NotificationProvider>
                 <RootLayoutNav />
                 <StatusBar style="auto" />
-              </QueryClientProvider>
-            </trpc.Provider>
-          </NotificationProvider>
+              </NotificationProvider>
+            </QueryClientProvider>
+          </trpc.Provider>
         </AuthProvider>
       </I18nProvider>
     </GestureHandlerRootView>
