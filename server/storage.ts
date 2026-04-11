@@ -1,95 +1,92 @@
-// Preconfigured storage helpers for Manus WebDev templates
-// Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
+/**
+ * Supabase Storage — file upload/download for Content Queen.
+ *
+ * Env vars:
+ *   SUPABASE_URL
+ *   SUPABASE_SERVICE_ROLE_KEY
+ *   SUPABASE_STORAGE_BUCKET (default: "content-queen")
+ */
+import { createClient } from "@supabase/supabase-js";
 
-import { ENV } from "./_core/env";
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? "content-queen";
 
-type StorageConfig = { baseUrl: string; apiKey: string };
+function getClient() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function getStorageConfig(): StorageConfig {
-  const baseUrl = ENV.forgeApiUrl;
-  const apiKey = ENV.forgeApiKey;
-
-  if (!baseUrl || !apiKey) {
-    throw new Error(
-      "Storage proxy credentials missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY",
-    );
+  if (!url || !key) {
+    throw new Error("SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY gerekli");
   }
 
-  return { baseUrl: baseUrl.replace(/\/+$/, ""), apiKey };
-}
-
-function buildUploadUrl(baseUrl: string, relKey: string): URL {
-  const url = new URL("v1/storage/upload", ensureTrailingSlash(baseUrl));
-  url.searchParams.set("path", normalizeKey(relKey));
-  return url;
-}
-
-async function buildDownloadUrl(baseUrl: string, relKey: string, apiKey: string): Promise<string> {
-  const downloadApiUrl = new URL("v1/storage/downloadUrl", ensureTrailingSlash(baseUrl));
-  downloadApiUrl.searchParams.set("path", normalizeKey(relKey));
-  const response = await fetch(downloadApiUrl, {
-    method: "GET",
-    headers: buildAuthHeaders(apiKey),
+  return createClient(url, key, {
+    auth: { persistSession: false },
   });
-  return (await response.json()).url;
 }
 
-function ensureTrailingSlash(value: string): string {
-  return value.endsWith("/") ? value : `${value}/`;
-}
-
-function normalizeKey(relKey: string): string {
-  return relKey.replace(/^\/+/, "");
-}
-
-function toFormData(
-  data: Buffer | Uint8Array | string,
-  contentType: string,
-  fileName: string,
-): FormData {
-  const blob =
-    typeof data === "string"
-      ? new Blob([data], { type: contentType })
-      : new Blob([data as any], { type: contentType });
-  const form = new FormData();
-  form.append("file", blob, fileName || "file");
-  return form;
-}
-
-function buildAuthHeaders(apiKey: string): HeadersInit {
-  return { Authorization: `Bearer ${apiKey}` };
-}
-
+/**
+ * Dosya yükle ve public URL döndür.
+ */
 export async function storagePut(
   relKey: string,
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream",
 ): Promise<{ key: string; url: string }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  const uploadUrl = buildUploadUrl(baseUrl, key);
-  const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
-  const response = await fetch(uploadUrl, {
-    method: "POST",
-    headers: buildAuthHeaders(apiKey),
-    body: formData,
-  });
+  const supabase = getClient();
+  const key = relKey.replace(/^\/+/, "");
 
-  if (!response.ok) {
-    const message = await response.text().catch(() => response.statusText);
-    throw new Error(
-      `Storage upload failed (${response.status} ${response.statusText}): ${message}`,
-    );
+  // Buffer'ı Uint8Array'e çevir (Supabase SDK uyumluluğu)
+  const fileData = typeof data === "string"
+    ? new TextEncoder().encode(data)
+    : data instanceof Buffer
+      ? new Uint8Array(data)
+      : data;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(key, fileData, {
+      contentType,
+      upsert: true,
+    });
+
+  if (error) {
+    console.error("[Storage] Upload hatası:", error);
+    throw new Error(`Dosya yüklenemedi: ${error.message}`);
   }
-  const url = (await response.json()).url;
-  return { key, url };
+
+  // Public URL al
+  const { data: urlData } = supabase.storage
+    .from(BUCKET)
+    .getPublicUrl(key);
+
+  return { key, url: urlData.publicUrl };
 }
 
+/**
+ * Dosyanın public URL'ini döndür.
+ */
 export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  return {
-    key,
-    url: await buildDownloadUrl(baseUrl, key, apiKey),
-  };
+  const supabase = getClient();
+  const key = relKey.replace(/^\/+/, "");
+
+  const { data } = supabase.storage
+    .from(BUCKET)
+    .getPublicUrl(key);
+
+  return { key, url: data.publicUrl };
+}
+
+/**
+ * Dosya sil.
+ */
+export async function storageDelete(relKey: string): Promise<void> {
+  const supabase = getClient();
+  const key = relKey.replace(/^\/+/, "");
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .remove([key]);
+
+  if (error) {
+    console.error("[Storage] Silme hatası:", error);
+  }
 }
