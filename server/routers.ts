@@ -129,55 +129,23 @@ export const appRouter = router({
         throw new Error("Zaten devam eden bir eğitim var");
       }
 
-      // Fotoğrafları tar.gz olarak paketle (Node.js native, bağımlılık yok)
-      console.log("[Training] Packaging photos...");
-      const zlib = await import("zlib");
-
-      // Basit tar formatı: her dosya için 512-byte header + data + padding
-      const tarBlocks: Buffer[] = [];
+      // Fotoğrafları zip olarak paketle
+      console.log("[Training] Packaging photos as zip...");
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
 
       for (let i = 0; i < photos.length; i++) {
         console.log(`[Training] Fetching photo ${i + 1}/${photos.length}`);
         const res = await fetch(photos[i].photoUrl);
-        const data = Buffer.from(await res.arrayBuffer());
-        const name = `photo_${i}.jpg`;
-
-        // TAR header (512 bytes)
-        const header = Buffer.alloc(512, 0);
-        header.write(name, 0, 100);                          // filename
-        header.write("0000644\0", 100, 8);                   // mode
-        header.write("0001000\0", 108, 8);                   // uid
-        header.write("0001000\0", 116, 8);                   // gid
-        header.write(data.length.toString(8).padStart(11, "0") + "\0", 124, 12); // size
-        header.write(Math.floor(Date.now() / 1000).toString(8).padStart(11, "0") + "\0", 136, 12); // mtime
-        header.write("        ", 148, 8);                    // checksum placeholder
-        header[156] = 48;                                    // type: regular file
-
-        // Calculate checksum
-        let checksum = 0;
-        for (let j = 0; j < 512; j++) checksum += header[j];
-        header.write(checksum.toString(8).padStart(6, "0") + "\0 ", 148, 8);
-
-        tarBlocks.push(header);
-        tarBlocks.push(data);
-
-        // Pad to 512-byte boundary
-        const remainder = data.length % 512;
-        if (remainder > 0) tarBlocks.push(Buffer.alloc(512 - remainder, 0));
+        const buf = await res.arrayBuffer();
+        zip.file(`photo_${i}.jpg`, buf);
       }
 
-      // End-of-archive marker (two 512-byte zero blocks)
-      tarBlocks.push(Buffer.alloc(1024, 0));
+      const zipBuffer = Buffer.from(await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" }));
+      console.log("[Training] Zip created:", zipBuffer.length, "bytes");
 
-      const tarBuffer = Buffer.concat(tarBlocks);
-      const gzBuffer = await new Promise<Buffer>((resolve, reject) => {
-        zlib.gzip(tarBuffer, (err, result) => (err ? reject(err) : resolve(result)));
-      });
-
-      console.log("[Training] Package created:", gzBuffer.length, "bytes");
-
-      const archiveKey = `${ctx.user.id}/training/training-photos.tar.gz`;
-      const { url: archiveUrl } = await storagePut(archiveKey, gzBuffer, "application/gzip");
+      const archiveKey = `${ctx.user.id}/training/training-photos.zip`;
+      const { url: archiveUrl } = await storagePut(archiveKey, zipBuffer, "application/zip");
       console.log("[Training] Uploaded to:", archiveUrl);
 
       // Replicate'te training başlat
