@@ -129,34 +129,60 @@ export const appRouter = router({
         throw new Error("Zaten devam eden bir eğitim var");
       }
 
-      // Fotoğrafları zip'le ve S3'e yükle
-      const { default: archiver } = await import("archiver");
-      const { PassThrough } = await import("stream");
+      // Fotoğrafları tar.gz olarak paketle (Node.js native, bağımlılık yok)
+      console.log("[Training] Packaging photos...");
+      const zlib = await import("zlib");
 
-      const passthrough = new PassThrough();
-      const archive = archiver("zip", { zlib: { level: 5 } });
-      const chunks: Buffer[] = [];
+      // Basit tar formatı: her dosya için 512-byte header + data + padding
+      const tarBlocks: Buffer[] = [];
 
-      passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
-      archive.pipe(passthrough);
-
-      // Her fotoğrafı indir ve zip'e ekle
       for (let i = 0; i < photos.length; i++) {
+        console.log(`[Training] Fetching photo ${i + 1}/${photos.length}`);
         const res = await fetch(photos[i].photoUrl);
-        const arrayBuf = await res.arrayBuffer();
-        archive.append(Buffer.from(arrayBuf), { name: `photo_${i}.jpg` });
+        const data = Buffer.from(await res.arrayBuffer());
+        const name = `photo_${i}.jpg`;
+
+        // TAR header (512 bytes)
+        const header = Buffer.alloc(512, 0);
+        header.write(name, 0, 100);                          // filename
+        header.write("0000644\0", 100, 8);                   // mode
+        header.write("0001000\0", 108, 8);                   // uid
+        header.write("0001000\0", 116, 8);                   // gid
+        header.write(data.length.toString(8).padStart(11, "0") + "\0", 124, 12); // size
+        header.write(Math.floor(Date.now() / 1000).toString(8).padStart(11, "0") + "\0", 136, 12); // mtime
+        header.write("        ", 148, 8);                    // checksum placeholder
+        header[156] = 48;                                    // type: regular file
+
+        // Calculate checksum
+        let checksum = 0;
+        for (let j = 0; j < 512; j++) checksum += header[j];
+        header.write(checksum.toString(8).padStart(6, "0") + "\0 ", 148, 8);
+
+        tarBlocks.push(header);
+        tarBlocks.push(data);
+
+        // Pad to 512-byte boundary
+        const remainder = data.length % 512;
+        if (remainder > 0) tarBlocks.push(Buffer.alloc(512 - remainder, 0));
       }
 
-      await archive.finalize();
-      await new Promise<void>((resolve) => passthrough.on("end", resolve));
+      // End-of-archive marker (two 512-byte zero blocks)
+      tarBlocks.push(Buffer.alloc(1024, 0));
 
-      const zipBuffer = Buffer.concat(chunks);
-      const zipKey = `${ctx.user.id}/training/training-photos.zip`;
-      const { url: zipUrl } = await storagePut(zipKey, zipBuffer, "application/zip");
+      const tarBuffer = Buffer.concat(tarBlocks);
+      const gzBuffer = await new Promise<Buffer>((resolve, reject) => {
+        zlib.gzip(tarBuffer, (err, result) => (err ? reject(err) : resolve(result)));
+      });
+
+      console.log("[Training] Package created:", gzBuffer.length, "bytes");
+
+      const archiveKey = `${ctx.user.id}/training/training-photos.tar.gz`;
+      const { url: archiveUrl } = await storagePut(archiveKey, gzBuffer, "application/gzip");
+      console.log("[Training] Uploaded to:", archiveUrl);
 
       // Replicate'te training başlat
       const destModel = `content-queen-user-${ctx.user.id}`;
-      const result = await replicateService.trainLoRA(zipUrl, `trairx/${destModel}`);
+      const result = await replicateService.trainLoRA(archiveUrl, `trairx/${destModel}`);
 
       if (result.status === "failed") {
         throw new Error(result.error || "Training başlatılamadı");
