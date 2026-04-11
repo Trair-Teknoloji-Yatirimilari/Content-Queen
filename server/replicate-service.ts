@@ -55,7 +55,7 @@ class ReplicateService {
       try {
         await client.models.create(owner, name, {
           visibility: "private",
-          hardware: "gpu-t4-nano",
+          hardware: "cpu",
         });
         console.log("[LoRA] Model oluşturuldu:", destinationModel);
       } catch (e: any) {
@@ -92,8 +92,14 @@ class ReplicateService {
         trainingId: training.id,
         status: this.mapTrainingStatus(training.status),
       };
-    } catch (error) {
-      console.error("[LoRA] Training başlatma hatası:", error);
+    } catch (error: any) {
+      console.error("[LoRA] Training başlatma hatası:", error?.message || error);
+      if (error?.response) {
+        try {
+          const body = await error.response.text?.() || JSON.stringify(error.response);
+          console.error("[LoRA] Response body:", body);
+        } catch {}
+      }
       return {
         trainingId: "",
         status: "failed",
