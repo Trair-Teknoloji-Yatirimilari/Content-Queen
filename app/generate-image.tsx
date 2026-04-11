@@ -5,7 +5,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
 import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
-import * as FileSystem from "expo-file-system";
+import { File, Paths } from "expo-file-system/next";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -122,26 +122,30 @@ export default function GenerateImageScreen() {
     if (!generatedImage) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const fileUri = FileSystem.documentDirectory + `content-queen-${Date.now()}.jpg`;
-      const download = await FileSystem.downloadAsync(generatedImage, fileUri);
+      const fileName = `content-queen-${Date.now()}.jpg`;
+      const dest = new File(Paths.cache, fileName);
+      
+      // Görseli indir
+      const response = await fetch(generatedImage);
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      dest.write(new Uint8Array(arrayBuffer));
 
       // Önce MediaLibrary dene
       try {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === "granted") {
-          await MediaLibrary.saveToLibraryAsync(download.uri);
+          await MediaLibrary.saveToLibraryAsync(dest.uri);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
           return;
         }
       } catch {}
 
-      // Fallback: Sharing ile "Save Image" seçeneği sun
+      // Fallback: Sharing
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(download.uri, { mimeType: "image/jpeg" });
-      } else {
-        Alert.alert("Bilgi", "Görseli kaydetmek için paylaşım menüsünü kullanın.");
+        await Sharing.shareAsync(dest.uri, { mimeType: "image/jpeg" });
       }
     } catch (e) {
       console.error("[Save]", e);
@@ -153,17 +157,21 @@ export default function GenerateImageScreen() {
     if (!generatedImage) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const fileUri = FileSystem.cacheDirectory + `content-queen-share-${Date.now()}.jpg`;
-      const download = await FileSystem.downloadAsync(generatedImage, fileUri);
+      const fileName = `content-queen-share-${Date.now()}.jpg`;
+      const dest = new File(Paths.cache, fileName);
+
+      const response = await fetch(generatedImage);
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      dest.write(new Uint8Array(arrayBuffer));
 
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(download.uri, {
+        await Sharing.shareAsync(dest.uri, {
           mimeType: "image/jpeg",
           dialogTitle: "Content Queen Görseli",
         });
       } else {
-        // Fallback: native Share API ile URL paylaş
         await Share.share({
           url: generatedImage,
           message: "Content Queen ile oluşturdum ✨",
