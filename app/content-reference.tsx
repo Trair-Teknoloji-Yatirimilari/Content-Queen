@@ -44,7 +44,7 @@ export default function ContentReferenceScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: "/select-reference",
+      pathname: "/generate-image",
       params: { contentImageUri: contentImage.uri },
     });
   };
@@ -126,7 +126,7 @@ export default function ContentReferenceScreen() {
                 },
               ]}
             >
-              <Text className="text-white font-semibold text-base">Devam Et</Text>
+              <Text className="text-white font-semibold text-base">Görsel Oluştur</Text>
             </Pressable>
           )}
         </View>
