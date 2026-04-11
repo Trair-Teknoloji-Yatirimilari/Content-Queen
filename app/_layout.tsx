@@ -32,47 +32,40 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const { isSignedIn } = useAuth();
-  const [kvkkAccepted, setKvkkAccepted] = useState<boolean | null>(null);
+  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
   useEffect(() => {
-    checkKvkkStatus();
+    checkOnboardingStatus();
   }, []);
 
-  const checkKvkkStatus = async () => {
+  const checkOnboardingStatus = async () => {
     try {
-      const accepted = await AsyncStorage.getItem("content_queen_kvkk_accepted");
-      setKvkkAccepted(accepted === "true");
+      const done = await AsyncStorage.getItem("cq_onboarding_done");
+      setOnboardingDone(done === "true");
     } catch (error) {
-      console.error("KVKK durumu kontrol hatası:", error);
-      setKvkkAccepted(false);
+      setOnboardingDone(false);
     }
   };
 
-  if (kvkkAccepted === null) {
+  if (onboardingDone === null) {
     return null;
   }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {isSignedIn ? (
-        <>
-          {!kvkkAccepted ? (
-            <>
-              <Stack.Screen name="splash" />
-              <Stack.Screen name="kvkk" />
-            </>
-          ) : (
-            <Stack.Screen name="(tabs)" />
-          )}
-        </>
-      ) : (
+      {!onboardingDone ? (
+        <Stack.Screen name="onboarding" />
+      ) : !isSignedIn ? (
         <Stack.Screen name="login" />
+      ) : (
+        <Stack.Screen name="(tabs)" />
       )}
       <Stack.Screen name="reference-photos" />
       <Stack.Screen name="content-reference" />
       <Stack.Screen name="select-reference" />
       <Stack.Screen name="generate-image" />
       <Stack.Screen name="training" />
+      <Stack.Screen name="onboarding" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="privacy-policy" />
       <Stack.Screen name="terms-of-service" />
