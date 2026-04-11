@@ -59,10 +59,6 @@ export default function ContentReferenceScreen() {
       <ScreenHeader title="İçerik Referansı" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="px-6 py-4 gap-6">
-            <Text className="text-sm text-muted">
-              Pinterest veya baska bir kaynaktan indirdigin sik bir fotografyi yukle
-            </Text>
-          </View>
 
           {/* Upload Area */}
           {!contentImage ? (

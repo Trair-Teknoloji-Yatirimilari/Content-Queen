@@ -85,11 +85,6 @@ export default function ReferencePhotosScreen() {
       <ScreenHeader title="Referans Fotoğraflar" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="px-6 py-4 gap-6">
-            <Text className="text-sm text-muted">
-              Yüksek çözünürlüklü, yüz hatlarının belirgin olduğu fotoğraflar yükleyin
-            </Text>
-          </View>
-
           {/* Upload Button */}
           <Pressable
             onPress={pickImage}

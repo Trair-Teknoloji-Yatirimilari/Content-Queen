@@ -49,11 +49,6 @@ export default function SelectReferenceScreen() {
       <ScreenHeader title="Referans Seçin" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="px-6 py-4 gap-6">
-            <Text className="text-sm text-muted">
-              Asagidaki fotograflardan hangisini kullanmak istiyorsunuz?
-            </Text>
-          </View>
-
           {/* Content Preview */}
           {contentImageUri && (
             <View className="gap-2">
