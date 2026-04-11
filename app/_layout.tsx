@@ -66,6 +66,7 @@ function RootLayoutNav() {
       <Stack.Screen name="generate-image" />
       <Stack.Screen name="training" />
       <Stack.Screen name="gallery" />
+      <Stack.Screen name="image-detail" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="privacy-policy" />
       <Stack.Screen name="terms-of-service" />

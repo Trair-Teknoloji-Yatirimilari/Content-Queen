@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
 import { useColors } from "@/hooks/use-colors";
+import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { saveImageToGallery, shareImage } from "@/lib/image-utils";
@@ -16,6 +17,7 @@ const ITEM_SIZE = (SCREEN_WIDTH - GAP * (COLS + 1)) / COLS;
 
 export default function GalleryScreen() {
   const colors = useColors();
+  const router = useRouter();
   const utils = trpc.useUtils();
   const imagesQuery = trpc.generatedImages.list.useQuery();
   const deleteMutation = trpc.generatedImages.delete.useMutation();
@@ -76,7 +78,10 @@ export default function GalleryScreen() {
         columnWrapperStyle={{ gap: GAP, marginBottom: GAP }}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => handleSave(item.generatedImageUrl)}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push(`/image-detail?id=${item.id}`);
+            }}
             onLongPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               Alert.alert("Görsel", undefined, [

@@ -61,7 +61,7 @@ export default function HomeScreen() {
 
   const handleImagePress = (id: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push(`/generate-image?imageId=${id}`);
+    router.push(`/image-detail?id=${id}`);
   };
 
   return (
