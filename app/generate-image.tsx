@@ -18,11 +18,13 @@ export default function GenerateImageScreen() {
   const colors = useColors();
   const params = useLocalSearchParams();
   const contentImageUri = params.contentImageUri as string;
+  const autoStart = params.autoStart === "true";
 
-  const [state, setState] = useState<ScreenState>("preview");
+  const [state, setState] = useState<ScreenState>(autoStart ? "generating" : "preview");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const createMutation = trpc.generatedImages.create.useMutation();
@@ -107,6 +109,14 @@ export default function GenerateImageScreen() {
     setErrorMessage(null);
     setProgress(0);
   };
+
+  // Auto-start generation if coming from content-reference
+  React.useEffect(() => {
+    if (autoStart && !hasStarted && contentImageUri) {
+      setHasStarted(true);
+      handleGenerate();
+    }
+  }, [autoStart, hasStarted, contentImageUri]);
 
   const handleSaveToGallery = async () => {
     if (!generatedImage) return;

@@ -58,7 +58,7 @@ export default function ContentReferenceScreen() {
       });
       router.push({
         pathname: "/generate-image",
-        params: { contentImageUri: result.photoUrl },
+        params: { contentImageUri: result.photoUrl, autoStart: "true" },
       });
     } catch {
       Alert.alert("Hata", "Fotoğraf yüklenirken hata oluştu. Tekrar deneyin.");
