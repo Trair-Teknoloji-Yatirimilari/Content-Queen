@@ -54,6 +54,17 @@ export const appRouter = router({
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
+        // Yeni kullanıcıya ücretsiz deneme kredisi ver
+        const existingCredits = await db.getUserCredits(user.id);
+        if (!existingCredits) {
+          await db.createUserCredits({
+            userId: user.id,
+            totalCredits: 3,
+            usedCredits: 0,
+            subscriptionTier: "free",
+          });
+        }
+
         return {
           success: true,
           sessionToken,

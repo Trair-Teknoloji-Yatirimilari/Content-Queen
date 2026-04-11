@@ -1,224 +1,243 @@
-import React, { useState } from "react";
-import { ScrollView, Text, View, Pressable, Image, ActivityIndicator, Alert } from "react-native";
+import React, { useState, useRef } from "react";
+import { ScrollView, Text, View, Pressable, ActivityIndicator } from "react-native";
+import { Image } from "expo-image";
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
+import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { trpc } from "@/lib/trpc";
 
+type ScreenState = "preview" | "generating" | "success" | "error";
+
 export default function GenerateImageScreen() {
   const router = useRouter();
+  const colors = useColors();
   const params = useLocalSearchParams();
   const contentImageUri = params.contentImageUri as string;
-  const selectedPhotoId = params.selectedPhotoId as string;
 
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [state, setState] = useState<ScreenState>("preview");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const createImageMutation = trpc.generatedImages.create.useMutation();
+  const createMutation = trpc.generatedImages.create.useMutation();
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
 
   const handleGenerate = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsGenerating(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setState("generating");
+    setErrorMessage(null);
+    setProgress(0);
 
     try {
-      const result = await createImageMutation.mutateAsync({
+      const result = await createMutation.mutateAsync({
         contentImageUrl: contentImageUri,
-        faceImageUrl: "https://via.placeholder.com/300",
-        prompt: "Transform this person's appearance to match the style in the reference image. Professional photo transformation.",
+        faceImageUrl: contentImageUri,
+        prompt: "A photo of TOK person in the exact same pose, location, lighting and composition as the reference image. Photorealistic, professional photography.",
         style: "Professional",
       });
 
-      // Polling başlat
+      if (!result.jobId) {
+        throw new Error("İş oluşturulamadı");
+      }
+
+      // Polling
       let attempts = 0;
-      const maxAttempts = 120; // 2 dakika (1 saniye interval)
+      const maxAttempts = 150; // 2.5 dakika
 
-      const pollStatus = async () => {
-        while (attempts < maxAttempts) {
-          attempts++;
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+      pollingRef.current = setInterval(async () => {
+        attempts++;
+        setProgress(Math.min((attempts / maxAttempts) * 100, 95));
 
-          // Fetch status from API
-          const response = await fetch("/api/trpc/generatedImages.checkStatus", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jobId: result.jobId }),
-          });
-          const statusResult = await response.json();
-
-          if (statusResult.status === "completed" && statusResult.imageUrl) {
-            setGeneratedImage(statusResult.imageUrl);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setIsGenerating(false);
-            return;
-          } else if (statusResult.status === "failed") {
-            throw new Error(statusResult.error || "Görsel oluşturulamadı");
-          }
+        if (attempts >= maxAttempts) {
+          stopPolling();
+          setErrorMessage("İşlem zaman aşımına uğradı. Tekrar deneyin.");
+          setState("error");
+          return;
         }
-        throw new Error("İşlem zaman aşımına uğradı");
-      };
 
-      await pollStatus();
-    } catch (error) {
-      Alert.alert("Hata", error instanceof Error ? error.message : "Görsel oluşturulurken hata oluştu");
+        try {
+          const res = await fetch(
+            `http://localhost:3000/api/trpc/generatedImages.checkStatus?input=${encodeURIComponent(JSON.stringify({ json: { jobId: result.jobId } }))}`,
+            { credentials: "include" },
+          );
+          const json = await res.json();
+          const status = json?.result?.data?.json;
+
+          if (status?.status === "completed" && status?.imageUrl) {
+            stopPolling();
+            setGeneratedImage(status.imageUrl);
+            setProgress(100);
+            setState("success");
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else if (status?.status === "failed") {
+            stopPolling();
+            setErrorMessage(status.error || "Görsel oluşturulamadı");
+            setState("error");
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+        } catch {
+          // Polling hatası — devam et, ağ geçici sorun olabilir
+        }
+      }, 1000);
+    } catch (error: any) {
+      stopPolling();
+      setErrorMessage(error.message || "Bir hata oluştu");
+      setState("error");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setIsGenerating(false);
     }
   };
 
-  const handleDownload = async () => {
+  const handleRetry = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      // Görseli cihaza kaydet (gerçek uygulamada)
-      Alert.alert("Başarılı", "Görsel telefonunuza kaydedildi");
-      router.replace("/(tabs)");
-    } catch (error) {
-      Alert.alert("Hata", "Görsel kaydedilemedi");
-    }
+    setState("preview");
+    setErrorMessage(null);
+    setProgress(0);
   };
 
-  const handleShare = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert("Paylas", "Gorsel sosyal medyada paylasildi");
-  };
-
-  const handleNewImage = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setGeneratedImage(null);
-    router.replace("/content-reference");
-  };
-
-  if (generatedImage) {
+  // ─── SUCCESS ───
+  if (state === "success" && generatedImage) {
     return (
-      <ScreenContainer className="bg-background">
+      <ScreenContainer>
         <ScreenHeader title="Sonuç" showBack={false} />
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-          <View className="px-6 py-4 gap-6 flex-1 justify-center">
-            <View className="gap-2">
-              <Text className="text-2xl font-bold text-foreground text-center">Başarılı!</Text>
-              <Text className="text-sm text-muted text-center">Görseliniz hazırlandı</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }} showsVerticalScrollIndicator={false}>
+          <View style={{ paddingHorizontal: 24, gap: 20 }}>
+            <View style={{ alignItems: "center", gap: 4 }}>
+              <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>Başarılı! 🎉</Text>
+              <Text style={{ fontSize: 14, color: colors.muted }}>Görselin hazırlandı</Text>
             </View>
 
-            <View className="rounded-lg overflow-hidden bg-surface border border-border">
-              <Image source={{ uri: generatedImage }} className="w-full aspect-square" />
+            <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: colors.surface }}>
+              <Image source={{ uri: generatedImage }} style={{ width: "100%", aspectRatio: 1 }} contentFit="cover" />
             </View>
 
-            {/* Action Buttons */}
-            <View className="gap-3">
-              <Pressable
-                onPress={handleDownload}
-                style={({ pressed }) => [
-                  {
-                    backgroundColor: pressed ? "#D93B7F" : "#E94B8F",
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  },
-                ]}
-              >
-                <Text className="text-white font-semibold text-base">Telefonuma Kaydet</Text>
-              </Pressable>
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.replace("/(tabs)"); }}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? "#D93B7F" : colors.primary,
+                paddingVertical: 16, borderRadius: 14, alignItems: "center",
+                transform: [{ scale: pressed ? 0.97 : 1 }],
+              })}
+            >
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Ana Sayfaya Dön</Text>
+            </Pressable>
 
-              <Pressable
-                onPress={handleShare}
-                style={({ pressed }) => [
-                  {
-                    backgroundColor: pressed ? "#F0F0F0" : "#F5F5F5",
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    borderWidth: 1,
-                    borderColor: "#E5E7EB",
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  },
-                ]}
-              >
-                <Text className="text-foreground font-semibold text-base">Paylas</Text>
-              </Pressable>
-
-              <Pressable
-                onPress={handleNewImage}
-                style={({ pressed }) => [
-                  {
-                    backgroundColor: pressed ? "#F0F0F0" : "#F5F5F5",
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    borderWidth: 1,
-                    borderColor: "#E5E7EB",
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  },
-                ]}
-              >
-                <Text className="text-foreground font-semibold text-base">Yeni Gorsel Olustur</Text>
-              </Pressable>
-            </View>
+            <Pressable
+              onPress={() => { setGeneratedImage(null); setState("preview"); router.replace("/content-reference"); }}
+              style={{ alignItems: "center", padding: 8 }}
+            >
+              <Text style={{ fontSize: 14, color: colors.primary, fontWeight: "600" }}>Yeni Görsel Oluştur</Text>
+            </Pressable>
           </View>
         </ScrollView>
       </ScreenContainer>
     );
   }
 
-  return (
-    <ScreenContainer className="bg-background">
-      <ScreenHeader title="Görsel Oluştur" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="px-6 py-4 gap-6 flex-1 justify-center">
+  // ─── GENERATING ───
+  if (state === "generating") {
+    return (
+      <ScreenContainer>
+        <ScreenHeader title="Oluşturuluyor" showBack={false} />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, gap: 24 }}>
+          <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: "rgba(233,75,143,0.1)", justifyContent: "center", alignItems: "center" }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+          <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground, textAlign: "center" }}>
+            AI Görseli Oluşturuyor
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
+            Bu işlem 30-60 saniye sürebilir.{"\n"}Lütfen bekleyin...
+          </Text>
 
-          {/* Preview Cards */}
-          <View className="gap-3">
-            <Text className="text-xs font-semibold text-muted uppercase">Secimleriniz</Text>
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Text className="text-xs text-muted mb-2">Icerik Referansi</Text>
-                <View className="rounded-lg overflow-hidden bg-surface border border-border">
-                  <Image source={{ uri: contentImageUri }} className="w-full aspect-square" />
-                </View>
-              </View>
-              <View className="flex-1">
-                <Text className="text-xs text-muted mb-2">Yuz Referansi</Text>
-                <View className="rounded-lg overflow-hidden bg-surface border border-border">
-                  <Image
-                    source={{ uri: "https://via.placeholder.com/300" }}
-                    className="w-full aspect-square"
-                  />
-                </View>
-              </View>
+          {/* Progress bar */}
+          <View style={{ width: "100%", height: 6, backgroundColor: colors.border, borderRadius: 3 }}>
+            <View style={{ width: `${progress}%`, height: 6, backgroundColor: colors.primary, borderRadius: 3 }} />
+          </View>
+          <Text style={{ fontSize: 12, color: colors.muted }}>%{Math.round(progress)}</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  // ─── ERROR ───
+  if (state === "error") {
+    return (
+      <ScreenContainer>
+        <ScreenHeader title="Hata" />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, gap: 20 }}>
+          <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: "rgba(255,59,48,0.1)", justifyContent: "center", alignItems: "center" }}>
+            <Text style={{ fontSize: 40 }}>😔</Text>
+          </View>
+          <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground, textAlign: "center" }}>
+            Bir Sorun Oluştu
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
+            {errorMessage || "Görsel oluşturulurken hata oluştu."}
+          </Text>
+
+          <Pressable
+            onPress={handleRetry}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "#D93B7F" : colors.primary,
+              paddingVertical: 16, paddingHorizontal: 48, borderRadius: 14,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            })}
+          >
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Tekrar Dene</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.back()} style={{ padding: 8 }}>
+            <Text style={{ fontSize: 14, color: colors.muted }}>Geri Dön</Text>
+          </Pressable>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  // ─── PREVIEW ───
+  return (
+    <ScreenContainer>
+      <ScreenHeader title="Görsel Oluştur" />
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingHorizontal: 24, gap: 24 }}>
+          {/* Reference Preview */}
+          <View style={{ gap: 8 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              Referans Görsel
+            </Text>
+            <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: colors.surface }}>
+              <Image source={{ uri: contentImageUri }} style={{ width: "100%", aspectRatio: 1 }} contentFit="cover" />
             </View>
           </View>
 
           {/* Generate Button */}
           <Pressable
             onPress={handleGenerate}
-            disabled={isGenerating}
-            style={({ pressed }) => [
-              {
-                backgroundColor: isGenerating ? "#CCCCCC" : pressed ? "#D93B7F" : "#E94B8F",
-                paddingVertical: 16,
-                borderRadius: 12,
-                alignItems: "center",
-                opacity: isGenerating ? 0.6 : 1,
-                transform: [{ scale: pressed && !isGenerating ? 0.97 : 1 }],
-              },
-            ]}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "#D93B7F" : colors.primary,
+              paddingVertical: 18, borderRadius: 16, alignItems: "center",
+              flexDirection: "row", justifyContent: "center", gap: 8,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+              shadowColor: colors.primary, shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3, shadowRadius: 10,
+            })}
           >
-            {isGenerating ? (
-              <View className="flex-row items-center gap-2">
-                <ActivityIndicator color="#FFFFFF" />
-                <Text className="text-white font-semibold text-base">Olusturuluyor...</Text>
-              </View>
-            ) : (
-              <Text className="text-white font-semibold text-base">Gorsel Olustur</Text>
-            )}
+            <Text style={{ fontSize: 20 }}>✦</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Görsel Oluştur</Text>
           </Pressable>
 
-          {/* Info */}
-          <View className="bg-surface rounded-lg p-4 border border-border">
-            <Text className="text-xs text-muted leading-relaxed">
-              Bu islem 30-40 saniye surebilir. Lutfen bekleyin...
-            </Text>
-          </View>
+          <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
+            AI, kişisel modelini kullanarak seni bu pozda{"\n"}profesyonel bir fotoğraf olarak oluşturacak.
+          </Text>
         </View>
       </ScrollView>
     </ScreenContainer>
