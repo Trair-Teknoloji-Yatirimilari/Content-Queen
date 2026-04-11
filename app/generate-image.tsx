@@ -26,7 +26,6 @@ export default function GenerateImageScreen() {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const createMutation = trpc.generatedImages.create.useMutation();
-  const uploadMutation = trpc.referencePhotos.upload.useMutation();
 
   const stopPolling = () => {
     if (pollingRef.current) {
@@ -42,23 +41,11 @@ export default function GenerateImageScreen() {
     setProgress(0);
 
     try {
-      // Fotoğrafı önce Supabase'e yükle (Replicate public URL istiyor)
-      setProgress(5);
-      const base64 = await FileSystem.readAsStringAsync(contentImageUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      const uploadResult = await uploadMutation.mutateAsync({
-        base64,
-        photoType: "content",
-        fileName: `content-${Date.now()}.jpg`,
-      });
-
       setProgress(15);
 
       const result = await createMutation.mutateAsync({
-        contentImageUrl: uploadResult.photoUrl,
-        faceImageUrl: uploadResult.photoUrl,
+        contentImageUrl: contentImageUri,
+        faceImageUrl: contentImageUri,
         prompt: "A photo of TOK person in the exact same pose, location, lighting and composition as the reference image. Photorealistic, professional photography.",
         style: "Professional",
       });

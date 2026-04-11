@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View, Pressable, Image, Alert } from "react-native";
+import { ScrollView, Text, View, Pressable, Image, Alert, ActivityIndicator } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { trpc } from "@/lib/trpc";
+import { useColors } from "@/hooks/use-colors";
 
 interface ContentReference {
   uri: string;
@@ -13,8 +15,10 @@ interface ContentReference {
 
 export default function ContentReferenceScreen() {
   const router = useRouter();
+  const colors = useColors();
   const [contentImage, setContentImage] = useState<ContentReference | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const uploadMutation = trpc.referencePhotos.upload.useMutation();
 
   const pickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -22,10 +26,11 @@ export default function ContentReferenceScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        quality: 1,
+        quality: 0.9,
+        base64: true,
       });
 
-      if (!result.canceled) {
+      if (!result.canceled && result.assets[0]) {
         setContentImage({
           uri: result.assets[0].uri,
           name: "Secilen Gorsel",
@@ -33,20 +38,41 @@ export default function ContentReferenceScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error) {
-      Alert.alert("Hata", "Fotograf secilirken hata olustu");
+      Alert.alert("Hata", "Fotoğraf seçilirken hata oluştu");
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!contentImage) {
-      Alert.alert("Hata", "Lutfen bir icerik referansi secin");
+      Alert.alert("Hata", "Lütfen bir içerik referansı seçin");
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push({
-      pathname: "/generate-image",
-      params: { contentImageUri: contentImage.uri },
-    });
+    setIsUploading(true);
+
+    try {
+      // Fotoğrafı base64 olarak oku ve Supabase'e yükle
+      const FileSystem = await import("expo-file-system");
+      const base64 = await FileSystem.readAsStringAsync(contentImage.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const result = await uploadMutation.mutateAsync({
+        base64,
+        photoType: "content",
+        fileName: `content-${Date.now()}.jpg`,
+      });
+
+      // Public URL ile generate ekranına git
+      router.push({
+        pathname: "/generate-image",
+        params: { contentImageUri: result.photoUrl },
+      });
+    } catch (error) {
+      Alert.alert("Hata", "Fotoğraf yüklenirken hata oluştu. Tekrar deneyin.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const clearImage = () => {
@@ -116,17 +142,28 @@ export default function ContentReferenceScreen() {
           {contentImage && (
             <Pressable
               onPress={handleContinue}
+              disabled={isUploading}
               style={({ pressed }) => [
                 {
-                  backgroundColor: pressed ? "#D93B7F" : "#E94B8F",
+                  backgroundColor: isUploading ? "#ccc" : pressed ? "#D93B7F" : "#E94B8F",
                   paddingVertical: 14,
                   borderRadius: 12,
                   alignItems: "center",
-                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 8,
+                  transform: [{ scale: pressed && !isUploading ? 0.97 : 1 }],
                 },
               ]}
             >
-              <Text className="text-white font-semibold text-base">Görsel Oluştur</Text>
+              {isUploading ? (
+                <>
+                  <ActivityIndicator color="#fff" size="small" />
+                  <Text className="text-white font-semibold text-base">Yükleniyor...</Text>
+                </>
+              ) : (
+                <Text className="text-white font-semibold text-base">Görsel Oluştur</Text>
+              )}
             </Pressable>
           )}
         </View>
