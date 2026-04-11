@@ -16,7 +16,9 @@ const ITEM_SIZE = (SCREEN_WIDTH - GAP * (COLS + 1)) / COLS;
 
 export default function GalleryScreen() {
   const colors = useColors();
+  const utils = trpc.useUtils();
   const imagesQuery = trpc.generatedImages.list.useQuery();
+  const deleteMutation = trpc.generatedImages.delete.useMutation();
   const images = imagesQuery.data ?? [];
 
   const handleSave = async (url: string) => {
@@ -31,6 +33,25 @@ export default function GalleryScreen() {
   const handleShare = async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await shareImage(url);
+  };
+
+  const handleDelete = (id: number) => {
+    Alert.alert("Görseli Sil", "Bu görseli silmek istediğinize emin misiniz?", [
+      { text: "İptal" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          try {
+            await deleteMutation.mutateAsync({ id });
+            utils.generatedImages.list.invalidate();
+          } catch {
+            Alert.alert("Hata", "Görsel silinemedi.");
+          }
+        },
+      },
+    ]);
   };
 
   if (imagesQuery.isLoading) {
@@ -61,6 +82,7 @@ export default function GalleryScreen() {
               Alert.alert("Görsel", undefined, [
                 { text: "Kaydet", onPress: () => handleSave(item.generatedImageUrl) },
                 { text: "Paylaş", onPress: () => handleShare(item.generatedImageUrl) },
+                { text: "Sil", style: "destructive", onPress: () => handleDelete(item.id) },
                 { text: "İptal", style: "cancel" },
               ]);
             }}

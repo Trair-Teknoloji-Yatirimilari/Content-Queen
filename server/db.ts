@@ -313,3 +313,10 @@ export async function getTrainingPhotos(userId: number) {
     .from(referencePhotos)
     .where(and(eq(referencePhotos.userId, userId), eq(referencePhotos.photoType, "training" as any)));
 }
+
+export async function deleteGeneratedImage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(generatedImages).where(eq(generatedImages.id, id));
+}

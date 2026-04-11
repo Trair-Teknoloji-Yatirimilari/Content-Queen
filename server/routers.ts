@@ -439,6 +439,17 @@ export const appRouter = router({
         }
         return image;
       }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const image = await db.getGeneratedImage(input.id);
+        if (!image || image.userId !== ctx.user.id) {
+          throw new Error("Görsel bulunamadı");
+        }
+        await db.deleteGeneratedImage(input.id);
+        return { success: true };
+      }),
   }),
 
   notifications: router({
