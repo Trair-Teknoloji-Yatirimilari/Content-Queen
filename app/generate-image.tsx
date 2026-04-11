@@ -1,10 +1,13 @@
 import React, { useState, useRef } from "react";
-import { ScrollView, Text, View, Pressable, ActivityIndicator } from "react-native";
+import { ScrollView, Text, View, Pressable, ActivityIndicator, Alert, Share } from "react-native";
 import { Image } from "expo-image";
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
 import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
+import * as Sharing from "expo-sharing";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { trpc } from "@/lib/trpc";
 
@@ -103,6 +106,36 @@ export default function GenerateImageScreen() {
     setProgress(0);
   };
 
+  const handleSaveToGallery = async () => {
+    if (!generatedImage) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("İzin Gerekli", "Görseli kaydetmek için galeri izni gerekli.");
+        return;
+      }
+      const fileUri = FileSystem.cacheDirectory + `content-queen-${Date.now()}.jpg`;
+      await FileSystem.downloadAsync(generatedImage, fileUri);
+      await MediaLibrary.saveToLibraryAsync(fileUri);
+      Alert.alert("Kaydedildi", "Görsel galerine kaydedildi.");
+    } catch {
+      Alert.alert("Hata", "Görsel kaydedilemedi.");
+    }
+  };
+
+  const handleShare = async () => {
+    if (!generatedImage) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const fileUri = FileSystem.cacheDirectory + `content-queen-share-${Date.now()}.jpg`;
+      await FileSystem.downloadAsync(generatedImage, fileUri);
+      await Sharing.shareAsync(fileUri);
+    } catch {
+      Alert.alert("Hata", "Paylaşım başarısız.");
+    }
+  };
+
   // ─── SUCCESS ───
   if (state === "success" && generatedImage) {
     return (
@@ -119,15 +152,39 @@ export default function GenerateImageScreen() {
               <Image source={{ uri: generatedImage }} style={{ width: "100%", aspectRatio: 1 }} contentFit="cover" />
             </View>
 
+            {/* Save & Share */}
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Pressable
+                onPress={handleSaveToGallery}
+                style={({ pressed }) => ({
+                  flex: 1, backgroundColor: pressed ? "#D93B7F" : colors.primary,
+                  paddingVertical: 14, borderRadius: 14, alignItems: "center",
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>💾 Kaydet</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleShare}
+                style={({ pressed }) => ({
+                  flex: 1, backgroundColor: colors.surface,
+                  paddingVertical: 14, borderRadius: 14, alignItems: "center",
+                  borderWidth: 1, borderColor: colors.border,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>📤 Paylaş</Text>
+              </Pressable>
+            </View>
+
             <Pressable
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.replace("/(tabs)"); }}
               style={({ pressed }) => ({
-                backgroundColor: pressed ? "#D93B7F" : colors.primary,
-                paddingVertical: 16, borderRadius: 14, alignItems: "center",
+                backgroundColor: colors.surface, paddingVertical: 14, borderRadius: 14, alignItems: "center",
                 transform: [{ scale: pressed ? 0.97 : 1 }],
               })}
             >
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Ana Sayfaya Dön</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>Ana Sayfaya Dön</Text>
             </Pressable>
 
             <Pressable
