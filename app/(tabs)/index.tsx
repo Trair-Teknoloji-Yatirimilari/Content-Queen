@@ -21,9 +21,11 @@ export default function HomeScreen() {
 
   const creditsQuery = trpc.credits.getCredits.useQuery();
   const imagesQuery = trpc.generatedImages.list.useQuery();
+  const trainingQuery = trpc.training.status.useQuery();
 
   const credits = creditsQuery.data;
   const recentImages = imagesQuery.data ?? [];
+  const loraStatus = trainingQuery.data?.loraStatus ?? "none";
   const isLoading = creditsQuery.isLoading || imagesQuery.isLoading;
 
   const remainingCredit = credits
@@ -39,13 +41,17 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([creditsQuery.refetch(), imagesQuery.refetch()]);
+    await Promise.all([creditsQuery.refetch(), imagesQuery.refetch(), trainingQuery.refetch()]);
     setRefreshing(false);
-  }, [creditsQuery, imagesQuery]);
+  }, [creditsQuery, imagesQuery, trainingQuery]);
 
   const handleCreateNew = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push("/content-reference");
+    if (loraStatus === "ready") {
+      router.push("/content-reference");
+    } else {
+      router.push("/training");
+    }
   };
 
   const handleManageReferences = () => {
@@ -193,15 +199,45 @@ export default function HomeScreen() {
               elevation: 8,
             })}
           >
-            <Text style={{ fontSize: 22 }}>✦</Text>
+            <Text style={{ fontSize: 22 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
             <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-              Yeni Görsel Oluştur
+              {loraStatus === "ready"
+                ? "Yeni Görsel Oluştur"
+                : loraStatus === "training" || loraStatus === "pending"
+                  ? "Eğitim Devam Ediyor..."
+                  : "AI Modelini Oluştur"}
             </Text>
           </Pressable>
         </View>
 
         {/* ── Quick Actions ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 20, flexDirection: "row", gap: 12 }}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/training");
+            }}
+            style={({ pressed }) => ({
+              flex: 1,
+              backgroundColor: loraStatus === "ready" ? "rgba(52,199,89,0.08)" : colors.surface,
+              paddingVertical: 16,
+              borderRadius: 14,
+              alignItems: "center",
+              gap: 6,
+              opacity: pressed ? 0.7 : 1,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+              borderWidth: loraStatus === "ready" ? 1 : 0,
+              borderColor: loraStatus === "ready" ? "rgba(52,199,89,0.3)" : "transparent",
+            })}
+          >
+            <Text style={{ fontSize: 24 }}>
+              {loraStatus === "ready" ? "✅" : loraStatus === "training" || loraStatus === "pending" ? "⏳" : "🧠"}
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>
+              AI Modelim
+            </Text>
+          </Pressable>
+
           <Pressable
             onPress={handleManageReferences}
             style={({ pressed }) => ({

@@ -15,6 +15,12 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  /** LoRA training fields */
+  loraModelUrl: text("loraModelUrl"),
+  loraModelVersion: text("loraModelVersion"),
+  loraStatus: mysqlEnum("loraStatus", ["none", "pending", "training", "ready", "failed"]).default("none").notNull(),
+  loraTrainingId: varchar("loraTrainingId", { length: 255 }),
+  loraTrainedAt: timestamp("loraTrainedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -68,7 +74,7 @@ export const referencePhotos = mysqlTable("referencePhotos", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   photoUrl: text("photoUrl").notNull(),
-  photoType: mysqlEnum("photoType", ["face", "content"]).notNull(),
+  photoType: mysqlEnum("photoType", ["face", "content", "training"]).notNull(),
   analysis: text("analysis"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

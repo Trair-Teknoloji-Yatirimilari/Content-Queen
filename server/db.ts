@@ -276,3 +276,40 @@ export async function updateReferencePhoto(
 
   return result[0] || null;
 }
+
+/**
+ * LoRA Training
+ */
+export async function updateUserLoRA(
+  userId: number,
+  data: {
+    loraModelUrl?: string | null;
+    loraModelVersion?: string | null;
+    loraStatus?: "none" | "pending" | "training" | "ready" | "failed";
+    loraTrainingId?: string | null;
+    loraTrainedAt?: Date | null;
+  },
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set(data).where(eq(users.id, userId));
+}
+
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(users).where(eq(users.id, userId));
+  return result[0] || null;
+}
+
+export async function getTrainingPhotos(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(referencePhotos)
+    .where(and(eq(referencePhotos.userId, userId), eq(referencePhotos.photoType, "training" as any)));
+}

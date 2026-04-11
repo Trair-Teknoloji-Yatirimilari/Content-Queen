@@ -67,7 +67,150 @@ export const appRouter = router({
       }),
   }),
 
-  // Content Queen Features
+  // ─── LoRA Training ───
+  training: router({
+    /** Kullanıcının LoRA durumunu getir */
+    status: protectedProcedure.query(async ({ ctx }) => {
+      const user = await db.getUserById(ctx.user.id);
+      return {
+        loraStatus: user?.loraStatus ?? "none",
+        loraModelVersion: user?.loraModelVersion ?? null,
+        loraTrainedAt: user?.loraTrainedAt ?? null,
+      };
+    }),
+
+    /** Training fotoğraflarını yükle */
+    uploadPhoto: protectedProcedure
+      .input(z.object({ base64: z.string(), fileName: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const buffer = Buffer.from(input.base64, "base64");
+        const fileKey = `${ctx.user.id}/training/${Date.now()}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, "image/jpeg");
+
+        const photoId = await db.createReferencePhoto({
+          userId: ctx.user.id,
+          photoUrl: url,
+          photoType: "training" as any,
+          analysis: null,
+        });
+
+        return { id: photoId, photoUrl: url };
+      }),
+
+    /** Training fotoğraflarını listele */
+    listPhotos: protectedProcedure.query(async ({ ctx }) => {
+      return db.getTrainingPhotos(ctx.user.id);
+    }),
+
+    /** LoRA training başlat */
+    start: protectedProcedure.mutation(async ({ ctx }) => {
+      // Fotoğraf kontrolü
+      const photos = await db.getTrainingPhotos(ctx.user.id);
+      if (photos.length < 5) {
+        throw new Error("En az 5 eğitim fotoğrafı gerekli");
+      }
+
+      // Zaten training varsa engelle
+      const user = await db.getUserById(ctx.user.id);
+      if (user?.loraStatus === "training" || user?.loraStatus === "pending") {
+        throw new Error("Zaten devam eden bir eğitim var");
+      }
+
+      // Fotoğrafları zip'le ve S3'e yükle
+      const { default: archiver } = await import("archiver");
+      const { PassThrough } = await import("stream");
+
+      const passthrough = new PassThrough();
+      const archive = archiver("zip", { zlib: { level: 5 } });
+      const chunks: Buffer[] = [];
+
+      passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
+      archive.pipe(passthrough);
+
+      // Her fotoğrafı indir ve zip'e ekle
+      for (let i = 0; i < photos.length; i++) {
+        const res = await fetch(photos[i].photoUrl);
+        const arrayBuf = await res.arrayBuffer();
+        archive.append(Buffer.from(arrayBuf), { name: `photo_${i}.jpg` });
+      }
+
+      await archive.finalize();
+      await new Promise<void>((resolve) => passthrough.on("end", resolve));
+
+      const zipBuffer = Buffer.concat(chunks);
+      const zipKey = `${ctx.user.id}/training/training-photos.zip`;
+      const { url: zipUrl } = await storagePut(zipKey, zipBuffer, "application/zip");
+
+      // Replicate'te training başlat
+      const destModel = `content-queen-user-${ctx.user.id}`;
+      const result = await replicateService.trainLoRA(zipUrl, `trairx/${destModel}`);
+
+      if (result.status === "failed") {
+        throw new Error(result.error || "Training başlatılamadı");
+      }
+
+      // DB güncelle
+      await db.updateUserLoRA(ctx.user.id, {
+        loraStatus: "pending",
+        loraTrainingId: result.trainingId,
+      });
+
+      return { trainingId: result.trainingId, status: "pending" };
+    }),
+
+    /** Training durumunu kontrol et ve güncelle */
+    checkStatus: protectedProcedure.query(async ({ ctx }) => {
+      const user = await db.getUserById(ctx.user.id);
+      if (!user?.loraTrainingId) {
+        return { status: user?.loraStatus ?? "none" };
+      }
+
+      if (user.loraStatus === "ready" || user.loraStatus === "failed") {
+        return {
+          status: user.loraStatus,
+          modelVersion: user.loraModelVersion,
+        };
+      }
+
+      // Replicate'ten güncel durumu al
+      const result = await replicateService.checkTrainingStatus(user.loraTrainingId);
+
+      // DB güncelle
+      if (result.status === "ready" && result.modelVersion) {
+        await db.updateUserLoRA(ctx.user.id, {
+          loraStatus: "ready",
+          loraModelVersion: result.modelVersion,
+          loraTrainedAt: new Date(),
+        });
+      } else if (result.status === "failed") {
+        await db.updateUserLoRA(ctx.user.id, {
+          loraStatus: "failed",
+        });
+      } else if (result.status === "training" && user.loraStatus !== "training") {
+        await db.updateUserLoRA(ctx.user.id, { loraStatus: "training" });
+      }
+
+      return {
+        status: result.status,
+        modelVersion: result.modelVersion,
+        error: result.error,
+      };
+    }),
+
+    /** Training'i sıfırla (tekrar denemek için) */
+    reset: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.updateUserLoRA(ctx.user.id, {
+        loraStatus: "none",
+        loraTrainingId: null,
+        loraModelUrl: null,
+        loraModelVersion: null,
+        loraTrainedAt: null,
+      });
+      return { success: true };
+    }),
+  }),
+
+  // ─── Content Queen Features ───
   credits: router({
     getCredits: protectedProcedure.query(async ({ ctx }) => {
       return db.getUserCredits(ctx.user.id);
@@ -106,7 +249,7 @@ export const appRouter = router({
 
   referencePhotos: router({
     list: protectedProcedure
-      .input(z.object({ photoType: z.enum(["face", "content"]).optional() }))
+      .input(z.object({ photoType: z.enum(["face", "content", "training"]).optional() }))
       .query(async ({ ctx, input }) => {
         return db.getUserReferencePhotos(ctx.user.id, input.photoType);
       }),
@@ -115,7 +258,7 @@ export const appRouter = router({
       .input(
         z.object({
           base64: z.string(),
-          photoType: z.enum(["face", "content"]),
+          photoType: z.enum(["face", "content", "training"]),
           fileName: z.string(),
         })
       )
@@ -177,15 +320,24 @@ export const appRouter = router({
             throw new Error("Yeterli kredi yok");
           }
 
-          // Replicate API'ye gönder
-          const result = await replicateService.generateImage({
-            prompt: input.prompt,
-            imageUrl: input.contentImageUrl,
-            width: 1024,
-            height: 1024,
-            steps: 50,
-            guidance: 7.5,
-          });
+          // LoRA modeli var mı kontrol et
+          const user = await db.getUserById(ctx.user.id);
+          let result;
+
+          if (user?.loraStatus === "ready" && user.loraModelVersion) {
+            // LoRA ile üret (profesyonel mod)
+            result = await replicateService.generateWithLoRA(
+              user.loraModelVersion,
+              input.contentImageUrl,
+              input.prompt,
+            );
+          } else {
+            // Standart Flux ile üret (fallback)
+            result = await replicateService.generateStandard(
+              input.prompt,
+              input.contentImageUrl,
+            );
+          }
 
           if (result.status === "failed") {
             throw new Error(result.error || "Görsel oluşturulamadı");
@@ -211,6 +363,7 @@ export const appRouter = router({
             id: imageId,
             jobId: result.jobId,
             status: result.status,
+            usedLoRA: !!(user?.loraStatus === "ready"),
           };
         } catch (error) {
           console.error("Görsel oluşturma hatası:", error);
