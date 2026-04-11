@@ -28,6 +28,7 @@ export default function TrainingScreen() {
   const statusQuery = trpc.training.status.useQuery();
   const photosQuery = trpc.training.listPhotos.useQuery();
   const uploadMutation = trpc.training.uploadPhoto.useMutation();
+  const deleteMutation = trpc.referencePhotos.delete.useMutation();
   const startMutation = trpc.training.start.useMutation();
   const checkStatusQuery = trpc.training.checkStatus.useQuery(undefined, {
     enabled: false,
@@ -66,6 +67,25 @@ export default function TrainingScreen() {
 
     return () => clearInterval(interval);
   }, [currentStep]);
+
+  const handleDeletePhoto = useCallback((photoId: number) => {
+    Alert.alert("Fotoğrafı Sil", "Bu fotoğrafı silmek istediğinize emin misiniz?", [
+      { text: "İptal" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          try {
+            await deleteMutation.mutateAsync({ id: photoId });
+            utils.training.listPhotos.invalidate();
+          } catch {
+            Alert.alert("Hata", "Fotoğraf silinemedi");
+          }
+        },
+      },
+    ]);
+  }, [deleteMutation, utils]);
 
   const pickPhotos = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -334,6 +354,23 @@ export default function TrainingScreen() {
                   contentFit="cover"
                   transition={200}
                 />
+                <Pressable
+                  onPress={() => handleDeletePhoto(photo.id)}
+                  style={({ pressed }) => ({
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(0,0,0,0.6)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", marginTop: -1 }}>×</Text>
+                </Pressable>
               </View>
             ))}
 

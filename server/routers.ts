@@ -115,8 +115,10 @@ export const appRouter = router({
 
     /** LoRA training başlat */
     start: protectedProcedure.mutation(async ({ ctx }) => {
+      console.log("[Training] Start requested by user:", ctx.user.id);
       // Fotoğraf kontrolü
       const photos = await db.getTrainingPhotos(ctx.user.id);
+      console.log("[Training] Found", photos.length, "training photos");
       if (photos.length < 5) {
         throw new Error("En az 5 eğitim fotoğrafı gerekli");
       }
