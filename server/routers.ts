@@ -21,6 +21,23 @@ export const appRouter = router({
       return { success: true } as const;
     }),
 
+    deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+      const userId = ctx.user.id;
+      // Tüm kullanıcı verilerini sil
+      const dbConn = await db.getDb();
+      if (dbConn) {
+        const { eq } = await import("drizzle-orm");
+        const schema = await import("../drizzle/schema");
+        await dbConn.delete(schema.referencePhotos).where(eq(schema.referencePhotos.userId, userId));
+        await dbConn.delete(schema.generatedImages).where(eq(schema.generatedImages.userId, userId));
+        await dbConn.delete(schema.userCredits).where(eq(schema.userCredits.userId, userId));
+        await dbConn.delete(schema.users).where(eq(schema.users.id, userId));
+      }
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return { success: true } as const;
+    }),
+
     sendOtp: publicProcedure
       .input(z.object({ phone: z.string().min(10) }))
       .mutation(async ({ input }) => {

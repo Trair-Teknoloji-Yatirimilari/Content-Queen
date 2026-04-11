@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useI18n, type Language } from "@/lib/i18n-context";
 import { useAuth } from "@/lib/auth-context";
+import { trpc } from "@/lib/trpc";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface SettingItemProps {
@@ -43,6 +44,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { t, language, setLanguage } = useI18n();
   const { signOut, user } = useAuth();
+  const deleteAccountMutation = trpc.auth.deleteAccount.useMutation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
 
@@ -124,31 +126,21 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
       "Hesabı Sil",
-      "Bu işlem geri alınamaz. Tüm verileriniz silinecektir.",
+      "Bu işlem geri alınamaz. Tüm verileriniz, görselleriniz ve AI modeliniz silinecektir.",
       [
+        { text: "İptal", style: "cancel" },
         {
-          text: "İptal",
-          onPress: () => {},
-          style: "cancel",
-        },
-        {
-          text: "Sil",
-          onPress: () => {
-            Alert.alert(
-              "Hesap Silindi",
-              "Hesabınız başarıyla silinmiştir.",
-              [
-                {
-                  text: "Tamam",
-                  onPress: async () => {
-                    await signOut();
-                    router.replace("/login");
-                  },
-                },
-              ]
-            );
-          },
+          text: "Hesabımı Sil",
           style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAccountMutation.mutateAsync();
+              await signOut();
+              router.replace("/login");
+            } catch {
+              Alert.alert("Hata", "Hesap silinemedi. Tekrar deneyin.");
+            }
+          },
         },
       ]
     );
@@ -230,9 +222,7 @@ export default function SettingsScreen() {
             <View className="h-px bg-border" />
             <SettingItem
               label="Gizlilik Politikası"
-              onPress={() => {
-                // TODO: Gizlilik politikası linkini aç
-              }}
+              onPress={() => router.push("/privacy-policy")}
               rightElement={
                 <Text className="text-sm text-primary font-medium">›</Text>
               }
@@ -240,9 +230,7 @@ export default function SettingsScreen() {
             <View className="h-px bg-border" />
             <SettingItem
               label="Kullanım Şartları"
-              onPress={() => {
-                // TODO: Kullanım şartları linkini aç
-              }}
+              onPress={() => router.push("/terms-of-service")}
               rightElement={
                 <Text className="text-sm text-primary font-medium">›</Text>
               }
