@@ -118,11 +118,13 @@ export default function GenerateImageScreen() {
         return;
       }
       const fileUri = FileSystem.cacheDirectory + `content-queen-${Date.now()}.jpg`;
-      await FileSystem.downloadAsync(generatedImage, fileUri);
-      await MediaLibrary.saveToLibraryAsync(fileUri);
-      Alert.alert("Kaydedildi", "Görsel galerine kaydedildi.");
-    } catch {
-      Alert.alert("Hata", "Görsel kaydedilemedi.");
+      const download = await FileSystem.downloadAsync(generatedImage, fileUri);
+      await MediaLibrary.saveToLibraryAsync(download.uri);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
+    } catch (e) {
+      console.error("[Save]", e);
+      Alert.alert("Hata", "Görsel kaydedilemedi. Tekrar deneyin.");
     }
   };
 
@@ -131,9 +133,23 @@ export default function GenerateImageScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       const fileUri = FileSystem.cacheDirectory + `content-queen-share-${Date.now()}.jpg`;
-      await FileSystem.downloadAsync(generatedImage, fileUri);
-      await Sharing.shareAsync(fileUri);
-    } catch {
+      const download = await FileSystem.downloadAsync(generatedImage, fileUri);
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(download.uri, {
+          mimeType: "image/jpeg",
+          dialogTitle: "Content Queen Görseli",
+        });
+      } else {
+        // Fallback: native Share API ile URL paylaş
+        await Share.share({
+          url: generatedImage,
+          message: "Content Queen ile oluşturdum ✨",
+        });
+      }
+    } catch (e) {
+      console.error("[Share]", e);
       Alert.alert("Hata", "Paylaşım başarısız.");
     }
   };
