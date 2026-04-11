@@ -201,7 +201,7 @@ class ReplicateService {
 
       return {
         jobId: prediction.id,
-        status: prediction.status as any,
+        status: this.mapJobStatus(prediction.status),
         imageUrl: this.extractImageUrl(prediction.output),
       };
     } catch (error) {
@@ -239,7 +239,7 @@ class ReplicateService {
 
       return {
         jobId: prediction.id,
-        status: prediction.status as any,
+        status: this.mapJobStatus(prediction.status),
         imageUrl: this.extractImageUrl(prediction.output),
       };
     } catch (error) {
@@ -267,7 +267,7 @@ class ReplicateService {
 
       return {
         jobId: prediction.id,
-        status: prediction.status as any,
+        status: this.mapJobStatus(prediction.status),
         imageUrl: this.extractImageUrl(prediction.output),
         error: prediction.error as string | undefined,
       };
@@ -289,6 +289,23 @@ class ReplicateService {
       return output;
     }
     return undefined;
+  }
+
+  private mapJobStatus(status: string): JobResult["status"] {
+    switch (status) {
+      case "starting":
+      case "queued":
+        return "pending";
+      case "processing":
+        return "processing";
+      case "succeeded":
+        return "completed";
+      case "failed":
+      case "canceled":
+        return "failed";
+      default:
+        return "pending";
+    }
   }
 }
 

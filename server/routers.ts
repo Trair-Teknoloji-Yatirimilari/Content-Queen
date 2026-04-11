@@ -372,11 +372,11 @@ export const appRouter = router({
             userId: ctx.user.id,
             contentImageUrl: input.contentImageUrl,
             faceImageUrl: input.faceImageUrl,
-            generatedImageUrl: result.imageUrl || "",
+            generatedImageUrl: result.imageUrl || "pending",
             prompt: input.prompt,
             style: input.style,
             replicateJobId: result.jobId,
-            status: result.status as any,
+            status: "pending" as any,
             creditsUsed: 1,
           });
 
@@ -403,8 +403,12 @@ export const appRouter = router({
         // Veritabanını güncelle
         const image = await db.getGeneratedImageByReplicateJobId(input.jobId);
         if (image && result.status !== image.status) {
+          const dbStatus = result.status === "completed" ? "completed"
+            : result.status === "failed" ? "failed"
+            : result.status === "processing" ? "processing"
+            : "pending";
           await db.updateGeneratedImage(image.id, {
-            status: result.status as any,
+            status: dbStatus as any,
             generatedImageUrl: result.imageUrl || image.generatedImageUrl,
           });
 
