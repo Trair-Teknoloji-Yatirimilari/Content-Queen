@@ -122,19 +122,30 @@ export default function GenerateImageScreen() {
     if (!generatedImage) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("İzin Gerekli", "Görseli kaydetmek için galeri izni gerekli.");
-        return;
-      }
-      const fileUri = FileSystem.cacheDirectory + `content-queen-${Date.now()}.jpg`;
+      const fileUri = FileSystem.documentDirectory + `content-queen-${Date.now()}.jpg`;
       const download = await FileSystem.downloadAsync(generatedImage, fileUri);
-      await MediaLibrary.saveToLibraryAsync(download.uri);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
+
+      // Önce MediaLibrary dene
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === "granted") {
+          await MediaLibrary.saveToLibraryAsync(download.uri);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
+          return;
+        }
+      } catch {}
+
+      // Fallback: Sharing ile "Save Image" seçeneği sun
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(download.uri, { mimeType: "image/jpeg" });
+      } else {
+        Alert.alert("Bilgi", "Görseli kaydetmek için paylaşım menüsünü kullanın.");
+      }
     } catch (e) {
       console.error("[Save]", e);
-      Alert.alert("Hata", "Görsel kaydedilemedi. Tekrar deneyin.");
+      Alert.alert("Hata", "Görsel kaydedilemedi.");
     }
   };
 
