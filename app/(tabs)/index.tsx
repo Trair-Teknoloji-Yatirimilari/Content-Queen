@@ -284,7 +284,7 @@ export default function HomeScreen() {
               Son Görseller
             </Text>
             {recentImages.length > 6 && (
-              <Pressable onPress={() => {}}>
+              <Pressable onPress={() => router.push("/gallery")}>
                 <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>
                   Tümünü Gör
                 </Text>
