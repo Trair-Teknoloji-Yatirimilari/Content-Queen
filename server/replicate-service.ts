@@ -50,6 +50,21 @@ class ReplicateService {
     try {
       console.log("[LoRA] Training başlatılıyor:", { zipUrl, destinationModel });
 
+      // Hedef modeli oluştur (yoksa)
+      const [owner, name] = destinationModel.split("/");
+      try {
+        await client.models.create(owner, name, {
+          visibility: "private",
+          hardware: "gpu-t4-nano",
+        });
+        console.log("[LoRA] Model oluşturuldu:", destinationModel);
+      } catch (e: any) {
+        // Model zaten varsa 409 döner, sorun değil
+        if (e?.response?.status !== 409 && !e?.message?.includes("already exists")) {
+          console.log("[LoRA] Model zaten mevcut veya oluşturma atlandı:", e?.message);
+        }
+      }
+
       const training = await client.trainings.create(
         "ostris",
         "flux-dev-lora-trainer",
