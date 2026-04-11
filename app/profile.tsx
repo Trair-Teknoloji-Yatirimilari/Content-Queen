@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, Text, View, Pressable, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { ScreenHeader } from "@/components/screen-header";
 import { useAuth } from "@/lib/auth-context";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -29,12 +30,9 @@ export default function ProfileScreen() {
 
   return (
     <ScreenContainer className="bg-background">
+      <ScreenHeader title="Profilim" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="px-6 py-6 gap-6">
-          {/* Header */}
-          <View className="gap-2">
-            <Text className="text-2xl font-bold text-foreground">Profilim</Text>
-          </View>
+        <View className="px-6 py-4 gap-6">
 
           {/* User Info Card */}
           <View className="bg-surface rounded-2xl p-6 border border-border gap-4">

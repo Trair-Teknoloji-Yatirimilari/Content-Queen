@@ -1,20 +1,15 @@
 import React from "react";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { useRouter } from "expo-router";
+import { ScreenHeader } from "@/components/screen-header";
 import { useColors } from "@/hooks/use-colors";
 
 export default function PrivacyPolicyScreen() {
-  const router = useRouter();
   const colors = useColors();
 
   return (
     <ScreenContainer>
-      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 12 }}>
-        <Pressable onPress={() => router.back()} style={{ padding: 8 }}>
-          <Text style={{ fontSize: 16, color: colors.primary }}>← Geri</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader title="Gizlilik Politikası" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 4 }}>
           Gizlilik Politikası

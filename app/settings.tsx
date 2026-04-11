@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, Switch, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { ScreenHeader } from "@/components/screen-header";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useI18n, type Language } from "@/lib/i18n-context";
@@ -155,15 +156,9 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer className="bg-background">
+      <ScreenHeader title="Ayarlar" />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View className="px-4 py-6 gap-6">
-          {/* Header */}
-          <View className="gap-2">
-            <Text className="text-2xl font-bold text-foreground">Ayarlar</Text>
-            <Text className="text-sm text-muted">
-              Uygulama tercihlerinizi yönetin
-            </Text>
-          </View>
+        <View className="px-4 py-4 gap-6">
 
           {/* Dil Ayarları */}
           <View className="bg-surface rounded-lg border border-border overflow-hidden">

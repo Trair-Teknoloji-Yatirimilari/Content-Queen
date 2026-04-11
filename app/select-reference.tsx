@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ScrollView, Text, View, Pressable, FlatList, Image, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { ScreenHeader } from "@/components/screen-header";
 import * as Haptics from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -45,11 +46,9 @@ export default function SelectReferenceScreen() {
 
   return (
     <ScreenContainer className="bg-background">
+      <ScreenHeader title="Referans Seçin" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="px-6 py-6 gap-6">
-          {/* Header */}
-          <View className="gap-2">
-            <Text className="text-2xl font-bold text-foreground">Referans Secin</Text>
+        <View className="px-6 py-4 gap-6">
             <Text className="text-sm text-muted">
               Asagidaki fotograflardan hangisini kullanmak istiyorsunuz?
             </Text>

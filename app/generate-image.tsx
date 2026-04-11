@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ScrollView, Text, View, Pressable, Image, ActivityIndicator, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { ScreenHeader } from "@/components/screen-header";
 import * as Haptics from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { trpc } from "@/lib/trpc";
@@ -90,12 +91,12 @@ export default function GenerateImageScreen() {
   if (generatedImage) {
     return (
       <ScreenContainer className="bg-background">
+        <ScreenHeader title="Sonuç" showBack={false} />
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-          <View className="px-6 py-6 gap-6 flex-1 justify-center">
-            {/* Generated Image */}
+          <View className="px-6 py-4 gap-6 flex-1 justify-center">
             <View className="gap-2">
-              <Text className="text-2xl font-bold text-foreground text-center">Basarili!</Text>
-              <Text className="text-sm text-muted text-center">Gorseliniz hazirlandi</Text>
+              <Text className="text-2xl font-bold text-foreground text-center">Başarılı!</Text>
+              <Text className="text-sm text-muted text-center">Görseliniz hazırlandı</Text>
             </View>
 
             <View className="rounded-lg overflow-hidden bg-surface border border-border">
@@ -161,15 +162,9 @@ export default function GenerateImageScreen() {
 
   return (
     <ScreenContainer className="bg-background">
+      <ScreenHeader title="Görsel Oluştur" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="px-6 py-6 gap-6 flex-1 justify-center">
-          {/* Header */}
-          <View className="gap-2 items-center">
-            <Text className="text-2xl font-bold text-foreground">Gorsel Olustur</Text>
-            <Text className="text-sm text-muted text-center">
-              Yapay zeka sizin icin benzersiz bir gorsel olusturuyor
-            </Text>
-          </View>
+        <View className="px-6 py-4 gap-6 flex-1 justify-center">
 
           {/* Preview Cards */}
           <View className="gap-3">
