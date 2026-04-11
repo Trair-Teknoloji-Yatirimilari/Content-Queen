@@ -116,8 +116,9 @@ export default function HomeScreen() {
 
         {/* ── Credit Card (overlapping header) ── */}
         <View style={{ paddingHorizontal: 20, marginTop: -32 }}>
-          <View
-            style={{
+          <Pressable
+            onPress={() => router.push("/pricing")}
+            style={({ pressed }) => ({
               backgroundColor: colors.surface,
               borderRadius: 20,
               padding: 20,
@@ -126,7 +127,8 @@ export default function HomeScreen() {
               shadowOpacity: 0.08,
               shadowRadius: 12,
               elevation: 6,
-            }}
+              opacity: pressed ? 0.9 : 1,
+            })}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color={colors.primary} />
@@ -176,7 +178,7 @@ export default function HomeScreen() {
                 </View>
               </View>
             )}
-          </View>
+          </Pressable>
         </View>
 
         {/* ── Quick Actions ── */}
