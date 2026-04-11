@@ -118,34 +118,47 @@ export default function GenerateImageScreen() {
     }
   }, [autoStart, hasStarted, contentImageUri]);
 
+  const downloadImage = async (url: string): Promise<string> => {
+    // XMLHttpRequest ile base64 olarak indir (RN uyumlu)
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = () => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(",")[1];
+          const fileName = `content-queen-${Date.now()}.jpg`;
+          const dest = new File(Paths.cache, fileName);
+          dest.write(base64, { encoding: "base64" } as any);
+          resolve(dest.uri);
+        };
+        reader.readAsDataURL(xhr.response);
+      };
+      xhr.onerror = reject;
+      xhr.responseType = "blob";
+      xhr.open("GET", url, true);
+      xhr.send();
+    });
+  };
+
   const handleSaveToGallery = async () => {
     if (!generatedImage) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const fileName = `content-queen-${Date.now()}.jpg`;
-      const dest = new File(Paths.cache, fileName);
-      
-      // Görseli indir
-      const response = await fetch(generatedImage);
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      dest.write(new Uint8Array(arrayBuffer));
+      const fileUri = await downloadImage(generatedImage);
 
-      // Önce MediaLibrary dene
       try {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === "granted") {
-          await MediaLibrary.saveToLibraryAsync(dest.uri);
+          await MediaLibrary.saveToLibraryAsync(fileUri);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
           return;
         }
       } catch {}
 
-      // Fallback: Sharing
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(dest.uri, { mimeType: "image/jpeg" });
+        await Sharing.shareAsync(fileUri, { mimeType: "image/jpeg" });
       }
     } catch (e) {
       console.error("[Save]", e);
@@ -157,17 +170,11 @@ export default function GenerateImageScreen() {
     if (!generatedImage) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const fileName = `content-queen-share-${Date.now()}.jpg`;
-      const dest = new File(Paths.cache, fileName);
-
-      const response = await fetch(generatedImage);
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      dest.write(new Uint8Array(arrayBuffer));
+      const fileUri = await downloadImage(generatedImage);
 
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(dest.uri, {
+        await Sharing.shareAsync(fileUri, {
           mimeType: "image/jpeg",
           dialogTitle: "Content Queen Görseli",
         });
