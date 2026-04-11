@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Text,
   View,
@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  Animated,
+  Easing,
 } from "react-native";
 import { Image } from "expo-image";
 import { ScreenContainer } from "@/components/screen-container";
@@ -200,59 +202,7 @@ export default function TrainingScreen() {
 
   // ─── TRAINING STATE ───
   if (currentStep === "training") {
-    return (
-      <ScreenContainer>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingHorizontal: 28, gap: 24, alignItems: "center" }}>
-            <View
-              style={{
-                width: 88,
-                height: 88,
-                borderRadius: 44,
-                backgroundColor: "rgba(233,75,143,0.12)",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-            <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground, textAlign: "center" }}>
-              AI Modelin Eğitiliyor
-            </Text>
-            <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
-              Bu işlem 5-10 dakika sürebilir.{"\n"}Uygulamayı kapatabilirsin, hazır olunca bildirim göndereceğiz.
-            </Text>
-
-            <View
-              style={{
-                backgroundColor: colors.surface,
-                borderRadius: 16,
-                padding: 20,
-                width: "100%",
-                gap: 12,
-              }}
-            >
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontSize: 13, color: colors.muted }}>Durum</Text>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>
-                  {loraStatus === "pending" ? "Sırada bekliyor..." : "Eğitiliyor..."}
-                </Text>
-              </View>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontSize: 13, color: colors.muted }}>Fotoğraf sayısı</Text>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
-                  {photos.length}
-                </Text>
-              </View>
-            </View>
-
-            <Pressable onPress={handleReset}>
-              <Text style={{ fontSize: 13, color: colors.error }}>Eğitimi İptal Et</Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </ScreenContainer>
-    );
+    return <TrainingProgressScreen loraStatus={loraStatus} photoCount={photos.length} colors={colors} onCancel={handleReset} />;
   }
 
   // ─── UPLOAD STATE ───
@@ -438,6 +388,219 @@ export default function TrainingScreen() {
                 </Text>
               </>
             )}
+          </Pressable>
+        </View>
+      </ScrollView>
+    </ScreenContainer>
+  );
+}
+
+
+// ─── Training Progress Component ───
+
+interface TrainingProgressProps {
+  loraStatus: string;
+  photoCount: number;
+  colors: ReturnType<typeof useColors>;
+  onCancel: () => void;
+}
+
+const STEPS = [
+  { key: "upload", icon: "📤", label: "Fotoğraflar hazırlanıyor", duration: "~30 sn" },
+  { key: "queue", icon: "⏳", label: "Sıraya alındı", duration: "~1 dk" },
+  { key: "training", icon: "🧠", label: "AI modelin eğitiliyor", duration: "~5-8 dk" },
+  { key: "finalizing", icon: "✨", label: "Model tamamlanıyor", duration: "~1 dk" },
+];
+
+function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel }: TrainingProgressProps) {
+  const spinAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [elapsed, setElapsed] = useState(0);
+
+  const activeStep = loraStatus === "pending" ? 1 : 2;
+
+  useEffect(() => {
+    // Spin animation
+    const spin = Animated.loop(
+      Animated.timing(spinAnim, {
+        toValue: 1,
+        duration: 3000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    spin.start();
+
+    // Pulse animation
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.08, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    pulse.start();
+
+    // Elapsed timer
+    const timer = setInterval(() => setElapsed((p) => p + 1), 1000);
+
+    return () => {
+      spin.stop();
+      pulse.stop();
+      clearInterval(timer);
+    };
+  }, []);
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const spinInterpolate = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <ScreenContainer>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingHorizontal: 28, gap: 28, alignItems: "center" }}>
+          {/* Animated Icon */}
+          <Animated.View
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              backgroundColor: "rgba(233,75,143,0.08)",
+              justifyContent: "center",
+              alignItems: "center",
+              transform: [{ scale: pulseAnim }],
+            }}
+          >
+            <Animated.View style={{ transform: [{ rotate: spinInterpolate }] }}>
+              <Text style={{ fontSize: 44 }}>🧠</Text>
+            </Animated.View>
+          </Animated.View>
+
+          {/* Title */}
+          <View style={{ gap: 6, alignItems: "center" }}>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>
+              AI Modelin Eğitiliyor
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
+              Yapay zeka seni tanımayı öğreniyor.{"\n"}Bu işlem genellikle 5-10 dakika sürer.
+            </Text>
+          </View>
+
+          {/* Timer */}
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 20,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.primary, fontVariant: ["tabular-nums"] }}>
+              ⏱ {formatTime(elapsed)}
+            </Text>
+          </View>
+
+          {/* Steps */}
+          <View style={{ width: "100%", gap: 0 }}>
+            {STEPS.map((step, i) => {
+              const isActive = i === activeStep;
+              const isDone = i < activeStep;
+              const isFuture = i > activeStep;
+
+              return (
+                <View key={step.key} style={{ flexDirection: "row", gap: 14, alignItems: "flex-start" }}>
+                  {/* Line + Dot */}
+                  <View style={{ alignItems: "center", width: 28 }}>
+                    <View
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 14,
+                        backgroundColor: isDone
+                          ? colors.success
+                          : isActive
+                            ? colors.primary
+                            : colors.border,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {isDone ? (
+                        <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>✓</Text>
+                      ) : isActive ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={{ color: "#fff", fontSize: 12 }}>{i + 1}</Text>
+                      )}
+                    </View>
+                    {i < STEPS.length - 1 && (
+                      <View
+                        style={{
+                          width: 2,
+                          height: 32,
+                          backgroundColor: isDone ? colors.success : colors.border,
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  {/* Label */}
+                  <View style={{ flex: 1, paddingBottom: i < STEPS.length - 1 ? 16 : 0 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: isActive ? "700" : "500",
+                        color: isFuture ? colors.muted : colors.foreground,
+                      }}
+                    >
+                      {step.icon} {step.label}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
+                      {isDone ? "Tamamlandı" : isActive ? "Devam ediyor..." : step.duration}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Info Card */}
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 14,
+              padding: 16,
+              width: "100%",
+              gap: 10,
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ fontSize: 12, color: colors.muted }}>Eğitim fotoğrafı</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>{photoCount} adet</Text>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ fontSize: 12, color: colors.muted }}>Model tipi</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>Flux LoRA</Text>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ fontSize: 12, color: colors.muted }}>Tahmini süre</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>5-10 dakika</Text>
+            </View>
+          </View>
+
+          {/* Tip */}
+          <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
+            💡 Uygulamayı kapatabilirsin.{"\n"}Modelin hazır olduğunda bildirim göndereceğiz.
+          </Text>
+
+          <Pressable onPress={onCancel} style={{ padding: 8 }}>
+            <Text style={{ fontSize: 13, color: colors.error }}>Eğitimi İptal Et</Text>
           </Pressable>
         </View>
       </ScrollView>
