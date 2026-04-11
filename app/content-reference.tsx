@@ -3,6 +3,7 @@ import { ScrollView, Text, View, Pressable, Image, Alert, ActivityIndicator } fr
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { trpc } from "@/lib/trpc";
@@ -10,6 +11,7 @@ import { useColors } from "@/hooks/use-colors";
 
 interface ContentReference {
   uri: string;
+  base64: string;
   name: string;
 }
 
@@ -31,8 +33,19 @@ export default function ContentReferenceScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        let b64 = asset.base64;
+
+        // base64 yoksa FileSystem ile oku
+        if (!b64) {
+          b64 = await FileSystem.readAsStringAsync(asset.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+        }
+
         setContentImage({
-          uri: result.assets[0].uri,
+          uri: asset.uri,
+          base64: b64 || "",
           name: "Secilen Gorsel",
         });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -51,14 +64,8 @@ export default function ContentReferenceScreen() {
     setIsUploading(true);
 
     try {
-      // Fotoğrafı base64 olarak oku ve Supabase'e yükle
-      const FileSystem = await import("expo-file-system");
-      const base64 = await FileSystem.readAsStringAsync(contentImage.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
       const result = await uploadMutation.mutateAsync({
-        base64,
+        base64: contentImage.base64,
         photoType: "content",
         fileName: `content-${Date.now()}.jpg`,
       });
