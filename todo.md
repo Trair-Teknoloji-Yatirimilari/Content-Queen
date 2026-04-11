@@ -52,10 +52,10 @@
 
 - [x] Profil ekranını tasarla (kullanıcı bilgileri, istatistikler)
 - [x] Çıkış (logout) işlevselliğini ekle
-- [ ] Ayarlar ekranını tasarla (dil, bildirimler, gizlilik)
-- [ ] Dil seçimi ve i18n entegrasyonunu kur
-- [ ] Bildirim ayarlarını yönet
-- [ ] Hesap silme seçeneğini ekle
+- [x] Ayarlar ekranını tasarla (dil, bildirimler, gizlilik)
+- [x] Dil seçimi ve i18n entegrasyonunu kur
+- [x] Bildirim ayarlarını yönet
+- [x] Hesap silme seçeneğini ekle
 
 ## Fase 7: Push Bildirimleri ve Analitikler
 
