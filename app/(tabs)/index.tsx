@@ -179,37 +179,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ── CTA Button ── */}
-        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-          <Pressable
-            onPress={handleCreateNew}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? "#D93B7F" : colors.primary,
-              paddingVertical: 18,
-              borderRadius: 16,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 8,
-              transform: [{ scale: pressed ? 0.97 : 1 }],
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.3,
-              shadowRadius: 10,
-              elevation: 8,
-            })}
-          >
-            <Text style={{ fontSize: 22 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-              {loraStatus === "ready"
-                ? "Yeni Görsel Oluştur"
-                : loraStatus === "training" || loraStatus === "pending"
-                  ? "Eğitim Devam Ediyor..."
-                  : "AI Modelini Oluştur"}
-            </Text>
-          </Pressable>
-        </View>
-
         {/* ── Quick Actions ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 20, flexDirection: "row", gap: 12 }}>
           <Pressable
@@ -406,6 +375,37 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
+        </View>
+
+        {/* ── CTA Button ── */}
+        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+          <Pressable
+            onPress={handleCreateNew}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "#D93B7F" : colors.primary,
+              paddingVertical: 18,
+              borderRadius: 16,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 8,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3,
+              shadowRadius: 10,
+              elevation: 8,
+            })}
+          >
+            <Text style={{ fontSize: 22 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
+              {loraStatus === "ready"
+                ? "Yeni Görsel Oluştur"
+                : loraStatus === "training" || loraStatus === "pending"
+                  ? "Eğitim Devam Ediyor..."
+                  : "AI Modelini Oluştur"}
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </ScreenContainer>
