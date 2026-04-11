@@ -141,15 +141,19 @@ export default function ImageDetailScreen() {
               <Row label="Kredi" value={`${image.creditsUsed} kredi`} colors={colors} />
             </View>
 
-            {/* Prompt */}
-            {image.prompt && (
-              <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 6 }}>
+            {/* Reference Image */}
+            {image.contentImageUrl && image.contentImageUrl !== "pending" && (
+              <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 8 }}>
                 <Text style={{ fontSize: 12, fontWeight: "600", color: colors.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Prompt
+                  Referans Görsel
                 </Text>
-                <Text style={{ fontSize: 13, color: colors.foreground, lineHeight: 20 }}>
-                  {image.prompt}
-                </Text>
+                <View style={{ borderRadius: 10, overflow: "hidden" }}>
+                  <Image
+                    source={{ uri: image.contentImageUrl }}
+                    style={{ width: "100%", aspectRatio: 16 / 9 }}
+                    contentFit="cover"
+                  />
+                </View>
               </View>
             )}
 
