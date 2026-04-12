@@ -103,6 +103,17 @@ export default function GenerateImageScreen() {
         friendlyMsg = "Sunucularımız şu an yoğun. Lütfen birkaç saniye bekleyip tekrar deneyin.";
       } else if (rawMsg.includes("kredi") || rawMsg.includes("credit") || rawMsg.includes("Insufficient")) {
         friendlyMsg = "Yeterli krediniz yok. Kredi satın alarak devam edebilirsiniz.";
+        setState("error");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Alert.alert(
+          "Krediniz Bitti",
+          "Görsel oluşturmak için kredi satın almanız gerekiyor.",
+          [
+            { text: "İptal", style: "cancel" },
+            { text: "Kredi Satın Al", onPress: () => router.push("/pricing") },
+          ],
+        );
+        return;
       } else if (rawMsg.includes("timeout") || rawMsg.includes("zaman aşımı")) {
         friendlyMsg = "İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.";
       }

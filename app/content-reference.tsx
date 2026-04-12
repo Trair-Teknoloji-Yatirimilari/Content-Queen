@@ -17,6 +17,11 @@ export default function ContentReferenceScreen() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadMutation = trpc.referencePhotos.upload.useMutation();
+  const creditsQuery = trpc.credits.getCredits.useQuery();
+
+  const remainingCredit = creditsQuery.data
+    ? creditsQuery.data.totalCredits - creditsQuery.data.usedCredits
+    : 0;
 
   const pickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -47,6 +52,21 @@ export default function ContentReferenceScreen() {
 
   const handleGenerate = async () => {
     if (!imageBase64) return;
+
+    // Kredi kontrolü
+    if (remainingCredit < 1) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        "Krediniz Bitti",
+        "Görsel oluşturmak için kredi satın almanız gerekiyor.",
+        [
+          { text: "İptal", style: "cancel" },
+          { text: "Kredi Satın Al", onPress: () => router.push("/pricing") },
+        ],
+      );
+      return;
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsUploading(true);
 
