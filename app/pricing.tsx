@@ -6,6 +6,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
+import { CREDIT_AMOUNTS } from "@/lib/purchases";
 
 type Tab = "credits" | "subscription";
 

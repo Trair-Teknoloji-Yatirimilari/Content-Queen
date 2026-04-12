@@ -19,6 +19,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+import { initPurchases } from "@/lib/purchases";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { I18nProvider, useI18n } from "@/lib/i18n-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -86,6 +87,7 @@ export default function RootLayout() {
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
     initManusRuntime();
+    initPurchases();
   }, []);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
