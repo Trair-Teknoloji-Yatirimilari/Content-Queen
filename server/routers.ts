@@ -204,6 +204,7 @@ export const appRouter = router({
         await db.updateUserLoRA(ctx.user.id, {
           loraStatus: "ready",
           loraModelVersion: result.modelVersion,
+          loraModelUrl: result.weightsUrl || null,
           loraTrainedAt: new Date(),
         });
       } else if (result.status === "failed") {
@@ -349,11 +350,12 @@ export const appRouter = router({
           let result;
 
           if (user?.loraStatus === "ready" && user.loraModelVersion) {
-            // LoRA ile üret (profesyonel mod)
+            // LoRA + ControlNet ile üret (profesyonel mod)
             result = await replicateService.generateWithLoRA(
               user.loraModelVersion,
               input.contentImageUrl,
               input.prompt,
+              { loraWeightsUrl: user.loraModelUrl || undefined },
             );
           } else {
             // Standart Flux ile üret (fallback)

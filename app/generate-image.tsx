@@ -46,7 +46,7 @@ export default function GenerateImageScreen() {
       const result = await createMutation.mutateAsync({
         contentImageUrl: contentImageUri,
         faceImageUrl: contentImageUri,
-        prompt: "A photo of TOK person in the exact same pose, location, lighting and composition as the reference image. Photorealistic, professional photography.",
+        prompt: "exact same pose, same angle, same body position, same background, same lighting. Photorealistic, high quality, professional photography, 8k, detailed.",
         style: "Professional",
       });
 
@@ -85,7 +85,7 @@ export default function GenerateImageScreen() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           } else if (status?.status === "failed") {
             stopPolling();
-            setErrorMessage(status.error || "Görsel oluşturulamadı");
+            setErrorMessage(status.error ? "Görsel oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin." : "Görsel oluşturulamadı");
             setState("error");
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           }
@@ -95,7 +95,17 @@ export default function GenerateImageScreen() {
       }, 1000);
     } catch (error: any) {
       stopPolling();
-      setErrorMessage(error.message || "Bir hata oluştu");
+      // Kullanıcı dostu hata mesajları
+      const rawMsg = error?.message || "";
+      let friendlyMsg = "Görsel oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin.";
+      if (rawMsg.includes("429") || rawMsg.includes("throttled") || rawMsg.includes("rate limit")) {
+        friendlyMsg = "Sunucularımız şu an yoğun. Lütfen birkaç saniye bekleyip tekrar deneyin.";
+      } else if (rawMsg.includes("kredi") || rawMsg.includes("credit") || rawMsg.includes("Insufficient")) {
+        friendlyMsg = "Yeterli krediniz yok. Kredi satın alarak devam edebilirsiniz.";
+      } else if (rawMsg.includes("timeout") || rawMsg.includes("zaman aşımı")) {
+        friendlyMsg = "İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.";
+      }
+      setErrorMessage(friendlyMsg);
       setState("error");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }

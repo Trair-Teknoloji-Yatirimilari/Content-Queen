@@ -191,6 +191,21 @@ export default function TrainingScreen() {
                 Görsel Oluştur
               </Text>
             </Pressable>
+            <Pressable
+              onPress={handleReset}
+              style={({ pressed }) => ({
+                paddingVertical: 12,
+                paddingHorizontal: 32,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                Modeli Güncelle
+              </Text>
+            </Pressable>
             <Pressable onPress={() => router.replace("/(tabs)")}>
               <Text style={{ fontSize: 14, color: colors.muted }}>Ana Sayfaya Dön</Text>
             </Pressable>

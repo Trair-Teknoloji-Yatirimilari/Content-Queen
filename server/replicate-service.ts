@@ -13,6 +13,7 @@ export interface TrainingResult {
   trainingId: string;
   status: "pending" | "training" | "ready" | "failed";
   modelVersion?: string;
+  weightsUrl?: string;
   error?: string;
 }
 
@@ -121,6 +122,7 @@ class ReplicateService {
         trainingId: training.id,
         status: this.mapTrainingStatus(training.status),
         modelVersion: (training as any).output?.version ?? undefined,
+        weightsUrl: (training as any).output?.weights ?? undefined,
         error: training.error as string | undefined,
       };
     } catch (error) {
@@ -170,6 +172,7 @@ class ReplicateService {
       width?: number;
       height?: number;
       loraScale?: number;
+      loraWeightsUrl?: string;
       steps?: number;
       guidance?: number;
     },
@@ -177,23 +180,28 @@ class ReplicateService {
     const client = this.getClient();
 
     try {
-      console.log("[Generate] LoRA ile görsel üretimi:", {
-        loraModelVersion: loraModelVersion.substring(0, 30) + "...",
+      console.log("[Generate] LoRA + ControlNet ile görsel üretimi:", {
+        loraModelVersion: loraModelVersion.substring(0, 40) + "...",
         prompt: prompt.substring(0, 50) + "...",
       });
 
-      // LoRA modeli ile prediction oluştur
+      // xlabs-ai/flux-dev-controlnet: LoRA + Depth ControlNet birlikte
+      // Depth map referans fotoğraftan otomatik çıkarılır (DepthAnything)
+      // LoRA yüz/vücut benzerliğini sağlar
       const prediction = await client.predictions.create({
-        version: loraModelVersion,
+        model: "xlabs-ai/flux-dev-controlnet",
         input: {
-          prompt: `a photo of TOK ${prompt}`,
-          image: referenceImageUrl,
-          num_outputs: 1,
-          num_inference_steps: options?.steps ?? 28,
+          prompt: `a photo of TOK person, ${prompt}`,
+          control_image: referenceImageUrl,
+          control_type: "depth",
+          control_strength: 0.65,
+          lora_url: options?.loraWeightsUrl || "",
+          lora_strength: 1.0,
+          steps: options?.steps ?? 30,
           guidance_scale: options?.guidance ?? 3.5,
-          lora_scale: options?.loraScale ?? 0.8,
           output_format: "webp",
-          output_quality: 90,
+          output_quality: 95,
+          negative_prompt: "low quality, ugly, distorted, blurry, wrong pose, different angle",
         },
       });
 
@@ -204,13 +212,40 @@ class ReplicateService {
         status: this.mapJobStatus(prediction.status),
         imageUrl: this.extractImageUrl(prediction.output),
       };
-    } catch (error) {
-      console.error("[Generate] LoRA görsel üretim hatası:", error);
-      return {
-        jobId: "",
-        status: "failed",
-        error: error instanceof Error ? error.message : "Görsel üretilemedi",
-      };
+    } catch (error: any) {
+      console.error("[Generate] LoRA+ControlNet hatası:", error?.message);
+
+      // Fallback: LoRA-only generation (ControlNet başarısız olursa)
+      console.log("[Generate] Fallback: LoRA-only deneniyor...");
+      try {
+        const prediction = await client.predictions.create({
+          version: loraModelVersion,
+          input: {
+            prompt: `a photo of TOK person, ${prompt}`,
+            image: referenceImageUrl,
+            num_outputs: 1,
+            num_inference_steps: options?.steps ?? 30,
+            guidance_scale: options?.guidance ?? 3.5,
+            lora_scale: options?.loraScale ?? 0.95,
+            prompt_strength: 0.55,
+            output_format: "webp",
+            output_quality: 95,
+          },
+        });
+
+        return {
+          jobId: prediction.id,
+          status: this.mapJobStatus(prediction.status),
+          imageUrl: this.extractImageUrl(prediction.output),
+        };
+      } catch (fallbackError: any) {
+        console.error("[Generate] Fallback da başarısız:", fallbackError?.message);
+        return {
+          jobId: "",
+          status: "failed",
+          error: error?.message || "Görsel üretilemedi",
+        };
+      }
     }
   }
 

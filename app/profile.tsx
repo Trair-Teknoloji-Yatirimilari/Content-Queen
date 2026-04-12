@@ -108,6 +108,21 @@ export default function ProfileScreen() {
             {trainingQuery.data?.loraTrainedAt && (
               <Row label="Eğitim Tarihi" value={new Date(trainingQuery.data.loraTrainedAt).toLocaleDateString("tr-TR")} colors={colors} />
             )}
+            <Pressable
+              onPress={() => router.push("/training")}
+              style={({ pressed }) => ({
+                backgroundColor: colors.primary,
+                paddingVertical: 10,
+                borderRadius: 10,
+                alignItems: "center",
+                marginTop: 4,
+                opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "600", color: "#fff" }}>
+                {loraStatus === "ready" ? "Modeli Güncelle" : "AI Model Oluştur"}
+              </Text>
+            </Pressable>
           </View>
 
           {/* Links */}
