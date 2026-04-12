@@ -9,7 +9,12 @@ import Purchases, {
 } from "react-native-purchases";
 import { Platform } from "react-native";
 
-const REVENUECAT_API_KEY = "appl_MXpxxMyfsyQiUPxPqauVEBgOukK";
+const REVENUECAT_API_KEY_PRODUCTION = "appl_MXpxxMyfsyQiUPxPqauVEBgOukK";
+const REVENUECAT_API_KEY_TEST = "test_XcwALNssakPzsaFhvSdmrKczXfK";
+
+// Expo Go'da test key, development/production build'de production key
+const isExpoGo = !global.nativeModuleProxy;
+const REVENUECAT_API_KEY = __DEV__ ? REVENUECAT_API_KEY_TEST : REVENUECAT_API_KEY_PRODUCTION;
 
 // Product IDs matching App Store Connect
 export const PRODUCT_IDS = {
@@ -37,7 +42,7 @@ export async function initPurchases(userId?: string): Promise<void> {
   if (isInitialized) return;
 
   try {
-    Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
 
     await Purchases.configure({
       apiKey: REVENUECAT_API_KEY,
@@ -47,7 +52,8 @@ export async function initPurchases(userId?: string): Promise<void> {
     isInitialized = true;
     console.log("[Purchases] Initialized");
   } catch (error) {
-    console.error("[Purchases] Init failed:", error);
+    // Expo Go'da sessizce fail et
+    console.warn("[Purchases] Init skipped (Expo Go):", (error as any)?.message?.substring(0, 50));
   }
 }
 

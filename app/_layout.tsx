@@ -32,7 +32,7 @@ export const unstable_settings = {
 };
 
 function RootLayoutNav() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoading } = useAuth();
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function RootLayoutNav() {
     }
   };
 
-  if (onboardingDone === null) {
+  if (onboardingDone === null || isLoading) {
     return null;
   }
 

@@ -7,7 +7,8 @@ import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { trpc } from "@/lib/trpc";
-import { saveImageToGallery, shareImage } from "@/lib/image-utils";
+import { saveImageToGallery, shareImage, shareToInstagramStories, isInstagramInstalled } from "@/lib/image-utils";
+import { hasActiveSubscription } from "@/lib/purchases";
 
 type ScreenState = "preview" | "generating" | "success" | "error";
 
@@ -147,6 +148,37 @@ export default function GenerateImageScreen() {
     }
   };
 
+  const handleInstagramShare = async () => {
+    if (!generatedImage) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Premium kontrolü
+    const isPremium = await hasActiveSubscription();
+    if (!isPremium) {
+      Alert.alert(
+        "Premium Özellik 👑",
+        "Instagram'da direkt paylaşım Pro ve Premium abonelere özeldir.",
+        [
+          { text: "İptal" },
+          { text: "Paketleri Gör", onPress: () => router.push("/pricing") },
+        ],
+      );
+      return;
+    }
+
+    const installed = await isInstagramInstalled();
+    if (!installed) {
+      Alert.alert("Instagram Bulunamadı", "Instagram uygulaması yüklü değil.");
+      return;
+    }
+
+    const shared = await shareToInstagramStories(generatedImage);
+    if (!shared) {
+      // Fallback: normal paylaşım
+      await shareImage(generatedImage);
+    }
+  };
+
   // ─── SUCCESS ───
   if (state === "success" && generatedImage) {
     return (
@@ -187,6 +219,27 @@ export default function GenerateImageScreen() {
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>📤 Paylaş</Text>
               </Pressable>
             </View>
+
+            {/* Instagram Stories — Premium */}
+            <Pressable
+              onPress={handleInstagramShare}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                paddingVertical: 14,
+                borderRadius: 14,
+                backgroundColor: pressed ? "#C13584" : "#E1306C",
+                transform: [{ scale: pressed ? 0.97 : 1 }],
+              })}
+            >
+              <Text style={{ fontSize: 16 }}>📷</Text>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>Instagram'da Paylaş</Text>
+              <View style={{ backgroundColor: "rgba(255,255,255,0.25)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>PRO</Text>
+              </View>
+            </Pressable>
 
             <Pressable
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.replace("/(tabs)"); }}

@@ -115,3 +115,59 @@ export async function shareImage(url: string): Promise<boolean> {
     return false;
   }
 }
+
+
+/**
+ * Share image directly to Instagram Stories (premium feature).
+ * Uses Instagram's custom URL scheme.
+ */
+export async function shareToInstagramStories(url: string): Promise<boolean> {
+  try {
+    const { uri } = await downloadImageAsBase64(url);
+
+    if (Platform.OS === "ios") {
+      const Linking = await import("expo-linking");
+
+      // Instagram Stories URL scheme
+      // Requires the image to be in the pasteboard
+      const canOpen = await Linking.canOpenURL("instagram-stories://share");
+      if (!canOpen) {
+        return false;
+      }
+
+      // iOS: Use Sharing to send to Instagram
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "image/jpeg",
+          UTI: "com.instagram.sharedSticker.backgroundImage",
+        });
+        return true;
+      }
+    }
+
+    // Fallback: open Instagram with share sheet
+    const canShare = await Sharing.isAvailableAsync();
+    if (canShare) {
+      await Sharing.shareAsync(uri, { mimeType: "image/jpeg" });
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("[ImageUtils] Instagram share failed:", error);
+    return false;
+  }
+}
+
+/**
+ * Check if Instagram is installed.
+ */
+export async function isInstagramInstalled(): Promise<boolean> {
+  try {
+    const Linking = await import("expo-linking");
+    return await Linking.canOpenURL("instagram://");
+  } catch {
+    return false;
+  }
+}
