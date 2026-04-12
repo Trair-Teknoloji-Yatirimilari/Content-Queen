@@ -133,19 +133,19 @@ export default function HomeScreen() {
             {isLoading ? (
               <ActivityIndicator size="small" color={colors.primary} />
             ) : (
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <View>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <View style={{ flex: 1, alignItems: "center" }}>
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
                     Kalan Kredi
                   </Text>
-                  <Text style={{ fontSize: 32, fontWeight: "800", color: colors.primary, marginTop: 2 }}>
+                  <Text style={{ fontSize: 32, fontWeight: "800", color: colors.primary, marginTop: 6 }}>
                     {remainingCredit}
                   </Text>
                 </View>
-                <View style={{ height: 40, width: 1, backgroundColor: colors.border }} />
-                <View style={{ alignItems: "center" }}>
+                <View style={{ height: 40, width: 1, backgroundColor: colors.border, marginTop: 4 }} />
+                <View style={{ flex: 1, alignItems: "center" }}>
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                    Paket
+                    Plan
                   </Text>
                   <View
                     style={{
@@ -167,12 +167,12 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                 </View>
-                <View style={{ height: 40, width: 1, backgroundColor: colors.border }} />
-                <View style={{ alignItems: "center" }}>
+                <View style={{ height: 40, width: 1, backgroundColor: colors.border, marginTop: 4 }} />
+                <View style={{ flex: 1, alignItems: "center" }}>
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
                     Oluşturulan
                   </Text>
-                  <Text style={{ fontSize: 22, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>
+                  <Text style={{ fontSize: 22, fontWeight: "700", color: colors.foreground, marginTop: 6 }}>
                     {recentImages.length}
                   </Text>
                 </View>

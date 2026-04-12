@@ -24,9 +24,9 @@ const FALLBACK_CREDITS = [
 ];
 
 const FALLBACK_SUBS = [
-  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "30 kredi/ay", features: ["30 görsel/ay", "Standart kalite", "E-posta destek"] },
-  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "100 kredi/ay", popular: true, features: ["100 görsel/ay", "Yüksek kalite", "Öncelikli işlem", "7/24 destek"] },
-  { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "Sınırsız", features: ["Sınırsız görsel", "En yüksek kalite", "Öncelikli işlem", "Özel destek", "Erken erişim"] },
+  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "30 kredi/ay", features: ["Ayda 30 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "100 kredi/ay", popular: true, features: ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "Sınırsız", features: ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "En yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"] },
 ];
 
 export default function PricingScreen() {
@@ -207,8 +207,8 @@ export default function PricingScreen() {
                     {purchasing === item.id ? (
                       <ActivityIndicator color={colors.primary} />
                     ) : (
-                      <View style={{ backgroundColor: item.popular ? colors.primary : colors.foreground, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 }}>
-                        <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{item.price}</Text>
+                      <View style={{ backgroundColor: item.popular ? colors.primary : "#fff", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: item.popular ? 0 : 1, borderColor: colors.border }}>
+                        <Text style={{ fontSize: 16, fontWeight: "700", color: item.popular ? "#fff" : colors.foreground }}>{item.price}</Text>
                       </View>
                     )}
                   </View>
@@ -232,10 +232,10 @@ export default function PricingScreen() {
                 credits: p.identifier === "sub_basic" ? "30 kredi/ay" : p.identifier === "sub_pro" ? "100 kredi/ay" : "Sınırsız",
                 popular: p.identifier === "sub_pro",
                 features: p.identifier === "sub_basic"
-                  ? ["30 görsel/ay", "Standart kalite", "E-posta destek"]
+                  ? ["Ayda 30 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
                   : p.identifier === "sub_pro"
-                    ? ["100 görsel/ay", "Yüksek kalite", "Öncelikli işlem", "7/24 destek"]
-                    : ["Sınırsız görsel", "En yüksek kalite", "Öncelikli işlem", "Özel destek", "Erken erişim"],
+                    ? ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
+                    : ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "En yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],
                 pkg: p,
               }))).map((plan: any) => (
                 <Pressable
@@ -270,8 +270,8 @@ export default function PricingScreen() {
                       </View>
                     ))}
                   </View>
-                  <View style={{ backgroundColor: plan.popular ? colors.primary : colors.foreground, paddingVertical: 12, borderRadius: 12, alignItems: "center" }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>Abone Ol</Text>
+                  <View style={{ backgroundColor: plan.popular ? colors.primary : "#fff", paddingVertical: 12, borderRadius: 12, alignItems: "center", borderWidth: plan.popular ? 0 : 1, borderColor: colors.border }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: plan.popular ? "#fff" : colors.foreground }}>Abone Ol</Text>
                   </View>
                 </Pressable>
               ))}
