@@ -215,7 +215,8 @@ export default function PricingScreen() {
                 </Pressable>
               ))}
               <Text style={{ fontSize: 11, color: colors.muted, textAlign: "center", lineHeight: 16, marginTop: 4 }}>
-                Krediler süresiz geçerlidir. Her görsel oluşturma 1 kredi harcar.
+                Krediler süresiz geçerlidir. Her görsel oluşturma 1 kredi harcar.{"\n"}
+                Ödeme, satın alma onaylandığında Apple ID hesabınızdan tahsil edilir.
               </Text>
             </View>
           )}
@@ -278,6 +279,18 @@ export default function PricingScreen() {
               <Text style={{ fontSize: 11, color: colors.muted, textAlign: "center", lineHeight: 16, marginTop: 4 }}>
                 Abonelikler otomatik yenilenir. İstediğiniz zaman iptal edebilirsiniz.
               </Text>
+
+              {/* Apple Required Subscription Disclosures */}
+              <View style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, gap: 8, marginTop: 4, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>Abonelik Bilgileri</Text>
+                <Text style={{ fontSize: 11, color: colors.muted, lineHeight: 17 }}>
+                  • Ödeme, satın alma onaylandığında Apple ID hesabınızdan tahsil edilir.{"\n"}
+                  • Abonelik, mevcut dönemin bitiminden en az 24 saat önce iptal edilmediği sürece otomatik olarak yenilenir.{"\n"}
+                  • Yenileme ücreti, mevcut dönemin bitiminden önceki 24 saat içinde hesabınızdan tahsil edilir.{"\n"}
+                  • Aboneliğinizi satın alma sonrasında Ayarlar → Apple ID → Abonelikler bölümünden yönetebilir ve iptal edebilirsiniz.{"\n"}
+                  • Ücretsiz deneme süresi sunulması halinde, kullanılmayan kısım abonelik satın alındığında geçerliliğini yitirir.
+                </Text>
+              </View>
             </View>
           )}
 
@@ -285,6 +298,16 @@ export default function PricingScreen() {
           <Pressable onPress={handleRestore} style={{ alignItems: "center", padding: 12 }}>
             <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>Satın Almaları Geri Yükle</Text>
           </Pressable>
+
+          {/* Legal Links — Apple Required */}
+          <View style={{ flexDirection: "row", justifyContent: "center", gap: 16, paddingBottom: 8 }}>
+            <Pressable onPress={() => router.push("/terms-of-service")}>
+              <Text style={{ fontSize: 12, color: colors.muted, textDecorationLine: "underline" }}>Kullanım Şartları</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push("/privacy-policy")}>
+              <Text style={{ fontSize: 12, color: colors.muted, textDecorationLine: "underline" }}>Gizlilik Politikası</Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </ScreenContainer>
