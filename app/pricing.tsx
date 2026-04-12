@@ -29,16 +29,16 @@ interface SubscriptionPlan {
 }
 
 const CREDIT_PACKAGES: CreditPackage[] = [
-  { id: "credits_10", credits: 10, price: "₺29", pricePerCredit: "₺2.90" },
-  { id: "credits_50", credits: 50, price: "₺99", pricePerCredit: "₺1.98", popular: true, savings: "%32 tasarruf" },
-  { id: "credits_150", credits: 150, price: "₺199", pricePerCredit: "₺1.33", savings: "%54 tasarruf" },
+  { id: "credits_10", credits: 10, price: "$2.99", pricePerCredit: "$0.30" },
+  { id: "credits_50", credits: 50, price: "$9.99", pricePerCredit: "$0.20", popular: true, savings: "%33 tasarruf" },
+  { id: "credits_150", credits: 150, price: "$19.99", pricePerCredit: "$0.13", savings: "%56 tasarruf" },
 ];
 
 const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "sub_basic",
-    name: "Başlangıç",
-    price: "₺79",
+    name: "Basic",
+    price: "$4.99",
     period: "/ay",
     credits: "30 kredi/ay",
     features: ["30 görsel/ay", "Standart kalite", "E-posta destek"],
@@ -46,7 +46,7 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "sub_pro",
     name: "Pro",
-    price: "₺149",
+    price: "$9.99",
     period: "/ay",
     credits: "100 kredi/ay",
     popular: true,
@@ -55,7 +55,7 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "sub_premium",
     name: "Premium",
-    price: "₺299",
+    price: "$19.99",
     period: "/ay",
     credits: "Sınırsız",
     features: ["Sınırsız görsel", "En yüksek kalite", "Öncelikli işlem", "Özel destek", "Erken erişim"],
