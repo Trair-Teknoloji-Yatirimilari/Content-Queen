@@ -46,7 +46,6 @@ export default function SettingsScreen() {
   const { signOut, user } = useAuth();
   const deleteAccountMutation = trpc.auth.deleteAccount.useMutation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
 
   useEffect(() => {
     loadSettings();
@@ -55,10 +54,7 @@ export default function SettingsScreen() {
   const loadSettings = async () => {
     try {
       const notif = await AsyncStorage.getItem("content_queen_notifications");
-      const email = await AsyncStorage.getItem("content_queen_email_notifications");
-
       if (notif !== null) setNotificationsEnabled(notif === "true");
-      if (email !== null) setEmailNotifications(email === "true");
     } catch (error) {
       console.error("Ayarlar yükleme hatası:", error);
     }
@@ -67,12 +63,6 @@ export default function SettingsScreen() {
   const handleNotificationsToggle = async (value: boolean) => {
     setNotificationsEnabled(value);
     await AsyncStorage.setItem("content_queen_notifications", String(value));
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const handleEmailNotificationsToggle = async (value: boolean) => {
-    setEmailNotifications(value);
-    await AsyncStorage.setItem("content_queen_email_notifications", String(value));
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
@@ -180,20 +170,7 @@ export default function SettingsScreen() {
                   value={notificationsEnabled}
                   onValueChange={handleNotificationsToggle}
                   trackColor={{ false: "#E5E7EB", true: "#E94B8F" }}
-                  thumbColor={notificationsEnabled ? "#E94B8F" : "#9BA1A6"}
-                />
-              }
-            />
-            <View className="h-px bg-border" />
-            <SettingItem
-              label="E-posta Bildirimleri"
-              value="Haftalık özet ve öneriler"
-              rightElement={
-                <Switch
-                  value={emailNotifications}
-                  onValueChange={handleEmailNotificationsToggle}
-                  trackColor={{ false: "#E5E7EB", true: "#E94B8F" }}
-                  thumbColor={emailNotifications ? "#E94B8F" : "#9BA1A6"}
+                  thumbColor="#FFFFFF"
                 />
               }
             />

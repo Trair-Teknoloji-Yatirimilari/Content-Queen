@@ -2,16 +2,30 @@ import React, { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { trpc } from "./trpc";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Bildirim handler'ı yapılandır
 Notifications.setNotificationHandler({
-  handleNotification: async (notification) => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async () => {
+    // Kullanıcı bildirimleri kapattıysa gösterme
+    const enabled = await AsyncStorage.getItem("content_queen_notifications");
+    if (enabled === "false") {
+      return {
+        shouldShowAlert: false,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
+      };
+    }
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
