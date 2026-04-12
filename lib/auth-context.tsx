@@ -3,6 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
+import { loginPurchases } from "./purchases";
+
 const SESSION_KEY = "cq_session_token";
 const USER_KEY = "cq_user";
 
@@ -65,7 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
       if (token && stored) {
         setSessionToken(token);
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+        loginPurchases(String(parsed.id)).catch(() => {});
       }
     } catch (e) {
       console.error("[Auth] Restore failed:", e);
@@ -79,6 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await setStored(USER_KEY, JSON.stringify(userData));
     setSessionToken(token);
     setUser(userData);
+    // RevenueCat'e kullanıcı ID'sini bildir
+    loginPurchases(String(userData.id)).catch(() => {});
   };
 
   const signOut = async () => {
