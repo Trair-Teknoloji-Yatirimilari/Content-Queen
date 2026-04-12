@@ -10,12 +10,17 @@ class NotificationService {
   private initialized = false;
 
   constructor() {
-    // Firebase Admin SDK'yı başlat (credentials environment'ten alınacak)
+    // Firebase Admin SDK'yı başlat — sadece GOOGLE_APPLICATION_CREDENTIALS varsa
     try {
-      if (!admin.apps.length) {
+      if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !admin.apps.length) {
         admin.initializeApp();
+        this.initialized = true;
+      } else {
+        if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+          console.log("[Notification] Firebase atlandı: GOOGLE_APPLICATION_CREDENTIALS tanımlı değil");
+        }
+        this.initialized = false;
       }
-      this.initialized = true;
     } catch (error) {
       console.warn("Firebase Admin SDK başlatılamadı:", error);
       this.initialized = false;
