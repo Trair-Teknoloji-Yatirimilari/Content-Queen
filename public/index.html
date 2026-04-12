@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Queen — AI ile Profesyonel Görseller</title>
+  <meta name="description" content="Yapay zeka ile kişiye özel profesyonel fotoğraflar oluştur. Fotoğraflarını yükle, referans seç, kraliçe gibi parla.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+  <style>
+    :root {
+      --primary: #E94B8F;
+      --primary-dark: #D93B7F;
+      --primary-glow: rgba(233,75,143,0.25);
+      --purple: #A855F7;
+      --bg: #0F0F0F;
+      --surface: #1A1A2E;
+      --surface2: #252540;
+      --fg: #FFFFFF;
+      --muted: #9CA3AF;
+      --border: rgba(255,255,255,0.08);
+      --radius: 20px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--fg);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--primary); text-decoration: none; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(15,15,15,0.8); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo {
+      font-size: 20px; font-weight: 800;
+      background: linear-gradient(135deg, #E94B8F, #A855F7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: #fff; }
+    .lang-toggle {
+      display: flex; gap: 2px; background: var(--surface); border-radius: 8px; padding: 2px;
+    }
+    .lang-btn {
+      padding: 5px 12px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: transparent; color: var(--muted); transition: all .2s;
+    }
+    .lang-btn.active { background: var(--surface2); color: #fff; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px; position: relative;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; max-width: 700px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 6px 16px; border-radius: 100px; font-size: 13px;
+      color: var(--muted); margin-bottom: 24px;
+    }
+    .hero-badge span { color: var(--primary); }
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 72px); font-weight: 900;
+      line-height: 1.05; margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff 30%, #E94B8F 70%, #A855F7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px; color: var(--muted); max-width: 520px;
+      margin: 0 auto 36px; line-height: 1.7;
+    }
+    .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: #fff; font-size: 16px; font-weight: 700;
+      padding: 16px 36px; border-radius: 14px; border: none; cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 8px 30px var(--primary-glow);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px var(--primary-glow); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: #fff; font-size: 16px; font-weight: 600;
+      padding: 16px 36px; border-radius: 14px; cursor: pointer;
+      transition: transform .2s, background .2s;
+    }
+    .btn-secondary:hover { transform: translateY(-2px); background: var(--surface2); }
+
+    /* ── Phone Mockup ── */
+    .phone-section {
+      padding: 0 24px 100px; display: flex; justify-content: center;
+    }
+    .phone-mockup {
+      width: 280px; height: 560px; background: var(--surface);
+      border-radius: 40px; border: 3px solid var(--surface2);
+      overflow: hidden; position: relative;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
+    }
+    .phone-screen {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+    }
+    .phone-header {
+      background: var(--primary); padding: 48px 20px 36px;
+      border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+    }
+    .phone-header h3 { font-size: 20px; font-weight: 800; color: #fff; }
+    .phone-header p { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+    .phone-body { padding: 16px; flex: 1; }
+    .phone-card {
+      background: var(--surface2); border-radius: 16px; padding: 16px;
+      margin-top: -20px; margin-bottom: 12px;
+      display: flex; justify-content: space-around; text-align: center;
+    }
+    .phone-stat-num { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .phone-stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .phone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .phone-grid-item {
+      aspect-ratio: 1; border-radius: 12px;
+      background: linear-gradient(135deg, var(--surface2), rgba(233,75,143,0.15));
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+    }
+    .phone-cta {
+      margin-top: 12px; background: var(--primary); border-radius: 12px;
+      padding: 12px; text-align: center; font-size: 13px; font-weight: 700; color: #fff;
+    }
+
+    /* ── Features ── */
+    .features {
+      max-width: 1100px; margin: 0 auto; padding: 100px 24px;
+    }
+    .features-header {
+      text-align: center; margin-bottom: 60px;
+    }
+    .features-header h2 {
+      font-size: 36px; font-weight: 800; margin-bottom: 12px;
+    }
+    .features-header p { color: var(--muted); font-size: 16px; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px; transition: transform .3s, border-color .3s;
+    }
+    .feature-card:hover { transform: translateY(-4px); border-color: rgba(233,75,143,0.3); }
+    .feature-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 20px;
+    }
+    .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    /* ── How it works ── */
+    .steps {
+      max-width: 1100px; margin: 0 auto; padding: 100px 24px;
+    }
+    .steps-header { text-align: center; margin-bottom: 60px; }
+    .steps-header h2 { font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+    .steps-header p { color: var(--muted); font-size: 16px; }
+    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .step {
+      text-align: center; position: relative;
+    }
+    .step-number {
+      width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 900; color: #fff;
+    }
+    .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    /* ── Pricing ── */
+    .pricing {
+      max-width: 900px; margin: 0 auto; padding: 100px 24px;
+    }
+    .pricing-header { text-align: center; margin-bottom: 60px; }
+    .pricing-header h2 { font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+    .pricing-header p { color: var(--muted); font-size: 16px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .price-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px; text-align: center;
+      transition: transform .3s, border-color .3s;
+    }
+    .price-card.featured {
+      border-color: var(--primary); position: relative;
+      box-shadow: 0 0 40px var(--primary-glow);
+    }
+    .price-card.featured::before {
+      content: attr(data-badge); position: absolute; top: -12px; left: 50%;
+      transform: translateX(-50%); background: var(--primary);
+      color: #fff; font-size: 11px; font-weight: 700;
+      padding: 4px 14px; border-radius: 100px;
+    }
+    .price-card:hover { transform: translateY(-4px); }
+    .price-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .price-amount { font-size: 40px; font-weight: 900; color: var(--primary); margin: 12px 0; }
+    .price-amount small { font-size: 16px; color: var(--muted); font-weight: 400; }
+    .price-card ul { list-style: none; margin: 20px 0; text-align: left; }
+    .price-card ul li {
+      font-size: 14px; color: var(--muted); padding: 6px 0;
+      padding-left: 24px; position: relative;
+    }
+    .price-card ul li::before {
+      content: '✓'; position: absolute; left: 0;
+      color: var(--primary); font-weight: 700;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center; padding: 100px 24px;
+      position: relative;
+    }
+    .cta-section::before {
+      content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-section h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; position: relative; }
+    .cta-section p { color: var(--muted); font-size: 16px; margin-bottom: 32px; position: relative; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 40px 24px;
+      max-width: 1100px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-left { font-size: 13px; color: var(--muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 13px; color: var(--muted); transition: color .2s; }
+    .footer-links a:hover { color: #fff; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .features-grid, .steps-grid, .pricing-grid { grid-template-columns: 1fr; }
+      .nav-links a:not(.lang-toggle) { display: none; }
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 16px; }
+      footer { flex-direction: column; text-align: center; }
+      .phone-mockup { width: 240px; height: 480px; }
+    }
+
+    /* ── i18n ── */
+    [data-lang="en"] .tr { display: none; }
+    [data-lang="tr"] .en { display: none; }
+  </style>
+</head>
+<body data-lang="tr">
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">👑 Content Queen</div>
+    <div class="nav-links">
+      <a href="#features" class="tr">Özellikler</a>
+      <a href="#features" class="en">Features</a>
+      <a href="#how" class="tr">Nasıl Çalışır</a>
+      <a href="#how" class="en">How It Works</a>
+      <a href="#pricing" class="tr">Fiyatlar</a>
+      <a href="#pricing" class="en">Pricing</a>
+      <a href="/support" class="tr">Destek</a>
+      <a href="/support" class="en">Support</a>
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="setLang('tr')">TR</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span>✦</span>
+      <span class="tr">TrairX Technology tarafından geliştirildi</span>
+      <span class="en">Built by TrairX Technology</span>
+    </div>
+    <h1 class="tr">Kraliçe Gibi<br>Parla ✨</h1>
+    <h1 class="en">Shine Like<br>a Queen ✨</h1>
+    <p class="tr">
+      Fotoğraflarını yükle, yapay zeka seni tanısın.
+      Beğendiğin bir pozu seç, AI seni o fotoğrafın içine yerleştirsin.
+      Profesyonel görseller saniyeler içinde hazır.
+    </p>
+    <p class="en">
+      Upload your photos, let AI learn your look.
+      Pick a pose you love, AI places you right in.
+      Professional images ready in seconds.
+    </p>
+    <div class="hero-buttons">
+      <button class="btn-primary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">
+        <span class="tr">🚀 Hemen Başla</span>
+        <span class="en">🚀 Get Started</span>
+      </button>
+      <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+        <span class="tr">Nasıl Çalışır?</span>
+        <span class="en">How It Works?</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ── Phone Mockup ── -->
+<section class="phone-section">
+  <div class="phone-mockup">
+    <div class="phone-screen">
+      <div class="phone-header">
+        <h3>Content Queen</h3>
+        <p class="tr">Kraliçe gibi parla ✨</p>
+        <p class="en">Shine like a queen ✨</p>
+      </div>
+      <div class="phone-body">
+        <div class="phone-card">
+          <div>
+            <div class="phone-stat-num">3</div>
+            <div class="phone-stat-label tr">Kalan Kredi</div>
+            <div class="phone-stat-label en">Credits</div>
+          </div>
+          <div>
+            <div class="phone-stat-num" style="color:#fff;font-size:14px;padding-top:4px">Free</div>
+            <div class="phone-stat-label tr">Paket</div>
+            <div class="phone-stat-label en">Plan</div>
+          </div>
+          <div>
+            <div class="phone-stat-num" style="color:#fff">12</div>
+            <div class="phone-stat-label tr">Oluşturulan</div>
+            <div class="phone-stat-label en">Created</div>
+          </div>
+        </div>
+        <div class="phone-grid">
+          <div class="phone-grid-item">📸</div>
+          <div class="phone-grid-item">✨</div>
+          <div class="phone-grid-item">👑</div>
+          <div class="phone-grid-item">🎨</div>
+          <div class="phone-grid-item">💫</div>
+          <div class="phone-grid-item">🌟</div>
+        </div>
+        <div class="phone-cta">
+          <span class="tr">✦ Yeni Görsel Oluştur</span>
+          <span class="en">✦ Create New Image</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section class="features" id="features">
+  <div class="features-header">
+    <h2 class="tr">Neden Content Queen?</h2>
+    <h2 class="en">Why Content Queen?</h2>
+    <p class="tr">İçerik üreticileri için tasarlandı</p>
+    <p class="en">Designed for content creators</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(233,75,143,0.1)">🧠</div>
+      <h3 class="tr">Kişiye Özel AI Model</h3>
+      <h3 class="en">Personal AI Model</h3>
+      <p class="tr">Fotoğraflarını yükle, yapay zeka yüzünü, vücut tipini ve tarzını öğrensin. Sana özel bir model oluşturulsun.</p>
+      <p class="en">Upload your photos, let AI learn your face, body type, and style. A custom model is created just for you.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(168,85,247,0.1)">✨</div>
+      <h3 class="tr">Profesyonel Görseller</h3>
+      <h3 class="en">Professional Images</h3>
+      <p class="tr">Pinterest'ten beğendiğin bir pozu seç, AI seni o fotoğrafın içine yerleştirsin. Sanki orada çekilmiş gibi.</p>
+      <p class="en">Pick a pose from Pinterest, AI places you right in. Looks like you were actually there.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(52,199,89,0.1)">⚡</div>
+      <h3 class="tr">30 Saniyede Hazır</h3>
+      <h3 class="en">Ready in 30 Seconds</h3>
+      <p class="tr">Fotoğraf çekimi için saatler harcama. Referans seç, butona bas, profesyonel görselin saniyeler içinde hazır.</p>
+      <p class="en">No more hours of photoshoots. Pick a reference, tap the button, your professional image is ready in seconds.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(255,149,0,0.1)">📱</div>
+      <h3 class="tr">Sosyal Medya İçin</h3>
+      <h3 class="en">Made for Social Media</h3>
+      <p class="tr">Instagram, TikTok, LinkedIn — her platform için mükemmel görseller. Direkt paylaş veya indir.</p>
+      <p class="en">Instagram, TikTok, LinkedIn — perfect images for every platform. Share directly or download.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(0,122,255,0.1)">🔒</div>
+      <h3 class="tr">Güvenli ve Gizli</h3>
+      <h3 class="en">Secure and Private</h3>
+      <p class="tr">Fotoğrafların şifrelenmiş sunucularda saklanır. GDPR uyumlu. İstediğin zaman tüm verilerini silebilirsin.</p>
+      <p class="en">Your photos are stored on encrypted servers. GDPR compliant. Delete all your data anytime you want.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(233,75,143,0.1)">💰</div>
+      <h3 class="tr">Uygun Fiyat</h3>
+      <h3 class="en">Affordable</h3>
+      <p class="tr">Profesyonel fotoğraf çekimi binlerce lira. Content Queen ile görsel başına sadece birkaç lira öde.</p>
+      <p class="en">Professional photoshoots cost thousands. With Content Queen, pay just a few dollars per image.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ── -->
+<section class="steps" id="how">
+  <div class="steps-header">
+    <h2 class="tr">Nasıl Çalışır?</h2>
+    <h2 class="en">How It Works?</h2>
+    <p class="tr">3 basit adımda profesyonel görseller</p>
+    <p class="en">Professional images in 3 simple steps</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3 class="tr">Fotoğraflarını Yükle</h3>
+      <h3 class="en">Upload Your Photos</h3>
+      <p class="tr">5-10 fotoğrafını yükle. Yapay zeka yüzünü, vücut tipini ve tarzını öğrensin. Bu işlem sadece bir kez yapılır.</p>
+      <p class="en">Upload 5-10 photos. AI learns your face, body type, and style. This only needs to be done once.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3 class="tr">Referans Seç</h3>
+      <h3 class="en">Pick a Reference</h3>
+      <p class="tr">Pinterest'ten veya sosyal medyadan beğendiğin bir pozu seç. AI seni o fotoğrafın içine yerleştirecek.</p>
+      <p class="en">Pick a pose from Pinterest or social media. AI will place you right into that photo.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3 class="tr">Kraliçe Gibi Parla</h3>
+      <h3 class="en">Shine Like a Queen</h3>
+      <p class="tr">30 saniye bekle, profesyonel görselin hazır. İndir, paylaş, sosyal medyanda fark yarat.</p>
+      <p class="en">Wait 30 seconds, your professional image is ready. Download, share, stand out on social media.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ── -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header">
+    <h2 class="tr">Fiyatlandırma</h2>
+    <h2 class="en">Pricing</h2>
+    <p class="tr">Her bütçeye uygun paketler</p>
+    <p class="en">Plans for every budget</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <h3 class="tr">Başlangıç</h3>
+      <h3 class="en">Starter</h3>
+      <div class="price-amount">$2.99 <small class="tr">/ 10 kredi</small><small class="en">/ 10 credits</small></div>
+      <ul>
+        <li class="tr">10 görsel oluşturma hakkı</li>
+        <li class="en">10 image generations</li>
+        <li class="tr">Kişiye özel AI model</li>
+        <li class="en">Personal AI model</li>
+        <li class="tr">Yüksek çözünürlük</li>
+        <li class="en">High resolution</li>
+        <li class="tr">Sınırsız indirme</li>
+        <li class="en">Unlimited downloads</li>
+      </ul>
+    </div>
+    <div class="price-card featured" data-badge="⭐ Popüler">
+      <h3 class="tr">Pro</h3>
+      <h3 class="en">Pro</h3>
+      <div class="price-amount">$9.99 <small class="tr">/ 50 kredi</small><small class="en">/ 50 credits</small></div>
+      <ul>
+        <li class="tr">50 görsel oluşturma hakkı</li>
+        <li class="en">50 image generations</li>
+        <li class="tr">Kişiye özel AI model</li>
+        <li class="en">Personal AI model</li>
+        <li class="tr">Yüksek çözünürlük</li>
+        <li class="en">High resolution</li>
+        <li class="tr">Instagram direkt paylaşım</li>
+        <li class="en">Direct Instagram sharing</li>
+        <li class="tr">Öncelikli işlem sırası</li>
+        <li class="en">Priority processing</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <h3 class="tr">Premium</h3>
+      <h3 class="en">Premium</h3>
+      <div class="price-amount">$19.99 <small class="tr">/ 150 kredi</small><small class="en">/ 150 credits</small></div>
+      <ul>
+        <li class="tr">150 görsel oluşturma hakkı</li>
+        <li class="en">150 image generations</li>
+        <li class="tr">Kişiye özel AI model</li>
+        <li class="en">Personal AI model</li>
+        <li class="tr">En yüksek çözünürlük</li>
+        <li class="en">Highest resolution</li>
+        <li class="tr">Instagram direkt paylaşım</li>
+        <li class="en">Direct Instagram sharing</li>
+        <li class="tr">Öncelikli işlem sırası</li>
+        <li class="en">Priority processing</li>
+        <li class="tr">Özel destek</li>
+        <li class="en">Dedicated support</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <h2 class="tr">Hazır mısın? 👑</h2>
+  <h2 class="en">Ready? 👑</h2>
+  <p class="tr">3 ücretsiz kredi ile hemen dene. Kredi kartı gerekmez.</p>
+  <p class="en">Try now with 3 free credits. No credit card required.</p>
+  <button class="btn-primary" style="position:relative">
+    <span class="tr">📲 Uygulamayı İndir</span>
+    <span class="en">📲 Download the App</span>
+  </button>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-left">
+    <span style="font-weight:700;color:#fff">TrairX Technology</span> O.Ü. © 2026 — Estonia
+  </div>
+  <div class="footer-links">
+    <a href="/support" class="tr">Destek</a>
+    <a href="/support" class="en">Support</a>
+    <a href="/privacy" class="tr">Gizlilik Politikası</a>
+    <a href="/privacy" class="en">Privacy Policy</a>
+    <a href="/terms" class="tr">Kullanım Şartları</a>
+    <a href="/terms" class="en">Terms of Service</a>
+    <a href="mailto:hello@trairx.com" class="tr">İletişim</a>
+    <a href="mailto:hello@trairx.com" class="en">Contact</a>
+  </div>
+</footer>
+
+<script>
+  function setLang(lang) {
+    document.body.setAttribute('data-lang', lang);
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.lang-btn[onclick="setLang(\'' + lang + '\')"]').classList.add('active');
+    // Update featured badge
+    const featured = document.querySelector('.price-card.featured');
+    if (featured) featured.setAttribute('data-badge', lang === 'tr' ? '⭐ Popüler' : '⭐ Popular');
+  }
+  // Default to English
+  setLang('en');
+</script>
+
+</body>
+</html>

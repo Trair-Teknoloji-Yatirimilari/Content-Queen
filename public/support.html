@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Queen — Support</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+  <style>
+    :root {
+      --primary: #E94B8F;
+      --primary-glow: rgba(233,75,143,0.25);
+      --purple: #A855F7;
+      --bg: #0F0F0F;
+      --surface: #1A1A2E;
+      --surface2: #252540;
+      --fg: #FFFFFF;
+      --muted: #9CA3AF;
+      --border: rgba(255,255,255,0.08);
+      --success: #34C759;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--fg);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--primary); text-decoration: none; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,15,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo {
+      font-size: 20px; font-weight: 800;
+      background: linear-gradient(135deg, #E94B8F, #A855F7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-right a { color: var(--muted); font-size: 14px; font-weight: 500; }
+    .nav-right a:hover { color: #fff; }
+    .lang-toggle {
+      display: flex; gap: 2px; background: var(--surface); border-radius: 8px; padding: 2px;
+    }
+    .lang-btn {
+      padding: 5px 12px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: transparent; color: var(--muted); transition: all .2s;
+    }
+    .lang-btn.active { background: var(--surface2); color: #fff; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    .page-header { text-align: center; margin-bottom: 48px; }
+    .page-header h1 { font-size: 36px; font-weight: 900; margin-bottom: 8px; }
+    .page-header p { color: var(--muted); font-size: 16px; }
+
+    /* Contact cards */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 48px; }
+    .contact-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; text-align: center;
+      transition: transform .2s, border-color .2s;
+    }
+    .contact-card:hover { transform: translateY(-3px); border-color: rgba(233,75,143,0.3); }
+    .contact-icon { font-size: 36px; margin-bottom: 12px; }
+    .contact-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .contact-card p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+    .contact-link {
+      display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+      padding: 8px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      color: var(--primary); transition: background .2s;
+    }
+    .contact-link:hover { background: rgba(233,75,143,0.1); }
+
+    /* FAQ */
+    .faq-section { margin-bottom: 48px; }
+    .faq-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; }
+    .faq-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 12px; overflow: hidden;
+    }
+    .faq-q {
+      padding: 20px 24px; cursor: pointer; font-size: 15px; font-weight: 600;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: background .2s;
+    }
+    .faq-q:hover { background: var(--surface2); }
+    .faq-arrow { font-size: 12px; color: var(--muted); transition: transform .3s; }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s;
+      font-size: 14px; color: var(--muted); line-height: 1.7; padding: 0 24px;
+    }
+    .faq-item.open .faq-a { max-height: 300px; padding: 0 24px 20px; }
+
+    /* Account section */
+    .account-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px; text-align: center;
+    }
+    .account-section h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .account-section p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+    .account-section .note {
+      font-size: 12px; color: var(--muted); background: var(--surface2);
+      padding: 12px 16px; border-radius: 10px; margin-top: 12px; text-align: left;
+    }
+
+    footer {
+      border-top: 1px solid var(--border); padding: 32px 24px;
+      max-width: 800px; margin: 0 auto; text-align: center;
+      font-size: 12px; color: var(--muted);
+    }
+    footer a { color: var(--primary); }
+
+    @media (max-width: 640px) {
+      .contact-grid { grid-template-columns: 1fr; }
+      .page-header h1 { font-size: 28px; }
+    }
+
+    [data-lang="en"] .tr { display: none; }
+    [data-lang="tr"] .en { display: none; }
+  </style>
+</head>
+<body data-lang="tr">
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">👑 Content Queen</a>
+    <div class="nav-right">
+      <a href="/" class="tr">Ana Sayfa</a>
+      <a href="/" class="en">Home</a>
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="setLang('tr')">TR</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="tr">Destek Merkezi</h1>
+    <h1 class="en">Support Center</h1>
+    <p class="tr">Size nasıl yardımcı olabiliriz?</p>
+    <p class="en">How can we help you?</p>
+  </div>
+
+  <!-- Contact Cards -->
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="contact-icon">📧</div>
+      <h3 class="tr">E-posta Desteği</h3>
+      <h3 class="en">Email Support</h3>
+      <p class="tr">Sorularınız için bize e-posta gönderin. 24 saat içinde yanıt veriyoruz.</p>
+      <p class="en">Send us an email with your questions. We respond within 24 hours.</p>
+      <a href="mailto:support@trairx.com" class="contact-link">support@trairx.com</a>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon">💬</div>
+      <h3 class="tr">Genel İletişim</h3>
+      <h3 class="en">General Inquiries</h3>
+      <p class="tr">İş birlikleri, basın ve genel sorular için bize ulaşın.</p>
+      <p class="en">Reach out for partnerships, press, and general questions.</p>
+      <a href="mailto:hello@trairx.com" class="contact-link">hello@trairx.com</a>
+    </div>
+  </div>
+
+  <!-- FAQ TR -->
+  <div class="faq-section">
+    <h2 class="faq-title tr">Sıkça Sorulan Sorular</h2>
+    <h2 class="faq-title en">Frequently Asked Questions</h2>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Content Queen nedir? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Content Queen, yapay zeka teknolojisi kullanarak kişiye özel profesyonel görseller oluşturmanızı sağlayan bir mobil uygulamadır. Fotoğraflarınızı yüklersiniz, AI sizin yüzünüzü ve tarzınızı öğrenir, ardından beğendiğiniz herhangi bir pozda profesyonel görseller oluşturur.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">What is Content Queen? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Content Queen is a mobile app that uses AI technology to create personalized professional images. You upload your photos, AI learns your face and style, then generates professional images in any pose you like.</div>
+    </div>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Kredi sistemi nasıl çalışır? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Her görsel oluşturma 1 kredi harcar. Yeni kullanıcılara 3 ücretsiz deneme kredisi verilir. Ek krediler uygulama içi satın alma ile edinilebilir: 10 kredi $2.99, 50 kredi $9.99, 150 kredi $19.99. Satın alınan kredilerin süresi dolmaz.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How does the credit system work? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Each image generation costs 1 credit. New users get 3 free trial credits. Additional credits can be purchased in-app: 10 credits for $2.99, 50 credits for $9.99, 150 credits for $19.99. Purchased credits never expire.</div>
+    </div>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">AI modelim ne kadar sürede hazır olur? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">AI modeliniz genellikle 10-20 dakika içinde hazır olur. En az 5 fotoğraf yüklemeniz gerekir. Model bir kez oluşturulduktan sonra tekrar eğitim gerekmez — istediğiniz kadar görsel oluşturabilirsiniz.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How long does it take to train my AI model? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Your AI model is typically ready in 10-20 minutes. You need to upload at least 5 photos. Once the model is created, no retraining is needed — you can generate as many images as you want.</div>
+    </div>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Fotoğraflarım güvende mi? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Evet. Fotoğraflarınız şifrelenmiş sunucularda saklanır. GDPR uyumlu çalışıyoruz. Hesabınızı sildiğinizde tüm verileriniz 30 gün içinde kalıcı olarak silinir. Fotoğraflarınız hiçbir zaman üçüncü taraflarla paylaşılmaz.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Are my photos safe? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes. Your photos are stored on encrypted servers. We are GDPR compliant. When you delete your account, all your data is permanently deleted within 30 days. Your photos are never shared with third parties.</div>
+    </div>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Oluşturulan görselleri ticari amaçla kullanabilir miyim? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Evet. Oluşturulan görsellerin kullanım hakkı tamamen size aittir. Sosyal medya, web sitesi, reklam veya herhangi bir ticari amaçla kullanabilirsiniz.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can I use generated images commercially? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes. You have full usage rights to generated images. You can use them for social media, websites, advertising, or any commercial purpose.</div>
+    </div>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Satın aldığım krediler iade edilebilir mi? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Satın alınan krediler iade edilmez. Ancak Apple App Store veya Google Play Store üzerinden satın alma ile ilgili sorun yaşıyorsanız, ilgili mağazanın iade politikası geçerlidir. Teknik bir sorun nedeniyle krediniz harcandıysa support@trairx.com adresine yazın.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can I get a refund for purchased credits? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Purchased credits are non-refundable. However, if you experience issues with your purchase through Apple App Store or Google Play Store, their refund policies apply. If your credits were consumed due to a technical issue, please contact support@trairx.com.</div>
+    </div>
+
+    <div class="faq-item tr" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Hesabımı nasıl silebilirim? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Uygulama içinden Ayarlar → Hesabı Sil seçeneğini kullanabilirsiniz. Hesap silme işlemi sonrasında tüm kişisel verileriniz, fotoğraflarınız ve oluşturulan görselleriniz 30 gün içinde kalıcı olarak silinir. Kullanılmamış krediler iade edilmez.</div>
+    </div>
+    <div class="faq-item en" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How do I delete my account? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">You can use Settings → Delete Account within the app. After account deletion, all your personal data, photos, and generated images will be permanently deleted within 30 days. Unused credits will not be refunded.</div>
+    </div>
+  </div>
+
+  <!-- Account & Data -->
+  <div class="account-section">
+    <h3 class="tr">🏢 Hakkımızda</h3>
+    <h3 class="en">🏢 About Us</h3>
+    <p class="tr">
+      Content Queen, <strong>TrairX Technology O.Ü.</strong> tarafından geliştirilmiştir.
+      Estonya merkezli şirketimiz, yapay zeka ve mobil teknolojiler alanında yenilikçi ürünler geliştirmektedir.
+    </p>
+    <p class="en">
+      Content Queen is developed by <strong>TrairX Technology O.Ü.</strong>,
+      an Estonia-based company building innovative products in AI and mobile technology.
+    </p>
+    <div class="note">
+      <strong>TrairX Technology O.Ü.</strong><br>
+      📍 Estonia<br>
+      📧 hello@trairx.com<br>
+      🔒 privacy@trairx.com<br>
+      ⚖️ legal@trairx.com
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>TrairX Technology</strong> O.Ü. © 2026 — 
+  <a href="/privacy" class="tr">Gizlilik</a><a href="/privacy" class="en">Privacy</a> · 
+  <a href="/terms" class="tr">Şartlar</a><a href="/terms" class="en">Terms</a> · 
+  <a href="/" class="tr">Ana Sayfa</a><a href="/" class="en">Home</a>
+</footer>
+
+<script>
+  function setLang(lang) {
+    document.body.setAttribute('data-lang', lang);
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.lang-btn[onclick="setLang(\'' + lang + '\')"]').classList.add('active');
+  }
+  setLang('en');
+</script>
+
+</body>
+</html>
