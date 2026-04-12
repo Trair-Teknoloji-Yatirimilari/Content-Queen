@@ -9,7 +9,7 @@ import Purchases, {
 } from "react-native-purchases";
 import { Platform } from "react-native";
 
-const REVENUECAT_API_KEY = "test_XcwALNssakPzsaFhvSdmrKczXfK";
+const REVENUECAT_API_KEY = "appl_MXpxxMyfsyQiUPxPqauVEBgOukK";
 
 // Product IDs matching App Store Connect
 export const PRODUCT_IDS = {
