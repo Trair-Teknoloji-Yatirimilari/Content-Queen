@@ -31,6 +31,9 @@ export const CREDIT_AMOUNTS: Record<string, number> = {
   credits_10: 10,
   credits_50: 50,
   credits_150: 150,
+  sub_basic: 12,
+  sub_pro: 35,
+  sub_premium: 999,
 };
 
 let isInitialized = false;

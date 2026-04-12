@@ -254,20 +254,25 @@ export const appRouter = router({
     }),
 
     addCredits: protectedProcedure
-      .input(z.object({ amount: z.number().min(1) }))
+      .input(z.object({
+        amount: z.number().min(1),
+        subscriptionTier: z.enum(["free", "pro", "premium"]).optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
+        const tier = input.subscriptionTier ?? (input.amount >= 999 ? "premium" : input.amount >= 35 ? "pro" : "free");
         const credits = await db.getUserCredits(ctx.user.id);
         if (!credits) {
           return db.createUserCredits({
             userId: ctx.user.id,
             totalCredits: input.amount,
             usedCredits: 0,
-            subscriptionTier: "pro",
+            subscriptionTier: tier,
           });
         }
 
         return db.updateUserCredits(ctx.user.id, {
           totalCredits: credits.totalCredits + input.amount,
+          subscriptionTier: tier === "free" ? credits.subscriptionTier : tier,
         });
       }),
   }),

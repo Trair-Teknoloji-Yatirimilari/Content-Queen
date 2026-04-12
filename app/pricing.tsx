@@ -24,8 +24,8 @@ const FALLBACK_CREDITS = [
 ];
 
 const FALLBACK_SUBS = [
-  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "30 kredi/ay", features: ["Ayda 30 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
-  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "100 kredi/ay", popular: true, features: ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "12 kredi/ay", features: ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "35 kredi/ay", popular: true, features: ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
   { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "Sınırsız", features: ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "En yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"] },
 ];
 
@@ -77,7 +77,14 @@ export default function PricingScreen() {
         // Kredi paketi ise backend'e kredi ekle
         const creditAmount = CREDIT_AMOUNTS[pkg.identifier];
         if (creditAmount) {
-          await addCreditsMutation.mutateAsync({ amount: creditAmount });
+          const tier = pkg.identifier === "sub_premium" ? "premium"
+            : pkg.identifier === "sub_pro" ? "pro"
+            : pkg.identifier === "sub_basic" ? "pro"
+            : undefined;
+          await addCreditsMutation.mutateAsync({
+            amount: creditAmount,
+            ...(tier ? { subscriptionTier: tier as "free" | "pro" | "premium" } : {}),
+          });
           utils.credits.getCredits.invalidate();
         }
 
@@ -229,12 +236,12 @@ export default function PricingScreen() {
                 name: p.identifier === "sub_basic" ? "Basic" : p.identifier === "sub_pro" ? "Pro" : "Premium",
                 price: p.product.priceString,
                 period: "/ay",
-                credits: p.identifier === "sub_basic" ? "30 kredi/ay" : p.identifier === "sub_pro" ? "100 kredi/ay" : "Sınırsız",
+                credits: p.identifier === "sub_basic" ? "12 kredi/ay" : p.identifier === "sub_pro" ? "35 kredi/ay" : "Sınırsız",
                 popular: p.identifier === "sub_pro",
                 features: p.identifier === "sub_basic"
-                  ? ["Ayda 30 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
+                  ? ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
                   : p.identifier === "sub_pro"
-                    ? ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
+                    ? ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "Yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
                     : ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "En yüksek çözünürlük görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],
                 pkg: p,
               }))).map((plan: any) => (
