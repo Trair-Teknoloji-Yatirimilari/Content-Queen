@@ -1,12 +1,91 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Content Queen — Privacy Policy</title>
-  <meta http-equiv="refresh" content="0;url=legal.html#privacy-tr">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+  <style>
+    :root { --primary:#E94B8F; --bg:#0F0F0F; --surface:#1A1A2E; --surface2:#252540; --fg:#fff; --muted:#9CA3AF; --border:rgba(255,255,255,0.08); }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;-webkit-font-smoothing:antialiased}
+    a{color:var(--primary);text-decoration:none}
+    nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    .nav-inner{max-width:800px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+    .logo{font-size:20px;font-weight:800;background:linear-gradient(135deg,#E94B8F,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .nav-right{display:flex;align-items:center;gap:16px}
+    .nav-right a{color:var(--muted);font-size:14px;font-weight:500}
+    .nav-right a:hover{color:#fff}
+    .lang-toggle{display:flex;gap:2px;background:var(--surface);border-radius:8px;padding:2px}
+    .lang-btn{padding:5px 12px;border-radius:6px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+    .lang-btn.active{background:var(--surface2);color:#fff}
+    .container{max-width:800px;margin:0 auto;padding:48px 24px 80px}
+    h1{font-size:32px;font-weight:900;margin-bottom:4px}
+    .date{font-size:13px;color:var(--muted);margin-bottom:32px}
+    .section{margin-bottom:24px}
+    .section h2{font-size:16px;font-weight:700;margin-bottom:8px;color:#fff}
+    .section p{font-size:14px;color:var(--muted);line-height:1.75}
+    .section ul{list-style:none;padding:0;margin:8px 0 0}
+    .section ul li{font-size:14px;color:var(--muted);line-height:1.75;padding-left:18px;position:relative}
+    .section ul li::before{content:"•";position:absolute;left:0;color:var(--primary);font-weight:bold}
+    footer{border-top:1px solid var(--border);padding:32px 24px;max-width:800px;margin:0 auto;text-align:center;font-size:12px;color:var(--muted)}
+    [data-lang="en"] .tr{display:none} [data-lang="tr"] .en{display:none}
+    @media(max-width:640px){.container{padding:32px 16px}h1{font-size:26px}}
+  </style>
 </head>
-<body>
-  <p>Redirecting to <a href="legal.html#privacy-tr">Privacy Policy</a>...</p>
+<body data-lang="en">
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">👑 Content Queen</a>
+    <div class="nav-right">
+      <a href="/" class="tr">Ana Sayfa</a><a href="/" class="en">Home</a>
+      <a href="/terms" class="tr">Kullanım Şartları</a><a href="/terms" class="en">Terms</a>
+      <div class="lang-toggle">
+        <button class="lang-btn" onclick="setLang('tr')">TR</button>
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="container">
+
+<!-- EN -->
+<div class="en">
+<h1>Privacy Policy</h1>
+<p class="date">Last updated: April 11, 2026</p>
+<div class="section"><h2>1. Data Controller</h2><p>TrairX Technology O.Ü. ("Company"), a company incorporated under the laws of Estonia, is responsible for the processing of personal data collected through the Content Queen application ("App").</p></div>
+<div class="section"><h2>2. Data We Collect</h2><p>Our application collects the following personal data:</p><ul><li>Phone number (for authentication purposes)</li><li>Uploaded photos (reference and content images)</li><li>Generated images and related metadata</li><li>Device information (operating system, device model)</li><li>App usage data and preferences</li><li>Push notification tokens</li></ul></div>
+<div class="section"><h2>3. Purposes of Data Processing</h2><p>Your personal data is processed for the following purposes:</p><ul><li>Account creation and authentication</li><li>Providing AI-powered image generation services</li><li>Subscription and credit management</li><li>Sending push notifications</li><li>Improving service quality</li><li>Fulfilling legal obligations</li></ul></div>
+<div class="section"><h2>4. Data Storage</h2><p>Your photos and generated images are stored encrypted on secure cloud servers. When you delete your account, all your personal data will be permanently deleted within 30 days.</p></div>
+<div class="section"><h2>5. Third-Party Services</h2><p>We use the following third-party providers to deliver our service:</p><ul><li>Twilio — SMS verification service</li><li>Replicate — AI image generation</li><li>Firebase — Push notification service</li><li>Supabase — Data storage</li></ul><p>These providers only access data necessary for service delivery and are subject to their own privacy policies.</p></div>
+<div class="section"><h2>6. Data Security</h2><p>We implement industry-standard security measures to protect your data:</p><ul><li>TLS/SSL encryption for data transmission</li><li>Server-side AES-256 encryption</li><li>Regular security audits</li><li>Access control and authorization mechanisms</li></ul></div>
+<div class="section"><h2>7. User Rights</h2><p>Under the EU General Data Protection Regulation (GDPR) and Estonian data protection legislation, you have the following rights:</p><ul><li>Right to access your data</li><li>Right to request data correction</li><li>Right to request data deletion (right to be forgotten)</li><li>Right to restrict data processing</li><li>Right to data portability</li><li>Right to object</li></ul><p>To exercise these rights, please contact privacy@trairx.com.</p></div>
+<div class="section"><h2>8. Cookies and Tracking</h2><p>Our application uses cookies for session management. No third-party cookies for analytics or advertising purposes are used.</p></div>
+<div class="section"><h2>9. Children's Privacy</h2><p>Our application is not intended for individuals under the age of 16. We do not knowingly collect personal data from individuals under 16.</p></div>
+<div class="section"><h2>10. Policy Changes</h2><p>We may update this privacy policy from time to time. Significant changes will be announced via in-app notifications.</p></div>
+<div class="section"><h2>11. Contact</h2><p>For privacy-related questions:<br>TrairX Technology O.Ü.<br>Email: privacy@trairx.com<br>Country: Estonia</p></div>
+</div>
+
+<!-- TR -->
+<div class="tr">
+<h1>Gizlilik Politikası</h1>
+<p class="date">Son güncelleme: 11 Nisan 2026</p>
+<div class="section"><h2>1. Veri Sorumlusu</h2><p>TrairX Technology O.Ü. ("Şirket"), Estonya yasalarına göre kurulmuş bir şirket olup, Content Queen uygulaması ("Uygulama") aracılığıyla toplanan kişisel verilerin işlenmesinden sorumludur.</p></div>
+<div class="section"><h2>2. Toplanan Veriler</h2><p>Uygulamamız aşağıdaki kişisel verileri toplar:</p><ul><li>Telefon numarası (kimlik doğrulama amacıyla)</li><li>Yüklenen fotoğraflar (referans ve içerik görselleri)</li><li>Oluşturulan görseller ve ilgili meta veriler</li><li>Cihaz bilgileri (işletim sistemi, cihaz modeli)</li><li>Uygulama kullanım verileri ve tercihler</li><li>Push bildirim token'ları</li></ul></div>
+<div class="section"><h2>3. Verilerin İşlenme Amaçları</h2><p>Kişisel verileriniz aşağıdaki amaçlarla işlenir:</p><ul><li>Hesap oluşturma ve kimlik doğrulama</li><li>Yapay zeka destekli görsel oluşturma hizmetinin sunulması</li><li>Abonelik ve kredi yönetimi</li><li>Push bildirimleri gönderimi</li><li>Hizmet kalitesinin iyileştirilmesi</li><li>Yasal yükümlülüklerin yerine getirilmesi</li></ul></div>
+<div class="section"><h2>4. Verilerin Saklanması</h2><p>Fotoğraflarınız ve oluşturulan görseller, güvenli bulut sunucularında şifrelenmiş olarak saklanır. Hesabınızı sildiğinizde tüm kişisel verileriniz 30 gün içinde kalıcı olarak silinir.</p></div>
+<div class="section"><h2>5. Üçüncü Taraf Hizmetler</h2><p>Hizmetimizi sunmak için aşağıdaki üçüncü taraf sağlayıcıları kullanıyoruz:</p><ul><li>Twilio — SMS doğrulama hizmeti</li><li>Replicate — Yapay zeka görsel oluşturma</li><li>Firebase — Push bildirim hizmeti</li><li>Supabase — Veri depolama</li></ul><p>Bu sağlayıcılar yalnızca hizmet sunumu için gerekli verilere erişir ve kendi gizlilik politikalarına tabidir.</p></div>
+<div class="section"><h2>6. Veri Güvenliği</h2><p>Verilerinizi korumak için endüstri standardı güvenlik önlemleri uyguluyoruz:</p><ul><li>TLS/SSL şifreleme ile veri iletimi</li><li>Sunucu tarafında AES-256 şifreleme</li><li>Düzenli güvenlik denetimleri</li><li>Erişim kontrolü ve yetkilendirme mekanizmaları</li></ul></div>
+<div class="section"><h2>7. Kullanıcı Hakları</h2><p>Avrupa Birliği Genel Veri Koruma Tüzüğü (GDPR) ve Estonya veri koruma mevzuatı kapsamında aşağıdaki haklara sahipsiniz:</p><ul><li>Verilerinize erişim hakkı</li><li>Verilerin düzeltilmesini talep etme hakkı</li><li>Verilerin silinmesini talep etme hakkı (unutulma hakkı)</li><li>Veri işlemeyi kısıtlama hakkı</li><li>Veri taşınabilirliği hakkı</li><li>İtiraz hakkı</li></ul><p>Bu haklarınızı kullanmak için privacy@trairx.com adresine başvurabilirsiniz.</p></div>
+<div class="section"><h2>8. Çerezler ve İzleme</h2><p>Uygulamamız oturum yönetimi için çerezler kullanır. Analitik veya reklam amaçlı üçüncü taraf çerezleri kullanılmamaktadır.</p></div>
+<div class="section"><h2>9. Çocukların Gizliliği</h2><p>Uygulamamız 16 yaşın altındaki bireylere yönelik değildir. Bilerek 16 yaşın altındaki bireylerden kişisel veri toplamıyoruz.</p></div>
+<div class="section"><h2>10. Politika Değişiklikleri</h2><p>Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikler uygulama içi bildirim ile duyurulacaktır.</p></div>
+<div class="section"><h2>11. İletişim</h2><p>Gizlilik ile ilgili sorularınız için:<br>TrairX Technology O.Ü.<br>E-posta: privacy@trairx.com<br>Ülke: Estonya</p></div>
+</div>
+</div>
+<footer><strong>TrairX Technology</strong> O.Ü. © 2026 — <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/">Home</a></footer>
+<script>
+function setLang(l){document.body.setAttribute('data-lang',l);document.documentElement.lang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.lang-btn[onclick="setLang(\''+l+'\')"]').classList.add('active')}
+</script>
 </body>
 </html>

@@ -1,12 +1,97 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Content Queen — Terms of Service</title>
-  <meta http-equiv="refresh" content="0;url=legal.html#terms-tr">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+  <style>
+    :root { --primary:#E94B8F; --bg:#0F0F0F; --surface:#1A1A2E; --surface2:#252540; --fg:#fff; --muted:#9CA3AF; --border:rgba(255,255,255,0.08); }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;-webkit-font-smoothing:antialiased}
+    a{color:var(--primary);text-decoration:none}
+    nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    .nav-inner{max-width:800px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+    .logo{font-size:20px;font-weight:800;background:linear-gradient(135deg,#E94B8F,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .nav-right{display:flex;align-items:center;gap:16px}
+    .nav-right a{color:var(--muted);font-size:14px;font-weight:500}
+    .nav-right a:hover{color:#fff}
+    .lang-toggle{display:flex;gap:2px;background:var(--surface);border-radius:8px;padding:2px}
+    .lang-btn{padding:5px 12px;border-radius:6px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+    .lang-btn.active{background:var(--surface2);color:#fff}
+    .container{max-width:800px;margin:0 auto;padding:48px 24px 80px}
+    h1{font-size:32px;font-weight:900;margin-bottom:4px}
+    .date{font-size:13px;color:var(--muted);margin-bottom:32px}
+    .section{margin-bottom:24px}
+    .section h2{font-size:16px;font-weight:700;margin-bottom:8px;color:#fff}
+    .section p{font-size:14px;color:var(--muted);line-height:1.75}
+    .section ul{list-style:none;padding:0;margin:8px 0 0}
+    .section ul li{font-size:14px;color:var(--muted);line-height:1.75;padding-left:18px;position:relative}
+    .section ul li::before{content:"•";position:absolute;left:0;color:var(--primary);font-weight:bold}
+    footer{border-top:1px solid var(--border);padding:32px 24px;max-width:800px;margin:0 auto;text-align:center;font-size:12px;color:var(--muted)}
+    [data-lang="en"] .tr{display:none} [data-lang="tr"] .en{display:none}
+    @media(max-width:640px){.container{padding:32px 16px}h1{font-size:26px}}
+  </style>
 </head>
-<body>
-  <p>Redirecting to <a href="legal.html#terms-tr">Terms of Service</a>...</p>
+<body data-lang="en">
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">👑 Content Queen</a>
+    <div class="nav-right">
+      <a href="/" class="tr">Ana Sayfa</a><a href="/" class="en">Home</a>
+      <a href="/privacy" class="tr">Gizlilik</a><a href="/privacy" class="en">Privacy</a>
+      <div class="lang-toggle">
+        <button class="lang-btn" onclick="setLang('tr')">TR</button>
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="container">
+
+<!-- EN -->
+<div class="en">
+<h1>Terms of Service</h1>
+<p class="date">Last updated: April 11, 2026</p>
+<div class="section"><h2>1. Parties</h2><p>These terms of service ("Terms") constitute the agreement between TrairX Technology O.Ü. ("Company", "we") and you ("User") who uses the Content Queen application ("App"). The Company is incorporated and operates under the laws of the Republic of Estonia.</p></div>
+<div class="section"><h2>2. Service Description</h2><p>Content Queen is a mobile application that enables users to create professional images from reference photos using artificial intelligence technology. The service is provided through a credit-based system.</p></div>
+<div class="section"><h2>3. Account Creation</h2><p>You must register with your phone number to use the application. You are responsible for the security of your account. You must notify us immediately if you detect unauthorized access to your account.</p></div>
+<div class="section"><h2>4. Credit System and Payment</h2><ul><li>Each image generation costs 1 credit</li><li>New users receive 3 free trial credits</li><li>Additional credits can be purchased through in-app purchases</li><li>Purchased credits are non-refundable</li><li>Unused credits do not expire</li></ul></div>
+<div class="section"><h2>5. Subscription Plans</h2><p>Content Queen offers the following subscription plans:</p><ul><li>Basic — 12 image generations per month ($4.99/month)</li><li>Pro — 35 image generations per month ($9.99/month)</li><li>Premium — Unlimited image generations ($19.99/month)</li></ul><p>Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID account at confirmation of purchase. You can manage and cancel subscriptions in your device Settings → Apple ID → Subscriptions.</p></div>
+<div class="section"><h2>6. Usage Rules</h2><p>By using the application, you agree to the following rules:</p><ul><li>Only upload photos you have the right to use</li><li>Do not create illegal, obscene, or harmful content</li><li>Do not violate others' personal rights</li><li>Do not reverse engineer or misuse the application</li><li>Do not use automated tools or bots</li></ul></div>
+<div class="section"><h2>7. Intellectual Property</h2><ul><li>You retain the rights to your original uploaded photos</li><li>You have the right to use images generated by the application</li><li>The Content Queen brand, logo, and software are the property of the Company</li><li>You may use generated images for commercial purposes</li></ul></div>
+<div class="section"><h2>8. Artificial Intelligence and Content</h2><ul><li>Generated images are produced by AI and results may vary</li><li>The Company does not guarantee the quality or suitability of generated images</li><li>Your account may be suspended if inappropriate content is detected</li></ul></div>
+<div class="section"><h2>9. Service Continuity</h2><ul><li>We may temporarily suspend the service with prior notice</li><li>Interruptions may occur due to maintenance and updates</li><li>If we permanently discontinue the service, 30 days' notice will be given</li></ul></div>
+<div class="section"><h2>10. Limitation of Liability</h2><p>The Company cannot be held liable for direct or indirect damages arising from the use of the application. The service is provided "as is." Maximum liability is limited to the total amount paid by the user in the last 12 months.</p></div>
+<div class="section"><h2>11. Account Deletion</h2><p>You can delete your account at any time from the app settings. After account deletion:</p><ul><li>All your personal data will be deleted within 30 days</li><li>Generated images will be permanently removed</li><li>Unused credits will not be refunded</li></ul></div>
+<div class="section"><h2>12. Governing Law</h2><p>These terms are governed by the laws of the Republic of Estonia. Disputes will be resolved amicably first, otherwise in Estonian courts.</p></div>
+<div class="section"><h2>13. Changes to Terms</h2><p>We may update these terms from time to time. Significant changes will be announced via in-app notification at least 14 days in advance. Continuing to use the application after changes constitutes acceptance of the new terms.</p></div>
+<div class="section"><h2>14. Contact</h2><p>For questions:<br>TrairX Technology O.Ü.<br>Email: legal@trairx.com<br>Country: Estonia</p></div>
+</div>
+
+<!-- TR -->
+<div class="tr">
+<h1>Kullanım Şartları</h1>
+<p class="date">Son güncelleme: 11 Nisan 2026</p>
+<div class="section"><h2>1. Taraflar</h2><p>Bu kullanım şartları ("Şartlar"), TrairX Technology O.Ü. ("Şirket", "biz") ile Content Queen uygulamasını ("Uygulama") kullanan siz ("Kullanıcı") arasındaki sözleşmeyi oluşturur. Şirket, Estonya Cumhuriyeti yasalarına göre kurulmuş ve faaliyet göstermektedir.</p></div>
+<div class="section"><h2>2. Hizmet Tanımı</h2><p>Content Queen, yapay zeka teknolojisi kullanarak kullanıcıların referans fotoğraflarından profesyonel görseller oluşturmasını sağlayan bir mobil uygulamadır. Hizmet, kredi tabanlı bir sistem üzerinden sunulmaktadır.</p></div>
+<div class="section"><h2>3. Hesap Oluşturma</h2><p>Uygulamayı kullanmak için telefon numaranız ile kayıt olmanız gerekmektedir. Hesabınızın güvenliğinden siz sorumlusunuz. Hesabınızda yetkisiz erişim tespit ettiğinizde derhal bizi bilgilendirmelisiniz.</p></div>
+<div class="section"><h2>4. Kredi Sistemi ve Ödeme</h2><ul><li>Her görsel oluşturma işlemi 1 kredi harcar</li><li>Yeni kullanıcılara 3 ücretsiz deneme kredisi verilir</li><li>Ek krediler uygulama içi satın alma ile edinilebilir</li><li>Satın alınan krediler iade edilmez</li><li>Kullanılmayan kredilerin süresi dolmaz</li></ul></div>
+<div class="section"><h2>5. Abonelik Planları</h2><p>Content Queen aşağıdaki abonelik planlarını sunar:</p><ul><li>Basic — Ayda 12 görsel oluşturma (Aylık $4.99)</li><li>Pro — Ayda 35 görsel oluşturma (Aylık $9.99)</li><li>Premium — Sınırsız görsel oluşturma (Aylık $19.99)</li></ul><p>Abonelikler, mevcut dönemin bitiminden en az 24 saat önce iptal edilmediği sürece otomatik olarak yenilenir. Ödeme, satın alma onaylandığında Apple ID hesabınızdan tahsil edilir. Aboneliğinizi cihaz Ayarları → Apple ID → Abonelikler bölümünden yönetebilir ve iptal edebilirsiniz.</p></div>
+<div class="section"><h2>6. Kullanım Kuralları</h2><p>Uygulamayı kullanırken aşağıdaki kurallara uymayı kabul edersiniz:</p><ul><li>Yalnızca kullanım hakkına sahip olduğunuz fotoğrafları yüklemek</li><li>Yasadışı, müstehcen veya zararlı içerik oluşturmamak</li><li>Başkalarının kişilik haklarını ihlal etmemek</li><li>Uygulamayı tersine mühendislik yapmamak veya kötüye kullanmamak</li><li>Otomatik araçlar veya botlar kullanmamak</li></ul></div>
+<div class="section"><h2>7. Fikri Mülkiyet</h2><ul><li>Yüklediğiniz orijinal fotoğrafların hakları size aittir</li><li>Uygulama tarafından oluşturulan görsellerin kullanım hakkı size aittir</li><li>Content Queen markası, logosu ve yazılımı Şirket'in mülkiyetindedir</li><li>Oluşturulan görselleri ticari amaçla kullanabilirsiniz</li></ul></div>
+<div class="section"><h2>8. Yapay Zeka ve İçerik</h2><ul><li>Oluşturulan görseller yapay zeka tarafından üretilir ve sonuçlar değişkenlik gösterebilir</li><li>Şirket, oluşturulan görsellerin kalitesi veya uygunluğu konusunda garanti vermez</li><li>Uygunsuz içerik tespit edildiğinde hesabınız askıya alınabilir</li></ul></div>
+<div class="section"><h2>9. Hizmet Sürekliliği</h2><ul><li>Hizmeti önceden bildirimde bulunarak geçici olarak askıya alabiliriz</li><li>Bakım ve güncelleme nedeniyle kesintiler yaşanabilir</li><li>Hizmeti tamamen sonlandırmamız durumunda 30 gün önceden bildirim yapılır</li></ul></div>
+<div class="section"><h2>10. Sorumluluk Sınırlaması</h2><p>Şirket, uygulamanın kullanımından doğabilecek doğrudan veya dolaylı zararlardan sorumlu tutulamaz. Hizmet "olduğu gibi" sunulmaktadır. Azami sorumluluk, kullanıcının son 12 ayda ödediği toplam tutarla sınırlıdır.</p></div>
+<div class="section"><h2>11. Hesap Silme</h2><p>Hesabınızı istediğiniz zaman uygulama ayarlarından silebilirsiniz. Hesap silme işlemi sonrasında:</p><ul><li>Tüm kişisel verileriniz 30 gün içinde silinir</li><li>Oluşturulan görseller kalıcı olarak kaldırılır</li><li>Kullanılmamış krediler iade edilmez</li></ul></div>
+<div class="section"><h2>12. Uygulanacak Hukuk</h2><p>Bu şartlar Estonya Cumhuriyeti yasalarına tabidir. Uyuşmazlıklar öncelikle dostane çözüm yoluyla, aksi halde Estonya mahkemelerinde çözümlenecektir.</p></div>
+<div class="section"><h2>13. Şartlarda Değişiklik</h2><p>Bu şartları zaman zaman güncelleyebiliriz. Önemli değişiklikler uygulama içi bildirim ile en az 14 gün önceden duyurulacaktır. Değişiklik sonrası uygulamayı kullanmaya devam etmeniz, yeni şartları kabul ettiğiniz anlamına gelir.</p></div>
+<div class="section"><h2>14. İletişim</h2><p>Sorularınız için:<br>TrairX Technology O.Ü.<br>E-posta: legal@trairx.com<br>Ülke: Estonya</p></div>
+</div>
+</div>
+<footer><strong>TrairX Technology</strong> O.Ü. © 2026 — <a href="/privacy">Privacy</a> · <a href="/support">Support</a> · <a href="/">Home</a></footer>
+<script>
+function setLang(l){document.body.setAttribute('data-lang',l);document.documentElement.lang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.lang-btn[onclick="setLang(\''+l+'\')"]').classList.add('active')}
+</script>
 </body>
 </html>
