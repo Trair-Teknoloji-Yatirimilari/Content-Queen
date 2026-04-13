@@ -9,6 +9,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { trpc } from "@/lib/trpc";
 import { saveImageToGallery, shareImage, shareToInstagramStories, isInstagramInstalled } from "@/lib/image-utils";
 import { hasActiveSubscription } from "@/lib/purchases";
+import { getStyleById } from "@/constants/styles";
 
 type ScreenState = "preview" | "generating" | "success" | "error";
 
@@ -18,6 +19,8 @@ export default function GenerateImageScreen() {
   const params = useLocalSearchParams();
   const contentImageUri = params.contentImageUri as string;
   const autoStart = params.autoStart === "true";
+  const styleId = (params.styleId as string) || "professional";
+  const style = getStyleById(styleId);
 
   const [state, setState] = useState<ScreenState>(autoStart ? "generating" : "preview");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -47,8 +50,8 @@ export default function GenerateImageScreen() {
       const result = await createMutation.mutateAsync({
         contentImageUrl: contentImageUri,
         faceImageUrl: contentImageUri,
-        prompt: "exact same pose, same angle, same body position, same background, same lighting. Photorealistic, high quality, professional photography, 8k, detailed.",
-        style: "Professional",
+        prompt: `exact same pose, same angle, same body position, same background, same lighting. ${style.prompt}`,
+        style: style.name,
       });
 
       if (!result.jobId) {
@@ -284,7 +287,7 @@ export default function GenerateImageScreen() {
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
           <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground, textAlign: "center" }}>
-            AI Görseli Oluşturuyor
+            {style.emoji} {style.name} Stil
           </Text>
           <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
             Bu işlem 30-60 saniye sürebilir.{"\n"}Lütfen bekleyin...
