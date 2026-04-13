@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const trainingPhotos = photosQuery.data ?? [];
 
   const remainingCredit = credits ? credits.totalCredits - credits.usedCredits : 0;
-  const tierLabels: Record<string, string> = { free: "Ücretsiz", pro: "Pro", premium: "Premium" };
+  const tierLabels: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
 
   const handleSignOut = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -90,7 +90,7 @@ export default function ProfileScreen() {
           {/* Subscription */}
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 18, gap: 14 }}>
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>Abonelik</Text>
-            <Row label="Paket" value={tierLabels[credits?.subscriptionTier ?? "free"] ?? "Ücretsiz"} colors={colors} highlight />
+            <Row label="Plan" value={tierLabels[credits?.subscriptionTier ?? "free"] ?? "Free"} colors={colors} highlight />
             <Row label="Toplam Kredi" value={`${credits?.totalCredits ?? 0}`} colors={colors} />
             <Row label="Kullanılan" value={`${credits?.usedCredits ?? 0}`} colors={colors} />
             <Row label="Kalan" value={`${remainingCredit}`} colors={colors} />

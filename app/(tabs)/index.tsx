@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const subscriptionTier = credits?.subscriptionTier ?? "free";
 
   const tierLabels: Record<string, string> = {
-    free: "Ücretsiz",
+    free: "Free",
     pro: "Pro",
     premium: "Premium",
   };
