@@ -45,7 +45,11 @@ export const appRouter = router({
       }),
 
     verifyOtp: publicProcedure
-      .input(z.object({ phone: z.string().min(10), code: z.string().length(6) }))
+      .input(z.object({
+        phone: z.string().min(10),
+        code: z.string().length(6),
+        referralCode: z.string().optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
         const result = await verifyOtp(input.phone, input.code);
         if (!result.success) {
@@ -80,6 +84,18 @@ export const appRouter = router({
             usedCredits: 0,
             subscriptionTier: "free",
           });
+
+          // Referral kodu varsa uygula
+          if (input.referralCode) {
+            try {
+              const referrer = await db.getUserByReferralCode(input.referralCode);
+              if (referrer && referrer.id !== user.id) {
+                await db.applyReferral(referrer.id, user.id, 3);
+              }
+            } catch (e) {
+              console.error("[Referral] Error applying referral:", e);
+            }
+          }
         }
 
         return {
@@ -467,6 +483,21 @@ export const appRouter = router({
         await db.deleteGeneratedImage(input.id);
         return { success: true };
       }),
+  }),
+
+  referral: router({
+    /** Kullanıcının referral kodunu al (yoksa oluştur) */
+    getCode: protectedProcedure.query(async ({ ctx }) => {
+      const code = await db.ensureReferralCode(ctx.user.id);
+      return { code, link: `https://contentqueen.com.tr/r/${code}` };
+    }),
+
+    /** Referral istatistikleri */
+    stats: protectedProcedure.query(async ({ ctx }) => {
+      const stats = await db.getReferralStats(ctx.user.id);
+      const code = await db.ensureReferralCode(ctx.user.id);
+      return { ...stats, code, link: `https://contentqueen.com.tr/r/${code}` };
+    }),
   }),
 
   notifications: router({

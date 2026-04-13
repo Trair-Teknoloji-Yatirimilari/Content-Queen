@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Queen — Join with bonus credits!</title>
+  <meta name="description" content="Download Content Queen and get 6 free credits to create AI-powered professional images.">
+  <style>
+    :root{--primary:#E94B8F;--bg:#0F0F0F;--fg:#fff;--muted:#9CA3AF}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+    .card{max-width:400px}
+    .emoji{font-size:64px;margin-bottom:20px}
+    h1{font-size:28px;font-weight:900;margin-bottom:8px}
+    p{color:var(--muted);font-size:16px;line-height:1.6;margin-bottom:24px}
+    .code{display:inline-block;background:rgba(233,75,143,0.15);color:var(--primary);font-size:20px;font-weight:800;padding:8px 24px;border-radius:12px;letter-spacing:2px;margin-bottom:24px}
+    .btn{display:inline-block;background:linear-gradient(135deg,#E94B8F,#A855F7);color:#fff;font-size:18px;font-weight:700;padding:16px 48px;border-radius:14px;text-decoration:none;transition:transform .2s}
+    .btn:hover{transform:translateY(-2px)}
+    .note{color:var(--muted);font-size:12px;margin-top:16px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="emoji">👑</div>
+    <h1>You've been invited!</h1>
+    <p>Download Content Queen and use this referral code to get <strong>6 free credits</strong> instead of 3.</p>
+    <div class="code" id="code"></div>
+    <br><br>
+    <a href="/" class="btn">Get Content Queen</a>
+    <p class="note">Available on iOS and Android</p>
+  </div>
+  <script>
+    // Extract referral code from URL path: /r/ABC123
+    const path = window.location.pathname;
+    const code = path.split('/r/')[1] || '';
+    document.getElementById('code').textContent = code.toUpperCase();
+    // Store in localStorage so app can pick it up
+    if (code) localStorage.setItem('cq_referral_code', code.toUpperCase());
+  </script>
+</body>
+</html>

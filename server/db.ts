@@ -320,3 +320,97 @@ export async function deleteGeneratedImage(id: number) {
 
   await db.delete(generatedImages).where(eq(generatedImages.id, id));
 }
+
+/**
+ * Referral System
+ */
+import { referrals } from "../drizzle/schema";
+
+function generateReferralCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+export async function ensureReferralCode(userId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const user = await getUserById(userId);
+  if (user?.referralCode) return user.referralCode;
+
+  // Generate unique code
+  let code = generateReferralCode();
+  let attempts = 0;
+  while (attempts < 10) {
+    const existing = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
+    if (existing.length === 0) break;
+    code = generateReferralCode();
+    attempts++;
+  }
+
+  await db.update(users).set({ referralCode: code }).where(eq(users.id, userId));
+  return code;
+}
+
+export async function getUserByReferralCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(users).where(eq(users.referralCode, code.toUpperCase())).limit(1);
+  return result[0] || null;
+}
+
+export async function applyReferral(referrerId: number, referredId: number, creditsEach: number = 3) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Referral kaydı oluştur
+  await db.insert(referrals).values({
+    referrerId,
+    referredId,
+    creditsAwarded: creditsEach,
+  });
+
+  // Davet edene kredi ekle
+  const referrerCredits = await getUserCredits(referrerId);
+  if (referrerCredits) {
+    await updateUserCredits(referrerId, {
+      totalCredits: referrerCredits.totalCredits + creditsEach,
+    });
+  } else {
+    await createUserCredits({
+      userId: referrerId,
+      totalCredits: creditsEach,
+      usedCredits: 0,
+      subscriptionTier: "free",
+    });
+  }
+
+  // Davet edilene ekstra kredi (normal 3 + bonus 3 = 6)
+  const referredCredits = await getUserCredits(referredId);
+  if (referredCredits) {
+    await updateUserCredits(referredId, {
+      totalCredits: referredCredits.totalCredits + creditsEach,
+    });
+  }
+
+  // referredBy kaydet
+  await db.update(users).set({ referredBy: referrerId }).where(eq(users.id, referredId));
+}
+
+export async function getReferralStats(userId: number) {
+  const db = await getDb();
+  if (!db) return { totalReferred: 0, totalCreditsEarned: 0 };
+
+  const result = await db.select().from(referrals).where(eq(referrals.referrerId, userId));
+  const totalCreditsEarned = result.reduce((sum, r) => sum + r.creditsAwarded, 0);
+
+  return {
+    totalReferred: result.length,
+    totalCreditsEarned,
+  };
+}

@@ -21,6 +21,9 @@ export const users = mysqlTable("users", {
   loraStatus: mysqlEnum("loraStatus", ["none", "pending", "training", "ready", "failed"]).default("none").notNull(),
   loraTrainingId: varchar("loraTrainingId", { length: 255 }),
   loraTrainedAt: timestamp("loraTrainedAt"),
+  /** Referral system */
+  referralCode: varchar("referralCode", { length: 10 }).unique(),
+  referredBy: int("referredBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -81,3 +84,17 @@ export const referencePhotos = mysqlTable("referencePhotos", {
 
 export type ReferencePhoto = typeof referencePhotos.$inferSelect;
 export type InsertReferencePhoto = typeof referencePhotos.$inferInsert;
+
+/**
+ * Referral tracking
+ */
+export const referrals = mysqlTable("referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  referrerId: int("referrerId").notNull(),
+  referredId: int("referredId").notNull(),
+  creditsAwarded: int("creditsAwarded").default(3).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
