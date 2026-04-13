@@ -57,7 +57,7 @@ export default function ProfileScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 18, fontWeight: "700", color: "#fff" }}>
-                  {user?.name || "Kullanıcı"}
+                  {user?.name || user?.phone || "Kullanıcı"}
                 </Text>
                 <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                   {user?.phone || "-"}

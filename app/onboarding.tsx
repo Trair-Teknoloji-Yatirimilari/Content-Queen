@@ -74,6 +74,7 @@ export default function OnboardingScreen() {
 
   const completeOnboarding = async () => {
     await AsyncStorage.setItem("cq_onboarding_done", "true");
+    await AsyncStorage.setItem("cq_onboarding_version", "1.0.0");
     router.replace("/login");
   };
 

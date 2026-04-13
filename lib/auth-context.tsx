@@ -66,10 +66,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         getStored(USER_KEY),
       ]);
       if (token && stored) {
-        setSessionToken(token);
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-        loginPurchases(String(parsed.id)).catch(() => {});
+        // Token'ı backend'den doğrula
+        try {
+          const res = await fetch(
+            `${process.env.EXPO_PUBLIC_API_BASE_URL || ""}/api/auth/me`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user) {
+              setSessionToken(token);
+              const parsed = JSON.parse(stored);
+              // Backend'den gelen güncel bilgiyle güncelle
+              const updatedUser = { ...parsed, ...data.user };
+              setUser(updatedUser);
+              loginPurchases(String(updatedUser.id)).catch(() => {});
+              return;
+            }
+          }
+        } catch {
+          // Ağ hatası — offline olabilir, mevcut session'ı kullan
+          const parsed = JSON.parse(stored);
+          setSessionToken(token);
+          setUser(parsed);
+          loginPurchases(String(parsed.id)).catch(() => {});
+          return;
+        }
+        // Token geçersiz — temizle
+        await removeStored(SESSION_KEY);
+        await removeStored(USER_KEY);
       }
     } catch (e) {
       console.error("[Auth] Restore failed:", e);

@@ -41,8 +41,16 @@ function RootLayoutNav() {
 
   const checkOnboardingStatus = async () => {
     try {
+      // Version-aware onboarding: yeni versiyon yüklendiğinde onboarding'i sıfırla
+      const ONBOARDING_VERSION = "1.0.0";
+      const doneVersion = await AsyncStorage.getItem("cq_onboarding_version");
       const done = await AsyncStorage.getItem("cq_onboarding_done");
-      setOnboardingDone(done === "true");
+      
+      if (done === "true" && doneVersion === ONBOARDING_VERSION) {
+        setOnboardingDone(true);
+      } else {
+        setOnboardingDone(false);
+      }
     } catch (error) {
       setOnboardingDone(false);
     }
