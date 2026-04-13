@@ -19,6 +19,8 @@ export interface TrainingResult {
 
 // ─── Service ───
 
+const WEBHOOK_URL = process.env.REPLICATE_WEBHOOK_URL || "https://contentqueen.com.tr/api/webhooks/replicate";
+
 class ReplicateService {
   private client: Replicate | null = null;
 
@@ -84,6 +86,8 @@ class ReplicateService {
             autocaption_prefix: "a photo of TOK,",
             learning_rate: 0.0004,
           },
+          webhook: WEBHOOK_URL,
+          webhook_events_filter: ["completed"],
         },
       );
 
@@ -203,6 +207,8 @@ class ReplicateService {
           output_quality: 95,
           negative_prompt: "low quality, ugly, distorted, blurry, wrong pose, different angle",
         },
+        webhook: WEBHOOK_URL,
+        webhook_events_filter: ["completed"],
       });
 
       console.log("[Generate] Prediction oluşturuldu:", prediction.id);
@@ -231,6 +237,8 @@ class ReplicateService {
             output_format: "webp",
             output_quality: 95,
           },
+          webhook: WEBHOOK_URL,
+          webhook_events_filter: ["completed"],
         });
 
         return {
@@ -270,6 +278,8 @@ class ReplicateService {
           output_format: "webp",
           output_quality: 90,
         },
+        webhook: WEBHOOK_URL,
+        webhook_events_filter: ["completed"],
       });
 
       return {
