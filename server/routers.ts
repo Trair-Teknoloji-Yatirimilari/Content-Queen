@@ -150,13 +150,6 @@ export const appRouter = router({
     start: protectedProcedure.mutation(async ({ ctx }) => {
       console.log("[Training] Start requested by user:", ctx.user.id);
 
-      // Tier kontrolü — sadece Pro ve Premium kullanıcılar LoRA eğitimi yapabilir
-      const credits = await db.getUserCredits(ctx.user.id);
-      const tier = credits?.subscriptionTier ?? "free";
-      if (tier === "free") {
-        throw new Error("AI model eğitimi Pro ve Premium planlara özeldir. Lütfen planınızı yükseltin.");
-      }
-
       // Fotoğraf kontrolü
       const photos = await db.getTrainingPhotos(ctx.user.id);
       console.log("[Training] Found", photos.length, "training photos");
@@ -374,22 +367,20 @@ export const appRouter = router({
             throw new Error("Yeterli kredi yok");
           }
 
-          // LoRA modeli var mı ve kullanıcı Pro/Premium mı kontrol et
+          // LoRA modeli hazır mı kontrol et
           const user = await db.getUserById(ctx.user.id);
-          const tier = credits?.subscriptionTier ?? "free";
           let result;
-          const canUseLora = tier !== "free" && user?.loraStatus === "ready" && user.loraModelVersion;
 
-          if (canUseLora) {
-            // LoRA + ControlNet ile üret (Pro/Premium — kişiye özel)
+          if (user?.loraStatus === "ready" && user.loraModelVersion) {
+            // LoRA + ControlNet ile üret (kişiye özel)
             result = await replicateService.generateWithLoRA(
-              user.loraModelVersion!,
+              user.loraModelVersion,
               input.contentImageUrl,
               input.prompt,
               { loraWeightsUrl: user.loraModelUrl || undefined },
             );
           } else {
-            // Standart Flux ile üret (Basic/Free veya LoRA hazır değil)
+            // Standart Flux ile üret (LoRA hazır değil)
             result = await replicateService.generateStandard(
               input.prompt,
               input.contentImageUrl,
@@ -420,7 +411,7 @@ export const appRouter = router({
             id: imageId,
             jobId: result.jobId,
             status: result.status,
-            usedLoRA: !!canUseLora,
+            usedLoRA: !!(user?.loraStatus === "ready" && user.loraModelVersion),
           };
         } catch (error) {
           console.error("Görsel oluşturma hatası:", error);

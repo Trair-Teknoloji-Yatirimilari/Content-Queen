@@ -24,7 +24,7 @@ const FALLBACK_CREDITS = [
 ];
 
 const FALLBACK_SUBS = [
-  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "12 kredi/ay", features: ["Ayda 12 görsel oluşturma", "Standart AI görsel üretimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "12 kredi/ay", features: ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
   { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "35 kredi/ay", popular: true, features: ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
   { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "Sınırsız", features: ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"] },
 ];
@@ -239,7 +239,7 @@ export default function PricingScreen() {
                 credits: p.identifier === "sub_basic" ? "12 kredi/ay" : p.identifier === "sub_pro" ? "35 kredi/ay" : "Sınırsız",
                 popular: p.identifier === "sub_pro",
                 features: p.identifier === "sub_basic"
-                  ? ["Ayda 12 görsel oluşturma", "Standart AI görsel üretimi", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
+                  ? ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
                   : p.identifier === "sub_pro"
                     ? ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
                     : ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],

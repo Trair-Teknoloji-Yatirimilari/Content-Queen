@@ -29,7 +29,6 @@ export default function TrainingScreen() {
 
   const statusQuery = trpc.training.status.useQuery();
   const photosQuery = trpc.training.listPhotos.useQuery();
-  const creditsQuery = trpc.credits.getCredits.useQuery();
   const uploadMutation = trpc.training.uploadPhoto.useMutation();
   const deleteMutation = trpc.referencePhotos.delete.useMutation();
   const startMutation = trpc.training.start.useMutation();
@@ -121,20 +120,6 @@ export default function TrainingScreen() {
   }, [photos.length]);
 
   const handleStartTraining = async () => {
-    // Tier kontrolü
-    const tier = creditsQuery.data?.subscriptionTier ?? "free";
-    if (tier === "free") {
-      Alert.alert(
-        "Pro Plan Gerekli 👑",
-        "AI model eğitimi Pro ve Premium planlara özeldir. Planınızı yükselterek kişiye özel AI modelinizi oluşturabilirsiniz.",
-        [
-          { text: "İptal", style: "cancel" },
-          { text: "Planları Gör", onPress: () => router.push("/pricing") },
-        ],
-      );
-      return;
-    }
-
     if (photos.length < MIN_PHOTOS) {
       Alert.alert("Yetersiz Fotoğraf", `En az ${MIN_PHOTOS} fotoğraf yüklemelisiniz.`);
       return;
