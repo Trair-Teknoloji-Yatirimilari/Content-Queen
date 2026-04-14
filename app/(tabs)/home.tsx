@@ -9,11 +9,12 @@ import {
 import { ScreenContainer } from "@/components/screen-container";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
 import { IMAGE_STYLES } from "@/constants/styles";
+import { Animated } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -184,8 +185,38 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
+        {/* ── CTA Button ── */}
+        <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
+          <Pressable
+            onPress={handleCreateNew}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "#D93B7F" : colors.primary,
+              paddingVertical: 14,
+              borderRadius: 14,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 8,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+            })}
+          >
+            <Text style={{ fontSize: 18 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>
+              {loraStatus === "ready"
+                ? "Yeni Görsel Oluştur"
+                : loraStatus === "training" || loraStatus === "pending"
+                  ? "Eğitim Devam Ediyor..."
+                  : "AI Modelini Oluştur"}
+            </Text>
+          </Pressable>
+        </View>
+
         {/* ── Quick Actions ── */}
-        <View style={{ paddingHorizontal: 20, marginTop: 20, flexDirection: "row", gap: 12 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: 12, flexDirection: "row", gap: 10 }}>
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -251,6 +282,9 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
+        {/* ── Style Slider ── */}
+        <StyleSlider colors={colors} onPress={handleCreateNew} />
+
         {/* ── Recent Images ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -273,36 +307,7 @@ export default function HomeScreen() {
           )}
 
           {!isLoading && recentImages.length === 0 && (
-            <View style={{ gap: 16 }}>
-              {/* Stil Kartları */}
-              <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>
-                Hangi stilde parlamak istersin?
-              </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-                {IMAGE_STYLES.map((style) => (
-                  <Pressable
-                    key={style.id}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      handleCreateNew();
-                    }}
-                    style={({ pressed }) => ({
-                      width: "31%",
-                      backgroundColor: colors.surface,
-                      borderRadius: 14,
-                      padding: 14,
-                      alignItems: "center",
-                      gap: 6,
-                      transform: [{ scale: pressed ? 0.95 : 1 }],
-                    })}
-                  >
-                    <Text style={{ fontSize: 28 }}>{style.emoji}</Text>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>{style.name}</Text>
-                    <Text style={{ fontSize: 9, color: colors.muted, textAlign: "center" }} numberOfLines={1}>{style.description}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            <View />
           )}
 
           {!isLoading && recentImages.length > 0 && (
@@ -368,48 +373,17 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ── CTA Button ── */}
-        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-          <Pressable
-            onPress={handleCreateNew}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? "#D93B7F" : colors.primary,
-              paddingVertical: 18,
-              borderRadius: 16,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 8,
-              transform: [{ scale: pressed ? 0.97 : 1 }],
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.3,
-              shadowRadius: 10,
-              elevation: 8,
-            })}
-          >
-            <Text style={{ fontSize: 22 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-              {loraStatus === "ready"
-                ? "Yeni Görsel Oluştur"
-                : loraStatus === "training" || loraStatus === "pending"
-                  ? "Eğitim Devam Ediyor..."
-                  : "AI Modelini Oluştur"}
-            </Text>
-          </Pressable>
-        </View>
-
         {/* ── Showcase ── */}
-        {showcaseImages.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
-                ✨ Showcase
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.muted }}>
-                Topluluk görselleri
-              </Text>
-            </View>
+        <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
+              ✨ Showcase
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.muted }}>
+              Topluluk görselleri
+            </Text>
+          </View>
+          {showcaseImages.length > 0 ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
               {showcaseImages.map((item) => (
                 <View
@@ -436,10 +410,86 @@ export default function HomeScreen() {
                 </View>
               ))}
             </View>
-          </View>
-        )}
+          ) : (
+            <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 24, alignItems: "center", gap: 8 }}>
+              <Text style={{ fontSize: 28 }}>🌟</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>Henüz paylaşım yok</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
+                Görsel oluştur ve showcase'e ekleyerek{"\n"}ilk paylaşan sen ol!
+              </Text>
+            </View>
+          )}
+        </View>
 
       </ScrollView>
     </ScreenContainer>
+  );
+}
+
+
+// ─── Auto-scrolling Style Slider ───
+
+const CARD_WIDTH = 100;
+const CARD_GAP = 8;
+const TOTAL_WIDTH = (CARD_WIDTH + CARD_GAP) * IMAGE_STYLES.length;
+
+function StyleSlider({ colors, onPress }: { colors: ReturnType<typeof useColors>; onPress: () => void }) {
+  const scrollX = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.timing(scrollX, {
+        toValue: -TOTAL_WIDTH,
+        duration: TOTAL_WIDTH * 50,
+        useNativeDriver: true,
+        isInteraction: false,
+      }),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+
+  // Duplicate styles for seamless loop
+  const items = [...IMAGE_STYLES, ...IMAGE_STYLES];
+
+  return (
+    <View style={{ marginTop: 14, gap: 8 }}>
+      <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, paddingHorizontal: 20 }}>
+        Hangi stilde parlamak istersin?
+      </Text>
+      <View style={{ overflow: "hidden", height: 85 }}>
+        <Animated.View
+          style={{
+            flexDirection: "row",
+            gap: CARD_GAP,
+            transform: [{ translateX: scrollX }],
+          }}
+        >
+          {items.map((style, i) => (
+            <Pressable
+              key={`${style.id}-${i}`}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onPress();
+              }}
+              style={({ pressed }) => ({
+                width: CARD_WIDTH,
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 10,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 3,
+                transform: [{ scale: pressed ? 0.95 : 1 }],
+              })}
+            >
+              <Text style={{ fontSize: 24 }}>{style.emoji}</Text>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.foreground }}>{style.name}</Text>
+              <Text style={{ fontSize: 9, color: colors.muted, textAlign: "center" }} numberOfLines={1}>{style.description}</Text>
+            </Pressable>
+          ))}
+        </Animated.View>
+      </View>
+    </View>
   );
 }
