@@ -76,9 +76,13 @@ export default function GenerateImageScreen() {
         }
 
         try {
+          const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL || "";
           const res = await fetch(
-            `http://localhost:3000/api/trpc/generatedImages.checkStatus?input=${encodeURIComponent(JSON.stringify({ json: { jobId: result.jobId } }))}`,
-            { credentials: "include" },
+            `${apiBase}/api/trpc/generatedImages.checkStatus?input=${encodeURIComponent(JSON.stringify({ json: { jobId: result.jobId } }))}`,
+            {
+              credentials: "include",
+              headers: { Authorization: `Bearer ${await getSessionToken()}` },
+            },
           );
           const json = await res.json();
           const status = json?.result?.data?.json;

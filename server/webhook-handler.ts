@@ -26,9 +26,9 @@ function extractImageUrl(output: unknown): string | undefined {
 export function registerWebhookRoutes(app: Express) {
   app.post("/api/webhooks/replicate", async (req: Request, res: Response) => {
     try {
-      // Basit webhook doğrulaması — User-Agent kontrolü
+      // Webhook doğrulaması
       const ua = req.headers["user-agent"] || "";
-      if (!ua.includes("replicate") && !ua.includes("Replicate") && process.env.NODE_ENV === "production") {
+      if (!ua.includes("Webhook") && !ua.includes("replicate") && !ua.includes("Replicate") && process.env.NODE_ENV === "production") {
         console.warn("[Webhook] Rejected: invalid user-agent:", ua);
         res.status(403).json({ error: "Forbidden" });
         return;
