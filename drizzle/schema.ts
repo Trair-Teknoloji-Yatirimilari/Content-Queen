@@ -116,3 +116,20 @@ export const showcase = mysqlTable("showcase", {
 
 export type Showcase = typeof showcase.$inferSelect;
 export type InsertShowcase = typeof showcase.$inferInsert;
+
+/**
+ * In-app notifications
+ */
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  isRead: int("isRead").default(0).notNull(),
+  data: text("data"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;

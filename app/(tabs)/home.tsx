@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const imagesQuery = trpc.generatedImages.list.useQuery();
   const trainingQuery = trpc.training.status.useQuery();
   const showcaseQuery = trpc.showcase.list.useQuery({ limit: 9 });
+  const unreadQuery = trpc.notifications.unreadCount.useQuery();
 
   const credits = creditsQuery.data;
   const recentImages = imagesQuery.data ?? [];
@@ -104,7 +105,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <Pressable
-              onPress={() => router.push("/profile")}
+              onPress={() => router.push("/notifications" as any)}
               style={({ pressed }) => ({
                 width: 40,
                 height: 40,
@@ -115,7 +116,19 @@ export default function HomeScreen() {
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Text style={{ fontSize: 18, color: "#fff" }}>👤</Text>
+              <Text style={{ fontSize: 18, color: "#fff" }}>🔔</Text>
+              {(unreadQuery.data?.count ?? 0) > 0 && (
+                <View style={{
+                  position: "absolute", top: 2, right: 2,
+                  width: 16, height: 16, borderRadius: 8,
+                  backgroundColor: "#FF3B30",
+                  justifyContent: "center", alignItems: "center",
+                }}>
+                  <Text style={{ fontSize: 9, fontWeight: "800", color: "#fff" }}>
+                    {unreadQuery.data!.count > 9 ? "9+" : unreadQuery.data!.count}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           </View>
         </View>

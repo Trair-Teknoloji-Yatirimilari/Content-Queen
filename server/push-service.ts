@@ -2,6 +2,7 @@
  * Expo Push Notification Service
  * Firebase yerine Expo'nun kendi push servisi — daha basit, daha güvenilir.
  */
+import * as db from "./db";
 
 interface ExpoPushMessage {
   to: string;
@@ -43,49 +44,52 @@ async function sendPushNotification(message: ExpoPushMessage): Promise<boolean> 
 // ─── Public API ───
 
 export async function notifyTrainingComplete(pushToken: string | null, userId: number): Promise<void> {
-  if (!pushToken) return;
+  const title = "AI Modelin Hazır! 🎉";
+  const body = "Kişisel AI modelin başarıyla oluşturuldu. Artık profesyonel görseller üretebilirsin.";
 
-  await sendPushNotification({
-    to: pushToken,
-    title: "AI Modelin Hazır! 🎉",
-    body: "Kişisel AI modelin başarıyla oluşturuldu. Artık profesyonel görseller üretebilirsin.",
-    data: { type: "training_ready", userId: String(userId) },
-    sound: "default",
-  });
+  await db.createNotification({ userId, type: "training_ready", title, body, data: JSON.stringify({ type: "training_ready" }) });
+
+  if (!pushToken) return;
+  await sendPushNotification({ to: pushToken, title, body, data: { type: "training_ready", userId: String(userId) }, sound: "default" });
 }
 
 export async function notifyTrainingFailed(pushToken: string | null, userId: number): Promise<void> {
-  if (!pushToken) return;
+  const title = "Eğitim Başarısız 😔";
+  const body = "AI model eğitimi tamamlanamadı. Lütfen tekrar deneyin.";
 
-  await sendPushNotification({
-    to: pushToken,
-    title: "Eğitim Başarısız 😔",
-    body: "AI model eğitimi tamamlanamadı. Lütfen tekrar deneyin.",
-    data: { type: "training_failed", userId: String(userId) },
-    sound: "default",
-  });
+  await db.createNotification({ userId, type: "training_failed", title, body, data: JSON.stringify({ type: "training_failed" }) });
+
+  if (!pushToken) return;
+  await sendPushNotification({ to: pushToken, title, body, data: { type: "training_failed", userId: String(userId) }, sound: "default" });
 }
 
 export async function notifyImageComplete(pushToken: string | null, userId: number, imageId: number, style: string): Promise<void> {
-  if (!pushToken) return;
+  const title = "Görselin Hazır! ✨";
+  const body = `${style} stilinde görselin başarıyla oluşturuldu.`;
 
-  await sendPushNotification({
-    to: pushToken,
-    title: "Görselin Hazır! ✨",
-    body: `${style} stilinde görselin başarıyla oluşturuldu.`,
-    data: { type: "image_generated", imageId: String(imageId), userId: String(userId) },
-    sound: "default",
-  });
+  await db.createNotification({ userId, type: "image_generated", title, body, data: JSON.stringify({ type: "image_generated", imageId: String(imageId) }) });
+
+  if (!pushToken) return;
+  await sendPushNotification({ to: pushToken, title, body, data: { type: "image_generated", imageId: String(imageId), userId: String(userId) }, sound: "default" });
 }
 
 export async function notifyImageFailed(pushToken: string | null, userId: number): Promise<void> {
-  if (!pushToken) return;
+  const title = "Görsel Oluşturulamadı";
+  const body = "Bir sorun oluştu. Lütfen tekrar deneyin.";
 
-  await sendPushNotification({
-    to: pushToken,
-    title: "Görsel Oluşturulamadı",
-    body: "Bir sorun oluştu. Lütfen tekrar deneyin.",
-    data: { type: "image_failed", userId: String(userId) },
-    sound: "default",
-  });
+  await db.createNotification({ userId, type: "image_failed", title, body, data: JSON.stringify({ type: "image_failed" }) });
+
+  if (!pushToken) return;
+  await sendPushNotification({ to: pushToken, title, body, data: { type: "image_failed", userId: String(userId) }, sound: "default" });
+}
+
+export async function notifyCreditsAdded(userId: number, amount: number): Promise<void> {
+  const title = "Kredi Yüklendi! 💎";
+  const body = `${amount} kredi hesabınıza eklendi.`;
+
+  await db.createNotification({ userId, type: "credits_added", title, body, data: JSON.stringify({ type: "credits_added", amount: String(amount) }) });
+
+  const pushToken = await db.getPushToken(userId);
+  if (!pushToken) return;
+  await sendPushNotification({ to: pushToken, title, body, data: { type: "credits_added" }, sound: "default" });
 }

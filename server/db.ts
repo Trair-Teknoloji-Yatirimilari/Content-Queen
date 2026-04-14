@@ -476,3 +476,40 @@ export async function getPushToken(userId: number): Promise<string | null> {
   const result = await db.select({ pushToken: users.pushToken }).from(users).where(eq(users.id, userId)).limit(1);
   return result[0]?.pushToken || null;
 }
+
+/**
+ * In-app Notifications
+ */
+import { notifications } from "../drizzle/schema";
+import type { InsertNotification } from "../drizzle/schema";
+
+export async function createNotification(data: InsertNotification) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(notifications).values(data);
+}
+
+export async function getUserNotifications(userId: number, limit: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)).limit(limit);
+}
+
+export async function getUnreadCount(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select().from(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, 0)));
+  return result.length;
+}
+
+export async function markNotificationRead(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notifications).set({ isRead: 1 }).where(and(eq(notifications.id, id), eq(notifications.userId, userId)));
+}
+
+export async function markAllRead(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.userId, userId));
+}

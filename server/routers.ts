@@ -10,6 +10,7 @@ import { notificationService } from "./notification-service";
 import { sendOtp, verifyOtp, normalizePhone } from "./_core/otp";
 import { sdk } from "./_core/sdk";
 import { ONE_YEAR_MS } from "../shared/const.js";
+import { notifyCreditsAdded } from "./push-service";
 
 export const appRouter = router({
   system: systemRouter,
@@ -278,19 +279,25 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const tier = input.subscriptionTier ?? (input.amount >= 999 ? "premium" : input.amount >= 35 ? "pro" : "free");
         const credits = await db.getUserCredits(ctx.user.id);
+        let result;
         if (!credits) {
-          return db.createUserCredits({
+          result = await db.createUserCredits({
             userId: ctx.user.id,
             totalCredits: input.amount,
             usedCredits: 0,
             subscriptionTier: tier,
           });
+        } else {
+          result = await db.updateUserCredits(ctx.user.id, {
+            totalCredits: credits.totalCredits + input.amount,
+            subscriptionTier: tier === "free" ? credits.subscriptionTier : tier,
+          });
         }
 
-        return db.updateUserCredits(ctx.user.id, {
-          totalCredits: credits.totalCredits + input.amount,
-          subscriptionTier: tier === "free" ? credits.subscriptionTier : tier,
-        });
+        // In-app + push notification
+        notifyCreditsAdded(ctx.user.id, input.amount).catch(() => {});
+
+        return result;
       }),
   }),
 
@@ -546,6 +553,28 @@ export const appRouter = router({
         await db.savePushToken(ctx.user.id, input.token);
         return { success: true };
       }),
+
+    list: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return db.getUserNotifications(ctx.user.id, input?.limit ?? 30);
+      }),
+
+    unreadCount: protectedProcedure.query(async ({ ctx }) => {
+      return { count: await db.getUnreadCount(ctx.user.id) };
+    }),
+
+    markRead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.markNotificationRead(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.markAllRead(ctx.user.id);
+      return { success: true };
+    }),
   }),
 });
 
