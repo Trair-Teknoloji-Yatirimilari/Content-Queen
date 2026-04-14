@@ -361,9 +361,18 @@ export default function HomeScreen() {
           {/* Hazır Poz Kategorileri */}
           {POSE_CATEGORIES.map((cat) => (
             <View key={cat.id} style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>
-                {cat.emoji} {cat.name}
-              </Text>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push({ pathname: "/pose-category" as any, params: { id: cat.id } });
+                }}
+                style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                  {cat.emoji} {cat.name}
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "600" }}>Tümü ›</Text>
+              </Pressable>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, paddingHorizontal: 20 }}>
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   {cat.poses.map((pose) => (

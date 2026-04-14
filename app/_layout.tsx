@@ -58,6 +58,7 @@ function RootLayoutNav() {
       <Stack.Screen name="image-detail" />
       <Stack.Screen name="pricing" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="pose-category" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="privacy-policy" />
