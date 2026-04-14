@@ -56,12 +56,16 @@ export default function PricingScreen() {
   const loadOfferings = async () => {
     try {
       const offerings = await getOfferings();
+      console.log("[Pricing] Offerings loaded:", offerings.creditPackages.length, "credits,", offerings.subscriptions.length, "subs");
       setCreditPackages(offerings.creditPackages);
       setSubscriptions(offerings.subscriptions);
       if (offerings.creditPackages.length === 0 && offerings.subscriptions.length === 0) {
+        console.warn("[Pricing] No offerings found — fallback mode");
+        // Production'da fallback'i sadece göster, satın alma devre dışı
         setUsesFallback(true);
       }
-    } catch {
+    } catch (e) {
+      console.error("[Pricing] Load offerings error:", e);
       setUsesFallback(true);
     } finally {
       setLoadingOfferings(false);
@@ -77,11 +81,13 @@ export default function PricingScreen() {
 
       if (result.success) {
         // Kredi paketi ise backend'e kredi ekle
-        const creditAmount = CREDIT_AMOUNTS[pkg.identifier];
+        const productId = pkg.product.identifier;
+        const creditAmount = CREDIT_AMOUNTS[productId];
+        console.log("[Pricing] Purchase success:", productId, "credits:", creditAmount);
         if (creditAmount) {
-          const tier = pkg.identifier === "sub_premium" ? "premium"
-            : pkg.identifier === "sub_pro" ? "pro"
-            : pkg.identifier === "sub_basic" ? "pro"
+          const tier = productId === "sub_premium" ? "premium"
+            : productId === "sub_pro" ? "pro"
+            : productId === "sub_basic" ? "pro"
             : undefined;
           await addCreditsMutation.mutateAsync({
             amount: creditAmount,
@@ -106,18 +112,11 @@ export default function PricingScreen() {
   };
 
   const handleFallbackPurchase = async (id: string, credits: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setPurchasing(id);
-    try {
-      await addCreditsMutation.mutateAsync({ amount: credits });
-      utils.credits.getCredits.invalidate();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Başarılı ✅", `${credits} kredi hesabınıza eklendi.`);
-    } catch {
-      Alert.alert("Hata", "İşlem başarısız.");
-    } finally {
-      setPurchasing(null);
-    }
+    // Production'da fallback satın alma devre dışı — RevenueCat gerekli
+    Alert.alert(
+      "Satın Alma Hazırlanıyor",
+      "Satın alma sistemi yükleniyor. Lütfen uygulamayı kapatıp tekrar açın.",
+    );
   };
 
   const handleRestore = async () => {
@@ -177,12 +176,12 @@ export default function PricingScreen() {
           {!loadingOfferings && tab === "credits" && (
             <View style={{ gap: 12 }}>
               {(usesFallback ? FALLBACK_CREDITS : creditPackages.map((p) => ({
-                id: p.identifier,
-                credits: CREDIT_AMOUNTS[p.identifier] || 0,
+                id: p.product.identifier,
+                credits: CREDIT_AMOUNTS[p.product.identifier] || 0,
                 price: p.product.priceString,
-                pricePerCredit: `$${((p.product.price || 0) / (CREDIT_AMOUNTS[p.identifier] || 1)).toFixed(2)}`,
-                popular: p.identifier === "credits_50",
-                savings: p.identifier === "credits_50" ? "%33" : p.identifier === "credits_150" ? "%56" : undefined,
+                pricePerCredit: `$${((p.product.price || 0) / (CREDIT_AMOUNTS[p.product.identifier] || 1)).toFixed(2)}`,
+                popular: p.product.identifier === "credits_50",
+                savings: p.product.identifier === "credits_50" ? "%33" : p.product.identifier === "credits_150" ? "%56" : undefined,
                 pkg: p,
               }))).map((item: any) => (
                 <Pressable
@@ -234,15 +233,15 @@ export default function PricingScreen() {
           {!loadingOfferings && tab === "subscription" && (
             <View style={{ gap: 12 }}>
               {(usesFallback ? FALLBACK_SUBS : subscriptions.map((p) => ({
-                id: p.identifier,
-                name: p.identifier === "sub_basic" ? "Basic" : p.identifier === "sub_pro" ? "Pro" : "Premium",
+                id: p.product.identifier,
+                name: p.product.identifier === "sub_basic" ? "Basic" : p.product.identifier === "sub_pro" ? "Pro" : "Premium",
                 price: p.product.priceString,
                 period: "/ay",
-                credits: p.identifier === "sub_basic" ? "12 kredi/ay" : p.identifier === "sub_pro" ? "35 kredi/ay" : "100 kredi/ay",
-                popular: p.identifier === "sub_pro",
-                features: p.identifier === "sub_basic"
+                credits: p.product.identifier === "sub_basic" ? "12 kredi/ay" : p.product.identifier === "sub_pro" ? "35 kredi/ay" : "100 kredi/ay",
+                popular: p.product.identifier === "sub_pro",
+                features: p.product.identifier === "sub_basic"
                   ? ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
-                  : p.identifier === "sub_pro"
+                  : p.product.identifier === "sub_pro"
                     ? ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
                     : ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],
                 pkg: p,

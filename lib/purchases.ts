@@ -80,21 +80,36 @@ export async function getOfferings(): Promise<{
   subscriptions: PurchasesPackage[];
 }> {
   try {
+    console.log("[Purchases] Fetching offerings...");
     const offerings = await Purchases.getOfferings();
+    console.log("[Purchases] Offerings:", JSON.stringify({
+      currentId: offerings.current?.identifier,
+      packageCount: offerings.current?.availablePackages.length,
+      packages: offerings.current?.availablePackages.map(p => ({
+        id: p.identifier,
+        productId: p.product.identifier,
+        price: p.product.priceString,
+      })),
+    }));
+
     const current = offerings.current;
 
     if (!current) {
+      console.warn("[Purchases] No current offering found");
       return { creditPackages: [], subscriptions: [] };
     }
 
-    return {
-      creditPackages: current.availablePackages.filter((p) =>
-        p.identifier.startsWith("credits_"),
-      ),
-      subscriptions: current.availablePackages.filter((p) =>
-        p.identifier.startsWith("sub_"),
-      ),
-    };
+    // Filter by product identifier (App Store product ID), not package identifier
+    const creditPackages = current.availablePackages.filter((p) =>
+      p.product.identifier.startsWith("credits_"),
+    );
+    const subscriptions = current.availablePackages.filter((p) =>
+      p.product.identifier.startsWith("sub_"),
+    );
+
+    console.log("[Purchases] Credits:", creditPackages.length, "Subs:", subscriptions.length);
+
+    return { creditPackages, subscriptions };
   } catch (error) {
     console.error("[Purchases] Get offerings failed:", error);
     return { creditPackages: [], subscriptions: [] };
