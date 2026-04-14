@@ -184,34 +184,31 @@ class ReplicateService {
     const client = this.getClient();
 
     try {
-      console.log("[Generate] LoRA + ControlNet ile görsel üretimi:", {
-        loraModelVersion: loraModelVersion.substring(0, 40) + "...",
+      console.log("[Generate] LoRA ile görsel üretimi:", {
+        loraModelVersion: loraModelVersion.substring(0, 50) + "...",
         prompt: prompt.substring(0, 50) + "...",
+        hasWeightsUrl: !!options?.loraWeightsUrl,
       });
 
-      // xlabs-ai/flux-dev-controlnet: LoRA + Depth ControlNet birlikte
-      // Depth map referans fotoğraftan otomatik çıkarılır (DepthAnything)
-      // LoRA yüz/vücut benzerliğini sağlar
+      // LoRA model version ile direkt prediction oluştur
       const prediction = await client.predictions.create({
-        model: "xlabs-ai/flux-dev-controlnet",
+        version: loraModelVersion,
         input: {
           prompt: `a photo of TOK person, ${prompt}`,
-          control_image: referenceImageUrl,
-          control_type: "depth",
-          control_strength: 0.65,
-          lora_url: options?.loraWeightsUrl || "",
-          lora_strength: 1.0,
-          steps: options?.steps ?? 30,
+          image: referenceImageUrl,
+          num_outputs: 1,
+          num_inference_steps: options?.steps ?? 28,
           guidance_scale: options?.guidance ?? 3.5,
+          lora_scale: options?.loraScale ?? 0.9,
+          prompt_strength: 0.6,
           output_format: "webp",
           output_quality: 95,
-          negative_prompt: "low quality, ugly, distorted, blurry, wrong pose, different angle",
         },
         webhook: WEBHOOK_URL,
         webhook_events_filter: ["completed"],
       });
 
-      console.log("[Generate] Prediction oluşturuldu:", prediction.id);
+      console.log("[Generate] Prediction oluşturuldu:", prediction.id, prediction.status);
 
       return {
         jobId: prediction.id,
@@ -219,33 +216,15 @@ class ReplicateService {
         imageUrl: this.extractImageUrl(prediction.output),
       };
     } catch (error: any) {
-      console.error("[Generate] LoRA+ControlNet hatası:", error?.message);
+      console.error("[Generate] LoRA hatası:", error?.message);
 
-      // Fallback: LoRA-only generation (ControlNet başarısız olursa)
-      console.log("[Generate] Fallback: LoRA-only deneniyor...");
+      // Fallback: Standart Flux ile üret
+      console.log("[Generate] Fallback: Standart Flux deneniyor...");
       try {
-        const prediction = await client.predictions.create({
-          version: loraModelVersion,
-          input: {
-            prompt: `a photo of TOK person, ${prompt}`,
-            image: referenceImageUrl,
-            num_outputs: 1,
-            num_inference_steps: options?.steps ?? 30,
-            guidance_scale: options?.guidance ?? 3.5,
-            lora_scale: options?.loraScale ?? 0.95,
-            prompt_strength: 0.55,
-            output_format: "webp",
-            output_quality: 95,
-          },
-          webhook: WEBHOOK_URL,
-          webhook_events_filter: ["completed"],
-        });
-
-        return {
-          jobId: prediction.id,
-          status: this.mapJobStatus(prediction.status),
-          imageUrl: this.extractImageUrl(prediction.output),
-        };
+        return await this.generateStandard(
+          `a photo of TOK person, ${prompt}`,
+          referenceImageUrl,
+        );
       } catch (fallbackError: any) {
         console.error("[Generate] Fallback da başarısız:", fallbackError?.message);
         return {
