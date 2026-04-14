@@ -20,7 +20,8 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 function getClientIP(req: Request): string {
-  return (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
+  return (req.headers["cf-connecting-ip"] as string)
+    || (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
     || req.headers["x-real-ip"] as string
     || req.ip
     || "unknown";
