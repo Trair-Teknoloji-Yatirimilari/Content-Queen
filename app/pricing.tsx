@@ -24,9 +24,9 @@ const FALLBACK_CREDITS = [
 ];
 
 const FALLBACK_SUBS = [
-  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "12 kredi/ay", features: ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
-  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "35 kredi/ay", popular: true, features: ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
-  { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "Sınırsız", features: ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"] },
+  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "12 kredi/ay", features: ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "35 kredi/ay", popular: true, features: ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
+  { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "100 kredi/ay", features: ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"] },
 ];
 
 export default function PricingScreen() {
@@ -236,13 +236,13 @@ export default function PricingScreen() {
                 name: p.identifier === "sub_basic" ? "Basic" : p.identifier === "sub_pro" ? "Pro" : "Premium",
                 price: p.product.priceString,
                 period: "/ay",
-                credits: p.identifier === "sub_basic" ? "12 kredi/ay" : p.identifier === "sub_pro" ? "35 kredi/ay" : "Sınırsız",
+                credits: p.identifier === "sub_basic" ? "12 kredi/ay" : p.identifier === "sub_pro" ? "35 kredi/ay" : "100 kredi/ay",
                 popular: p.identifier === "sub_pro",
                 features: p.identifier === "sub_basic"
-                  ? ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
+                  ? ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
                   : p.identifier === "sub_pro"
-                    ? ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
-                    : ["Sınırsız görsel oluşturma", "Kişiye özel AI model eğitimi", "LoRA ile profesyonel görseller", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],
+                    ? ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
+                    : ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],
                 pkg: p,
               }))).map((plan: any) => (
                 <Pressable
