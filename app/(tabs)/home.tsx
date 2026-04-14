@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
 import { IMAGE_STYLES } from "@/constants/styles";
+import { POSE_CATEGORIES } from "@/constants/poses";
 import { Animated } from "react-native";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -388,7 +389,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ── Showcase ── */}
+        {/* ── Showcase — Hazır Pozlar + Topluluk ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
@@ -398,40 +399,78 @@ export default function HomeScreen() {
               {t("home.showcaseSub")}
             </Text>
           </View>
-          {showcaseImages.length > 0 ? (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-              {showcaseImages.map((item) => (
-                <View
-                  key={item.id}
-                  style={{
-                    width: "31%",
-                    aspectRatio: 1,
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    backgroundColor: colors.surface,
-                  }}
-                >
-                  <Image
-                    source={{ uri: item.imageUrl }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    transition={300}
-                  />
-                  {item.style && (
-                    <View style={{ position: "absolute", bottom: 4, left: 4, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                      <Text style={{ fontSize: 9, color: "#fff", fontWeight: "600" }}>{item.style}</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 24, alignItems: "center", gap: 8 }}>
-              <Text style={{ fontSize: 28 }}>🌟</Text>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{t("home.noShowcase")}</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
-                {t("home.noShowcaseDesc")}
+
+          {/* Hazır Poz Kategorileri */}
+          {POSE_CATEGORIES.map((cat) => (
+            <View key={cat.id} style={{ marginBottom: 16 }}>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>
+                {cat.emoji} {cat.name}
               </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, paddingHorizontal: 20 }}>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  {cat.poses.map((pose) => (
+                    <Pressable
+                      key={pose.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push({ pathname: "/generate-image" as any, params: { contentImageUri: pose.imageUrl, autoStart: "false" } });
+                      }}
+                      style={({ pressed }) => ({
+                        width: 130,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        backgroundColor: colors.surface,
+                        transform: [{ scale: pressed ? 0.95 : 1 }],
+                      })}
+                    >
+                      <Image
+                        source={{ uri: pose.imageUrl }}
+                        style={{ width: 130, height: 170 }}
+                        contentFit="cover"
+                        transition={300}
+                      />
+                      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "rgba(0,0,0,0.5)", paddingVertical: 6, paddingHorizontal: 8 }}>
+                        <Text style={{ fontSize: 11, color: "#fff", fontWeight: "700" }}>{pose.label}</Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          ))}
+
+          {/* Topluluk Görselleri */}
+          {showcaseImages.length > 0 && (
+            <View style={{ marginTop: 8 }}>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>
+                🌟 Topluluk
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                {showcaseImages.map((item) => (
+                  <View
+                    key={item.id}
+                    style={{
+                      width: "31%",
+                      aspectRatio: 1,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      backgroundColor: colors.surface,
+                    }}
+                  >
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={300}
+                    />
+                    {item.style && (
+                      <View style={{ position: "absolute", bottom: 4, left: 4, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                        <Text style={{ fontSize: 9, color: "#fff", fontWeight: "600" }}>{item.style}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
             </View>
           )}
         </View>
