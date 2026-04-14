@@ -21,6 +21,9 @@ export const users = mysqlTable("users", {
   loraStatus: mysqlEnum("loraStatus", ["none", "pending", "training", "ready", "failed"]).default("none").notNull(),
   loraTrainingId: varchar("loraTrainingId", { length: 255 }),
   loraTrainedAt: timestamp("loraTrainedAt"),
+  /** Monthly training limit tracking */
+  loraTrainCount: int("loraTrainCount").default(0).notNull(),
+  loraTrainResetAt: timestamp("loraTrainResetAt"),
   /** Referral system */
   referralCode: varchar("referralCode", { length: 10 }).unique(),
   referredBy: int("referredBy"),

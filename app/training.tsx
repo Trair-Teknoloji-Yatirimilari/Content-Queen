@@ -219,7 +219,7 @@ export default function TrainingScreen() {
 
   // ─── TRAINING STATE ───
   if (currentStep === "training") {
-    return <TrainingProgressScreen loraStatus={loraStatus} photoCount={photos.length} colors={colors} onCancel={handleReset} t={t} />;
+    return <TrainingProgressScreen loraStatus={loraStatus} photoCount={photos.length} colors={colors} onCancel={handleReset} t={t} router={router} />;
   }
 
   // ─── UPLOAD STATE ───
@@ -421,6 +421,7 @@ interface TrainingProgressProps {
   colors: ReturnType<typeof useColors>;
   onCancel: () => void;
   t: (key: string) => string;
+  router: any;
 }
 
 const STEPS = [
@@ -430,7 +431,7 @@ const STEPS = [
   { key: "finalizing", icon: "✨", label: "Model tamamlanıyor", duration: "~1 dk" },
 ];
 
-function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel, t }: TrainingProgressProps) {
+function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel, t, router }: TrainingProgressProps) {
   const spinAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [elapsed, setElapsed] = useState(0);
@@ -616,6 +617,22 @@ function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel, t }:
           <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
             {t("training.canClose")}
           </Text>
+
+          <Pressable
+            onPress={() => router.replace("/(tabs)/home")}
+            style={({ pressed }) => ({
+              backgroundColor: colors.surface,
+              paddingVertical: 12,
+              paddingHorizontal: 32,
+              borderRadius: 12,
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: colors.border,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            })}
+          >
+            <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{t("training.goHome")}</Text>
+          </Pressable>
 
           <Pressable onPress={onCancel} style={{ padding: 8 }}>
             <Text style={{ fontSize: 13, color: colors.error }}>{t("training.cancel")}</Text>

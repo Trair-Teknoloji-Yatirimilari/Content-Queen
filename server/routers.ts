@@ -117,10 +117,25 @@ export const appRouter = router({
     /** Kullanıcının LoRA durumunu getir */
     status: protectedProcedure.query(async ({ ctx }) => {
       const user = await db.getUserById(ctx.user.id);
+      const credits = await db.getUserCredits(ctx.user.id);
+      const tier = credits?.subscriptionTier ?? "free";
+      const TRAIN_LIMITS: Record<string, number> = { free: 1, pro: 2, premium: 3 };
+      const maxTrains = TRAIN_LIMITS[tier] ?? 1;
+
+      let trainCount = user?.loraTrainCount ?? 0;
+      const now = new Date();
+      const resetAt = user?.loraTrainResetAt ? new Date(user.loraTrainResetAt) : null;
+      if (!resetAt || now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+        trainCount = 0;
+      }
+
       return {
         loraStatus: user?.loraStatus ?? "none",
         loraModelVersion: user?.loraModelVersion ?? null,
         loraTrainedAt: user?.loraTrainedAt ?? null,
+        trainingsUsed: trainCount,
+        trainingsMax: maxTrains,
+        trainingsRemaining: Math.max(0, maxTrains - trainCount),
       };
     }),
 
@@ -150,6 +165,30 @@ export const appRouter = router({
     /** LoRA training başlat */
     start: protectedProcedure.mutation(async ({ ctx }) => {
       console.log("[Training] Start requested by user:", ctx.user.id);
+
+      // Aylık training limit kontrolü
+      const credits = await db.getUserCredits(ctx.user.id);
+      const tier = credits?.subscriptionTier ?? "free";
+      const TRAIN_LIMITS: Record<string, number> = { free: 1, pro: 2, premium: 3 };
+      const maxTrains = TRAIN_LIMITS[tier] ?? 1;
+
+      const user = await db.getUserById(ctx.user.id);
+      if (user) {
+        // Ay sıfırlama kontrolü
+        const now = new Date();
+        const resetAt = user.loraTrainResetAt ? new Date(user.loraTrainResetAt) : null;
+        let trainCount = user.loraTrainCount ?? 0;
+
+        if (!resetAt || now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+          // Yeni ay — sayacı sıfırla
+          trainCount = 0;
+          await db.updateUserLoRA(ctx.user.id, { loraTrainCount: 0, loraTrainResetAt: now } as any);
+        }
+
+        if (trainCount >= maxTrains) {
+          throw new Error(`Bu ay ${maxTrains} model eğitim hakkınızı kullandınız. Planınızı yükselterek daha fazla eğitim yapabilirsiniz.`);
+        }
+      }
 
       // Fotoğraf kontrolü
       const photos = await db.getTrainingPhotos(ctx.user.id);
@@ -196,6 +235,19 @@ export const appRouter = router({
         loraStatus: "pending",
         loraTrainingId: result.trainingId,
       });
+
+      // Training sayacını artır
+      const currentUser = await db.getUserById(ctx.user.id);
+      const newCount = (currentUser?.loraTrainCount ?? 0) + 1;
+      const dbConn = await db.getDb();
+      if (dbConn) {
+        const { eq } = await import("drizzle-orm");
+        const { users } = await import("../drizzle/schema");
+        await dbConn.update(users).set({
+          loraTrainCount: newCount,
+          loraTrainResetAt: new Date(),
+        }).where(eq(users.id, ctx.user.id));
+      }
 
       return { trainingId: result.trainingId, status: "pending" };
     }),
