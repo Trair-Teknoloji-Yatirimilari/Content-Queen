@@ -323,7 +323,7 @@ export const appRouter = router({
 
     addCredits: protectedProcedure
       .input(z.object({
-        amount: z.number().min(1),
+        amount: z.number().min(1).max(150),
         subscriptionTier: z.enum(["free", "pro", "premium"]).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
