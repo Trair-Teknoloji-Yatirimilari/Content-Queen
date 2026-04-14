@@ -8,10 +8,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { saveImageToGallery, shareImage } from "@/lib/image-utils";
+import { useI18n } from "@/lib/i18n-context";
 
 export default function ImageDetailScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { t } = useI18n();
   const params = useLocalSearchParams();
   const imageId = Number(params.id);
 
@@ -27,7 +29,7 @@ export default function ImageDetailScreen() {
     const saved = await saveImageToGallery(image.generatedImageUrl);
     if (saved) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
+      Alert.alert(t("generate.saved"), t("generate.savedDesc"));
     }
   };
 
@@ -54,10 +56,10 @@ export default function ImageDetailScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert("Görseli Sil", "Bu görseli silmek istediğinize emin misiniz?", [
-      { text: "İptal" },
+    Alert.alert(t("imageDetail.delete"), t("imageDetail.deleteConfirm"), [
+      { text: t("common.cancel") },
       {
-        text: "Sil",
+        text: t("common.delete"),
         style: "destructive",
         onPress: async () => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -86,7 +88,7 @@ export default function ImageDetailScreen() {
         <ScreenHeader title="Görsel" />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 40 }}>😔</Text>
-          <Text style={{ fontSize: 16, color: colors.muted }}>Görsel bulunamadı</Text>
+          <Text style={{ fontSize: 16, color: colors.muted }}>{t("imageDetail.notFound")}</Text>
         </View>
       </ScreenContainer>
     );
@@ -102,7 +104,7 @@ export default function ImageDetailScreen() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Görsel Detay" />
+      <ScreenHeader title={t("imageDetail.title")} />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         <View style={{ gap: 16 }}>
           {/* Image */}
@@ -127,7 +129,7 @@ export default function ImageDetailScreen() {
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 })}
               >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>💾 Kaydet</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>{t("generate.save")}</Text>
               </Pressable>
               <Pressable
                 onPress={handleShare}
@@ -142,7 +144,7 @@ export default function ImageDetailScreen() {
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 })}
               >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>📤 Paylaş</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{t("generate.share")}</Text>
               </Pressable>
             </View>
 
@@ -164,27 +166,27 @@ export default function ImageDetailScreen() {
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 })}
               >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.primary }}>✨ Showcase'e Ekle</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.primary }}>{t("imageDetail.addShowcase")}</Text>
               </Pressable>
             )}
 
             {/* Info Card */}
             <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 12 }}>
-              <Row label="Tarih" value={createdAt} colors={colors} />
-              <Row label="Stil" value={image.style || "Profesyonel"} colors={colors} />
-              <Row label="Durum" value={
-                image.status === "completed" ? "Tamamlandı ✅" :
-                image.status === "failed" ? "Başarısız ❌" :
-                "İşleniyor ⏳"
+              <Row label={t("imageDetail.date")} value={createdAt} colors={colors} />
+              <Row label={t("imageDetail.style")} value={image.style || "Profesyonel"} colors={colors} />
+              <Row label={t("imageDetail.status")} value={
+                image.status === "completed" ? t("imageDetail.completed") :
+                image.status === "failed" ? t("imageDetail.failedStatus") :
+                t("imageDetail.processingStatus")
               } colors={colors} />
-              <Row label="Kredi" value={`${image.creditsUsed} kredi`} colors={colors} />
+              <Row label={t("imageDetail.credit")} value={`${image.creditsUsed} ${t("pricing.credits")}`} colors={colors} />
             </View>
 
             {/* Reference Image */}
             {image.contentImageUrl && image.contentImageUrl !== "pending" && (
               <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 8 }}>
                 <Text style={{ fontSize: 12, fontWeight: "600", color: colors.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Referans Görsel
+                  {t("imageDetail.reference")}
                 </Text>
                 <View style={{ borderRadius: 10, overflow: "hidden" }}>
                   <Image
@@ -206,7 +208,7 @@ export default function ImageDetailScreen() {
                 backgroundColor: pressed ? "rgba(255,59,48,0.1)" : "transparent",
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.error }}>Görseli Sil</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.error }}>{t("imageDetail.delete")}</Text>
             </Pressable>
           </View>
         </View>

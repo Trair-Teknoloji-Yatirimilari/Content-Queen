@@ -14,44 +14,22 @@ import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { useI18n } from "@/lib/i18n-context";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-interface OnboardingSlide {
-  emoji: string;
-  title: string;
-  subtitle: string;
-  bgColor: string;
-}
-
-const slides: OnboardingSlide[] = [
-  {
-    emoji: "📸",
-    title: "Fotoğraflarını Yükle",
-    subtitle:
-      "5-10 fotoğrafını yükle, yapay zeka seni tanısın.\nYüzün, vücut tipin, tarzın — hepsi öğrenilecek.",
-    bgColor: "rgba(233,75,143,0.08)",
-  },
-  {
-    emoji: "✨",
-    title: "Referans Seç",
-    subtitle:
-      "Pinterest'ten veya sosyal medyadan beğendiğin bir pozu seç.\nAI seni o fotoğrafın içine yerleştirecek.",
-    bgColor: "rgba(52,199,89,0.08)",
-  },
-  {
-    emoji: "👑",
-    title: "Kraliçe Gibi Parla",
-    subtitle:
-      "Sanki orada çekilmiş gibi profesyonel görseller oluştur.\nSosyal medyanda fark yarat.",
-    bgColor: "rgba(255,149,0,0.08)",
-  },
-];
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { t } = useI18n();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const slides = [
+    { emoji: "📸", title: t("onboarding.slide1.title"), subtitle: t("onboarding.slide1.subtitle"), bgColor: "rgba(233,75,143,0.08)" },
+    { emoji: "✨", title: t("onboarding.slide2.title"), subtitle: t("onboarding.slide2.subtitle"), bgColor: "rgba(52,199,89,0.08)" },
+    { emoji: "👑", title: t("onboarding.slide3.title"), subtitle: t("onboarding.slide3.subtitle"), bgColor: "rgba(255,149,0,0.08)" },
+  ];
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
@@ -130,7 +108,7 @@ export default function OnboardingScreen() {
         {/* Skip */}
         <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 24, paddingTop: 8 }}>
           <Pressable onPress={handleSkip} style={{ padding: 8 }}>
-            <Text style={{ fontSize: 15, color: colors.muted, fontWeight: "600" }}>Atla</Text>
+            <Text style={{ fontSize: 15, color: colors.muted, fontWeight: "600" }}>{t("onboarding.skip")}</Text>
           </Pressable>
         </View>
 
@@ -182,7 +160,7 @@ export default function OnboardingScreen() {
             })}
           >
             <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-              {currentIndex === slides.length - 1 ? "Başlayalım" : "Devam"}
+              {currentIndex === slides.length - 1 ? t("onboarding.start") : t("onboarding.next")}
             </Text>
           </Pressable>
         </View>

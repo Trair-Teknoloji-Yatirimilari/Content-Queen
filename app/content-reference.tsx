@@ -10,10 +10,12 @@ import { useRouter } from "expo-router";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
 import { IMAGE_STYLES, type ImageStyle } from "@/constants/styles";
+import { useI18n } from "@/lib/i18n-context";
 
 export default function ContentReferenceScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { t } = useI18n();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle>(IMAGE_STYLES[0]);
@@ -59,11 +61,11 @@ export default function ContentReferenceScreen() {
     if (remainingCredit < 1) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
-        "Krediniz Bitti",
-        "Görsel oluşturmak için kredi satın almanız gerekiyor.",
+        t("contentRef.noCredits"),
+        t("contentRef.noCreditsDesc"),
         [
-          { text: "İptal", style: "cancel" },
-          { text: "Kredi Satın Al", onPress: () => router.push("/pricing") },
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("contentRef.buyCredits"), onPress: () => router.push("/pricing") },
         ],
       );
       return;
@@ -95,7 +97,7 @@ export default function ContentReferenceScreen() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Referans Seç" />
+      <ScreenHeader title={t("contentRef.title")} />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: imageUri ? "flex-start" : "center" }}
         showsVerticalScrollIndicator={false}
@@ -120,10 +122,10 @@ export default function ContentReferenceScreen() {
 
               <View style={{ alignItems: "center", gap: 6 }}>
                 <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>
-                  Referans Fotoğraf Seç
+                  {t("contentRef.heading")}
                 </Text>
                 <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
-                  Pinterest veya sosyal medyadan beğendiğin{"\n"}bir pozu seç, AI seni o pozda oluştursun.
+                  {t("contentRef.desc")}
                 </Text>
               </View>
 
@@ -145,15 +147,15 @@ export default function ContentReferenceScreen() {
                 })}
               >
                 <Text style={{ fontSize: 18 }}>🖼</Text>
-                <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Galeriden Seç</Text>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{t("contentRef.pickFromGallery")}</Text>
               </Pressable>
 
               {/* Tips */}
               <View style={{ width: "100%", gap: 10, marginTop: 12 }}>
                 {[
-                  { icon: "💡", text: "Pozun net ve belirgin olduğu fotoğraflar seç" },
-                  { icon: "🌅", text: "İyi aydınlatılmış, yüksek kaliteli görseller tercih et" },
-                  { icon: "👗", text: "Kıyafet ve aksesuar detayları görünmeli" },
+                  { icon: "💡", text: t("contentRef.tip1") },
+                  { icon: "🌅", text: t("contentRef.tip2") },
+                  { icon: "👗", text: t("contentRef.tip3") },
                 ].map((tip, i) => (
                   <View key={i} style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
                     <Text style={{ fontSize: 16 }}>{tip.icon}</Text>
@@ -214,14 +216,14 @@ export default function ContentReferenceScreen() {
                   })}
                 >
                   <Text style={{ fontSize: 12 }}>🔄</Text>
-                  <Text style={{ fontSize: 12, color: "#fff", fontWeight: "600" }}>Değiştir</Text>
+                  <Text style={{ fontSize: 12, color: "#fff", fontWeight: "600" }}>{t("contentRef.change")}</Text>
                 </Pressable>
               </View>
 
               {/* Style Selection */}
               <View style={{ gap: 10 }}>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
-                  Stil Seç
+                  {t("contentRef.selectStyle")}
                 </Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   {IMAGE_STYLES.map((style) => {
@@ -280,12 +282,12 @@ export default function ContentReferenceScreen() {
                 {isUploading ? (
                   <>
                     <ActivityIndicator color="#fff" size="small" />
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Yükleniyor...</Text>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{t("contentRef.uploading")}</Text>
                   </>
                 ) : (
                   <>
                     <Text style={{ fontSize: 20 }}>✦</Text>
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Görsel Oluştur</Text>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{t("contentRef.generate")}</Text>
                   </>
                 )}
               </Pressable>

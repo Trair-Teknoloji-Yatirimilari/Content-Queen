@@ -13,6 +13,7 @@ import {
   CREDIT_AMOUNTS,
 } from "@/lib/purchases";
 import type { PurchasesPackage } from "react-native-purchases";
+import { useI18n } from "@/lib/i18n-context";
 
 type Tab = "credits" | "subscription";
 
@@ -32,6 +33,7 @@ const FALLBACK_SUBS = [
 export default function PricingScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("credits");
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [creditPackages, setCreditPackages] = useState<PurchasesPackage[]>([]);
@@ -130,14 +132,14 @@ export default function PricingScreen() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Paketler" />
+      <ScreenHeader title={t("pricing.title")} />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: 20, gap: 20 }}>
 
           {/* Current Credits */}
           <View style={{ backgroundColor: colors.primary, borderRadius: 16, padding: 20, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View>
-              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Mevcut Kredin</Text>
+              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{t("pricing.currentCredits")}</Text>
               <Text style={{ fontSize: 32, fontWeight: "800", color: "#fff" }}>{remainingCredit}</Text>
             </View>
             <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(255,255,255,0.2)", justifyContent: "center", alignItems: "center" }}>
@@ -147,19 +149,19 @@ export default function PricingScreen() {
 
           {/* Tab Switcher */}
           <View style={{ flexDirection: "row", backgroundColor: colors.surface, borderRadius: 12, padding: 4 }}>
-            {(["credits", "subscription"] as Tab[]).map((t) => (
+            {(["credits", "subscription"] as Tab[]).map((tabKey) => (
               <Pressable
-                key={t}
-                onPress={() => { setTab(t); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+                key={tabKey}
+                onPress={() => { setTab(tabKey); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
                 style={{
                   flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center",
-                  backgroundColor: tab === t ? "#fff" : "transparent",
-                  shadowColor: tab === t ? "#000" : "transparent",
-                  shadowOffset: { width: 0, height: 1 }, shadowOpacity: tab === t ? 0.1 : 0, shadowRadius: 3,
+                  backgroundColor: tab === tabKey ? "#fff" : "transparent",
+                  shadowColor: tab === tabKey ? "#000" : "transparent",
+                  shadowOffset: { width: 0, height: 1 }, shadowOpacity: tab === tabKey ? 0.1 : 0, shadowRadius: 3,
                 }}
               >
-                <Text style={{ fontSize: 14, fontWeight: "600", color: tab === t ? colors.foreground : colors.muted }}>
-                  {t === "credits" ? "Kredi Paketleri" : "Abonelik"}
+                <Text style={{ fontSize: 14, fontWeight: "600", color: tab === tabKey ? colors.foreground : colors.muted }}>
+                  {tabKey === "credits" ? t("pricing.creditPacks") : t("pricing.subscription")}
                 </Text>
               </Pressable>
             ))}
@@ -195,19 +197,19 @@ export default function PricingScreen() {
                 >
                   {item.popular && (
                     <View style={{ position: "absolute", top: -10, right: 16, backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 }}>
-                      <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>EN POPÜLER</Text>
+                      <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>{t("pricing.mostPopular")}</Text>
                     </View>
                   )}
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                     <View style={{ gap: 4 }}>
                       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
                         <Text style={{ fontSize: 28, fontWeight: "800", color: colors.foreground }}>{item.credits}</Text>
-                        <Text style={{ fontSize: 14, color: colors.muted }}>kredi</Text>
+                        <Text style={{ fontSize: 14, color: colors.muted }}>{t("pricing.credits")}</Text>
                       </View>
-                      <Text style={{ fontSize: 12, color: colors.muted }}>Kredi başına {item.pricePerCredit}</Text>
+                      <Text style={{ fontSize: 12, color: colors.muted }}>{t("pricing.perCredit")} {item.pricePerCredit}</Text>
                       {item.savings && (
                         <View style={{ backgroundColor: "rgba(52,199,89,0.1)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, alignSelf: "flex-start", marginTop: 4 }}>
-                          <Text style={{ fontSize: 11, fontWeight: "600", color: colors.success }}>{item.savings} tasarruf</Text>
+                          <Text style={{ fontSize: 11, fontWeight: "600", color: colors.success }}>{item.savings} {t("pricing.savings")}</Text>
                         </View>
                       )}
                     </View>
@@ -256,7 +258,7 @@ export default function PricingScreen() {
                 >
                   {plan.popular && (
                     <View style={{ position: "absolute", top: -10, right: 16, backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 }}>
-                      <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>ÖNERİLEN</Text>
+                      <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>{t("pricing.recommended")}</Text>
                     </View>
                   )}
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -278,7 +280,7 @@ export default function PricingScreen() {
                     ))}
                   </View>
                   <View style={{ backgroundColor: plan.popular ? colors.primary : "#fff", paddingVertical: 12, borderRadius: 12, alignItems: "center", borderWidth: plan.popular ? 0 : 1, borderColor: colors.border }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: plan.popular ? "#fff" : colors.foreground }}>Abone Ol</Text>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: plan.popular ? "#fff" : colors.foreground }}>{t("pricing.subscribe")}</Text>
                   </View>
                 </Pressable>
               ))}
@@ -289,7 +291,7 @@ export default function PricingScreen() {
 
               {/* Apple Required Subscription Disclosures */}
               <View style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, gap: 8, marginTop: 4, borderWidth: 1, borderColor: colors.border }}>
-                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>Abonelik Bilgileri</Text>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>{t("pricing.subsDetails")}</Text>
                 <Text style={{ fontSize: 11, color: colors.muted, lineHeight: 17 }}>
                   • Ödeme, satın alma onaylandığında Apple ID hesabınızdan tahsil edilir.{"\n"}
                   • Abonelik, mevcut dönemin bitiminden en az 24 saat önce iptal edilmediği sürece otomatik olarak yenilenir.{"\n"}
@@ -303,16 +305,16 @@ export default function PricingScreen() {
 
           {/* Restore */}
           <Pressable onPress={handleRestore} style={{ alignItems: "center", padding: 12 }}>
-            <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>Satın Almaları Geri Yükle</Text>
+            <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>{t("pricing.restore")}</Text>
           </Pressable>
 
           {/* Legal Links — Apple Required */}
           <View style={{ flexDirection: "row", justifyContent: "center", gap: 16, paddingBottom: 8 }}>
             <Pressable onPress={() => router.push("/terms-of-service")}>
-              <Text style={{ fontSize: 12, color: colors.muted, textDecorationLine: "underline" }}>Kullanım Şartları</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, textDecorationLine: "underline" }}>{t("settings.terms")}</Text>
             </Pressable>
             <Pressable onPress={() => router.push("/privacy-policy")}>
-              <Text style={{ fontSize: 12, color: colors.muted, textDecorationLine: "underline" }}>Gizlilik Politikası</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, textDecorationLine: "underline" }}>{t("settings.privacy")}</Text>
             </Pressable>
           </View>
         </View>

@@ -16,6 +16,7 @@ import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { trpc } from "@/lib/trpc";
+import { useI18n } from "@/lib/i18n-context";
 
 type TrainingStep = "upload" | "training" | "ready";
 
@@ -25,6 +26,7 @@ const MAX_PHOTOS = 15;
 export default function TrainingScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { t } = useI18n();
   const utils = trpc.useUtils();
 
   const statusQuery = trpc.training.status.useQuery();
@@ -71,10 +73,10 @@ export default function TrainingScreen() {
   }, [currentStep]);
 
   const handleDeletePhoto = useCallback((photoId: number) => {
-    Alert.alert("Fotoğrafı Sil", "Bu fotoğrafı silmek istediğinize emin misiniz?", [
-      { text: "İptal" },
+    Alert.alert(t("training.deletePhoto"), t("training.deletePhotoConfirm"), [
+      { text: t("common.cancel") },
       {
-        text: "Sil",
+        text: t("common.delete"),
         style: "destructive",
         onPress: async () => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -121,7 +123,7 @@ export default function TrainingScreen() {
 
   const handleStartTraining = async () => {
     if (photos.length < MIN_PHOTOS) {
-      Alert.alert("Yetersiz Fotoğraf", `En az ${MIN_PHOTOS} fotoğraf yüklemelisiniz.`);
+      Alert.alert(t("training.minPhotos"), `${t("training.minPhotos")} — ${MIN_PHOTOS}`);
       return;
     }
 
@@ -136,10 +138,10 @@ export default function TrainingScreen() {
   };
 
   const handleReset = () => {
-    Alert.alert("Sıfırla", "Eğitimi sıfırlayıp tekrar denemek istiyor musunuz?", [
-      { text: "İptal" },
+    Alert.alert(t("training.reset"), t("training.resetConfirm"), [
+      { text: t("common.cancel") },
       {
-        text: "Sıfırla",
+        text: t("training.reset"),
         style: "destructive",
         onPress: async () => {
           await resetMutation.mutateAsync();
@@ -169,10 +171,10 @@ export default function TrainingScreen() {
               <Text style={{ fontSize: 40 }}>✅</Text>
             </View>
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground, textAlign: "center" }}>
-              AI Modelin Hazır
+              {t("training.ready")}
             </Text>
             <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
-              Kişisel AI modelin başarıyla oluşturuldu.{"\n"}Artık profesyonel görseller üretebilirsin.
+              {t("training.readyDesc")}
             </Text>
             <Pressable
               onPress={() => {
@@ -188,7 +190,7 @@ export default function TrainingScreen() {
               })}
             >
               <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                Görsel Oluştur
+                {t("training.createImage")}
               </Text>
             </Pressable>
             <Pressable
@@ -203,11 +205,11 @@ export default function TrainingScreen() {
               })}
             >
               <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-                Modeli Güncelle
+                {t("training.updateModel")}
               </Text>
             </Pressable>
             <Pressable onPress={() => router.replace("/(tabs)")}>
-              <Text style={{ fontSize: 14, color: colors.muted }}>Ana Sayfaya Dön</Text>
+              <Text style={{ fontSize: 14, color: colors.muted }}>{t("training.goHome")}</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -217,7 +219,7 @@ export default function TrainingScreen() {
 
   // ─── TRAINING STATE ───
   if (currentStep === "training") {
-    return <TrainingProgressScreen loraStatus={loraStatus} photoCount={photos.length} colors={colors} onCancel={handleReset} />;
+    return <TrainingProgressScreen loraStatus={loraStatus} photoCount={photos.length} colors={colors} onCancel={handleReset} t={t} />;
   }
 
   // ─── UPLOAD STATE ───
@@ -236,13 +238,13 @@ export default function TrainingScreen() {
           }}
         >
           <Pressable onPress={() => router.back()} style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 15, color: "rgba(255,255,255,0.8)" }}>← Geri</Text>
+            <Text style={{ fontSize: 15, color: "rgba(255,255,255,0.8)" }}>{t("training.back")}</Text>
           </Pressable>
           <Text style={{ fontSize: 24, fontWeight: "800", color: "#fff" }}>
-            AI Modelini Oluştur
+            {t("training.title")}
           </Text>
           <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 4 }}>
-            Fotoğraflarını yükle, sana özel AI modeli eğitelim
+            {t("training.subtitle")}
           </Text>
         </View>
 
@@ -262,15 +264,15 @@ export default function TrainingScreen() {
             }}
           >
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>
-              📸 Fotoğraf Rehberi
+              {t("training.guide")}
             </Text>
             <View style={{ gap: 8 }}>
               {[
-                "En az 5, ideal olarak 10-15 fotoğraf yükle",
-                "Yüz yakın çekim, yarım boy ve tam boy karışık olsun",
-                "Farklı açılardan fotoğraflar ekle (önden, yandan)",
-                "İyi aydınlatılmış, net fotoğraflar seç",
-                "Güneş gözlüğü veya maske olmadan",
+                t("training.tip1"),
+                t("training.tip2"),
+                t("training.tip3"),
+                t("training.tip4"),
+                t("training.tip5"),
               ].map((tip, i) => (
                 <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
                   <Text style={{ fontSize: 12, color: colors.primary, marginTop: 1 }}>•</Text>
@@ -285,7 +287,7 @@ export default function TrainingScreen() {
           {/* Photo Counter */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
-              Fotoğraflar ({photos.length}/{MAX_PHOTOS})
+              {t("training.photos")} ({photos.length}/{MAX_PHOTOS})
             </Text>
             <Text
               style={{
@@ -295,8 +297,8 @@ export default function TrainingScreen() {
               }}
             >
               {photos.length >= MIN_PHOTOS
-                ? "✓ Yeterli fotoğraf"
-                : `${MIN_PHOTOS - photos.length} fotoğraf daha gerekli`}
+                ? t("training.enough")
+                : `${MIN_PHOTOS - photos.length} ${t("training.needMore")}`}
             </Text>
           </View>
 
@@ -362,7 +364,7 @@ export default function TrainingScreen() {
                 ) : (
                   <>
                     <Text style={{ fontSize: 28, color: colors.primary }}>+</Text>
-                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>Ekle</Text>
+                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>{t("training.add")}</Text>
                   </>
                 )}
               </Pressable>
@@ -399,7 +401,7 @@ export default function TrainingScreen() {
               <>
                 <Text style={{ fontSize: 20 }}>🧠</Text>
                 <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                  AI Modelimi Eğit
+                  {t("training.start")}
                 </Text>
               </>
             )}
@@ -418,6 +420,7 @@ interface TrainingProgressProps {
   photoCount: number;
   colors: ReturnType<typeof useColors>;
   onCancel: () => void;
+  t: (key: string) => string;
 }
 
 const STEPS = [
@@ -427,7 +430,7 @@ const STEPS = [
   { key: "finalizing", icon: "✨", label: "Model tamamlanıyor", duration: "~1 dk" },
 ];
 
-function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel }: TrainingProgressProps) {
+function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel, t }: TrainingProgressProps) {
   const spinAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [elapsed, setElapsed] = useState(0);
@@ -500,10 +503,10 @@ function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel }: Tr
           {/* Title */}
           <View style={{ gap: 6, alignItems: "center" }}>
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>
-              AI Modelin Eğitiliyor
+              {t("training.inProgress")}
             </Text>
             <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
-              Yapay zeka seni tanımayı öğreniyor.{"\n"}Bu işlem genellikle 5-10 dakika sürer.
+              {t("training.inProgressDesc")}
             </Text>
           </View>
 
@@ -611,11 +614,11 @@ function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel }: Tr
 
           {/* Tip */}
           <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
-            💡 Uygulamayı kapatabilirsin.{"\n"}Modelin hazır olduğunda bildirim göndereceğiz.
+            {t("training.canClose")}
           </Text>
 
           <Pressable onPress={onCancel} style={{ padding: 8 }}>
-            <Text style={{ fontSize: 13, color: colors.error }}>Eğitimi İptal Et</Text>
+            <Text style={{ fontSize: 13, color: colors.error }}>{t("training.cancel")}</Text>
           </Pressable>
         </View>
       </ScrollView>

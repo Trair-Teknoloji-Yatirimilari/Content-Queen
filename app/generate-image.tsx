@@ -10,12 +10,14 @@ import { trpc } from "@/lib/trpc";
 import { saveImageToGallery, shareImage, shareToInstagramStories, isInstagramInstalled } from "@/lib/image-utils";
 import { hasActiveSubscription } from "@/lib/purchases";
 import { getStyleById } from "@/constants/styles";
+import { useI18n } from "@/lib/i18n-context";
 
 type ScreenState = "preview" | "generating" | "success" | "error";
 
 export default function GenerateImageScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { t } = useI18n();
   const params = useLocalSearchParams();
   const contentImageUri = params.contentImageUri as string;
   const autoStart = params.autoStart === "true";
@@ -147,7 +149,7 @@ export default function GenerateImageScreen() {
     const saved = await saveImageToGallery(generatedImage);
     if (saved) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Kaydedildi ✅", "Görsel galerine kaydedildi.");
+      Alert.alert(t("generate.saved"), t("generate.savedDesc"));
     } else {
       Alert.alert("Hata", "Görsel kaydedilemedi.");
     }
@@ -201,8 +203,8 @@ export default function GenerateImageScreen() {
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }} showsVerticalScrollIndicator={false}>
           <View style={{ paddingHorizontal: 24, gap: 20 }}>
             <View style={{ alignItems: "center", gap: 4 }}>
-              <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>Başarılı! 🎉</Text>
-              <Text style={{ fontSize: 14, color: colors.muted }}>Görselin hazırlandı</Text>
+              <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>{t("generate.success")}</Text>
+              <Text style={{ fontSize: 14, color: colors.muted }}>{t("generate.successDesc")}</Text>
             </View>
 
             <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: colors.surface }}>
@@ -219,7 +221,7 @@ export default function GenerateImageScreen() {
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 })}
               >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>💾 Kaydet</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>{t("generate.save")}</Text>
               </Pressable>
               <Pressable
                 onPress={handleShare}
@@ -230,7 +232,7 @@ export default function GenerateImageScreen() {
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 })}
               >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>📤 Paylaş</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{t("generate.share")}</Text>
               </Pressable>
             </View>
 
@@ -249,7 +251,7 @@ export default function GenerateImageScreen() {
               })}
             >
               <Text style={{ fontSize: 16 }}>📷</Text>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>Instagram'da Paylaş</Text>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>{t("generate.instagramShare")}</Text>
               <View style={{ backgroundColor: "rgba(255,255,255,0.25)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
                 <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>PRO</Text>
               </View>
@@ -262,14 +264,14 @@ export default function GenerateImageScreen() {
                 transform: [{ scale: pressed ? 0.97 : 1 }],
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>Ana Sayfaya Dön</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{t("generate.goHome")}</Text>
             </Pressable>
 
             <Pressable
               onPress={() => { setGeneratedImage(null); setState("preview"); router.replace("/content-reference"); }}
               style={{ alignItems: "center", padding: 8 }}
             >
-              <Text style={{ fontSize: 14, color: colors.primary, fontWeight: "600" }}>Yeni Görsel Oluştur</Text>
+              <Text style={{ fontSize: 14, color: colors.primary, fontWeight: "600" }}>{t("generate.createNew")}</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -281,7 +283,7 @@ export default function GenerateImageScreen() {
   if (state === "generating") {
     return (
       <ScreenContainer>
-        <ScreenHeader title="Oluşturuluyor" showBack={false} />
+        <ScreenHeader title={t("generate.generating")} showBack={false} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, gap: 24 }}>
           <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: "rgba(233,75,143,0.1)", justifyContent: "center", alignItems: "center" }}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -290,7 +292,7 @@ export default function GenerateImageScreen() {
             {style.emoji} {style.name} Stil
           </Text>
           <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
-            Bu işlem 30-60 saniye sürebilir.{"\n"}Lütfen bekleyin...
+            {t("generate.waitMessage")}
           </Text>
 
           {/* Progress bar */}
@@ -313,7 +315,7 @@ export default function GenerateImageScreen() {
             <Text style={{ fontSize: 40 }}>😔</Text>
           </View>
           <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground, textAlign: "center" }}>
-            Bir Sorun Oluştu
+            {t("generate.error")}
           </Text>
           <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", lineHeight: 22 }}>
             {errorMessage || "Görsel oluşturulurken hata oluştu."}
@@ -327,11 +329,11 @@ export default function GenerateImageScreen() {
               transform: [{ scale: pressed ? 0.97 : 1 }],
             })}
           >
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Tekrar Dene</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{t("generate.retry")}</Text>
           </Pressable>
 
           <Pressable onPress={() => router.back()} style={{ padding: 8 }}>
-            <Text style={{ fontSize: 14, color: colors.muted }}>Geri Dön</Text>
+            <Text style={{ fontSize: 14, color: colors.muted }}>{t("generate.goBack")}</Text>
           </Pressable>
         </View>
       </ScreenContainer>
@@ -341,13 +343,13 @@ export default function GenerateImageScreen() {
   // ─── PREVIEW ───
   return (
     <ScreenContainer>
-      <ScreenHeader title="Görsel Oluştur" />
+      <ScreenHeader title={t("generate.title")} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: 24, gap: 24 }}>
           {/* Reference Preview */}
           <View style={{ gap: 8 }}>
             <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
-              Referans Görsel
+              {t("generate.reference")}
             </Text>
             <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: colors.surface }}>
               <Image source={{ uri: contentImageUri }} style={{ width: "100%", aspectRatio: 1 }} contentFit="cover" />
@@ -367,7 +369,7 @@ export default function GenerateImageScreen() {
             })}
           >
             <Text style={{ fontSize: 20 }}>✦</Text>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Görsel Oluştur</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{t("generate.title")}</Text>
           </Pressable>
 
           <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>

@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/use-colors";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
+import { useI18n } from "@/lib/i18n-context";
 
 type Step = "phone" | "otp";
 
@@ -22,6 +23,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const colors = useColors();
   const { setSession } = useAuth();
+  const { t } = useI18n();
 
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
@@ -50,11 +52,11 @@ export default function LoginScreen() {
 
   const handleSendOtp = async () => {
     if (phone.length < 10) {
-      setError("Geçerli bir telefon numarası girin");
+      setError(t("login.invalidPhone"));
       return;
     }
     if (!termsAccepted) {
-      setError("Devam etmek için sözleşmeleri kabul etmelisiniz");
+      setError(t("login.acceptTerms"));
       return;
     }
 
@@ -69,10 +71,10 @@ export default function LoginScreen() {
         startCountdown();
         setTimeout(() => otpRefs.current[0]?.focus(), 300);
       } else {
-        setError(result.error || "SMS gönderilemedi");
+        setError(result.error || t("login.smsFailed"));
       }
     } catch (e) {
-      setError("Bir hata oluştu. Tekrar deneyin.");
+      setError(t("login.error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -122,13 +124,13 @@ export default function LoginScreen() {
         await setSession(result.sessionToken, result.user);
         // Layout useEffect handles navigation based on isSignedIn
       } else {
-        setError(result.error || "Doğrulama başarısız");
+        setError(result.error || t("login.verifyFailed"));
         setOtp(["", "", "", "", "", ""]);
         otpRefs.current[0]?.focus();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } catch (e) {
-      setError("Bir hata oluştu. Tekrar deneyin.");
+      setError(t("login.error"));
       setOtp(["", "", "", "", "", ""]);
     } finally {
       setIsSubmitting(false);
@@ -166,7 +168,7 @@ export default function LoginScreen() {
                 Content Queen
               </Text>
               <Text style={{ fontSize: 14, color: colors.muted }}>
-                Kraliçe gibi parla ✨
+                {t("login.tagline")}
               </Text>
             </View>
 
@@ -175,7 +177,7 @@ export default function LoginScreen() {
               <View style={{ gap: 20 }}>
                 <View style={{ gap: 8 }}>
                   <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                    Telefon Numarası
+                    {t("login.phone")}
                   </Text>
                   <View
                     style={{
@@ -239,7 +241,7 @@ export default function LoginScreen() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                      Doğrulama Kodu Gönder
+                      {t("login.sendOtp")}
                     </Text>
                   )}
                 </Pressable>
@@ -272,16 +274,16 @@ export default function LoginScreen() {
                         style={{ color: colors.primary, fontWeight: "600" }}
                         onPress={() => router.push("/privacy-policy")}
                       >
-                        Gizlilik Politikası
+                        {t("kvkk.privacy")}
                       </Text>
-                      {"'nı ve "}
+                      {t("login.termsText")}
                       <Text
                         style={{ color: colors.primary, fontWeight: "600" }}
                         onPress={() => router.push("/terms-of-service")}
                       >
-                        Kullanım Şartları
+                        {t("kvkk.terms")}
                       </Text>
-                      {"'nı okudum ve kabul ediyorum."}
+                      {t("login.termsAccept")}
                     </Text>
                   </View>
                 </Pressable>
@@ -291,10 +293,10 @@ export default function LoginScreen() {
               <View style={{ gap: 20 }}>
                 <View style={{ alignItems: "center", gap: 4 }}>
                   <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                    Doğrulama Kodu
+                    {t("login.otpTitle")}
                   </Text>
                   <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center" }}>
-                    +90 {phone} numarasına gönderildi
+                    +90 {phone} {t("login.otpSent")}
                   </Text>
                 </View>
 
@@ -353,7 +355,7 @@ export default function LoginScreen() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                      Doğrula
+                      {t("login.verify")}
                     </Text>
                   )}
                 </Pressable>
@@ -367,7 +369,7 @@ export default function LoginScreen() {
                   ) : (
                     <Pressable onPress={handleSendOtp}>
                       <Text style={{ fontSize: 14, fontWeight: "600", color: colors.primary }}>
-                        Kodu Tekrar Gönder
+                        {t("login.resend")}
                       </Text>
                     </Pressable>
                   )}
@@ -380,7 +382,7 @@ export default function LoginScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 13, color: colors.muted }}>
-                      Numarayı Değiştir
+                      {t("login.changeNumber")}
                     </Text>
                   </Pressable>
                 </View>

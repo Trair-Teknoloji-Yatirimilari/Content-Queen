@@ -92,16 +92,16 @@ export default function SettingsScreen() {
   const handleLogout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
-      "Çıkış Yap",
-      "Oturumunuzu kapatmak istediğinizden emin misiniz?",
+      t("settings.logout"),
+      t("settings.logoutConfirm"),
       [
         {
-          text: "İptal",
+          text: t("common.cancel"),
           onPress: () => {},
           style: "cancel",
         },
         {
-          text: "Çıkış Yap",
+          text: t("settings.logout"),
           onPress: async () => {
             await signOut();
             router.replace("/login");
@@ -115,10 +115,10 @@ export default function SettingsScreen() {
   const handleDeleteAccount = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
-      "Hesabı Sil",
-      "Bu işlem geri alınamaz. Tüm verileriniz, görselleriniz ve AI modeliniz silinecektir.",
+      t("settings.deleteAccount"),
+      t("settings.deleteConfirm"),
       [
-        { text: "İptal", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
           text: "Hesabımı Sil",
           style: "destructive",
@@ -138,17 +138,17 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <ScreenHeader title="Ayarlar" />
+      <ScreenHeader title={t("settings.title")} />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="px-4 py-4 gap-6">
 
           {/* Dil Ayarları */}
           <View className="bg-surface rounded-lg border border-border overflow-hidden">
             <Text className="text-sm font-semibold text-foreground px-4 pt-4 pb-2">
-              DİL
+              {t("settings.language")}
             </Text>
             <SettingItem
-              label="Dil"
+              label={t("settings.languageLabel")}
               value={language === "tr" ? "Türkçe" : "English"}
               onPress={handleLanguageChange}
               rightElement={
@@ -160,11 +160,11 @@ export default function SettingsScreen() {
           {/* Bildirim Ayarları */}
           <View className="bg-surface rounded-lg border border-border overflow-hidden">
             <Text className="text-sm font-semibold text-foreground px-4 pt-4 pb-2">
-              BİLDİRİMLER
+              {t("settings.notifications")}
             </Text>
             <SettingItem
-              label="Push Bildirimleri"
-              value="Görsel oluşturma tamamlandığında bildir"
+              label={t("settings.pushNotif")}
+              value={t("settings.pushNotifDesc")}
               rightElement={
                 <Switch
                   value={notificationsEnabled}
@@ -179,10 +179,10 @@ export default function SettingsScreen() {
           {/* Hesap Ayarları */}
           <View className="bg-surface rounded-lg border border-border overflow-hidden">
             <Text className="text-sm font-semibold text-foreground px-4 pt-4 pb-2">
-              HESAP
+              {t("settings.account")}
             </Text>
             <SettingItem
-              label="Telefon"
+              label={t("settings.phone")}
               value={user?.phone || "-"}
             />
           </View>
@@ -190,15 +190,15 @@ export default function SettingsScreen() {
           {/* Hakkında */}
           <View className="bg-surface rounded-lg border border-border overflow-hidden">
             <Text className="text-sm font-semibold text-foreground px-4 pt-4 pb-2">
-              HAKKINDA
+              {t("settings.about")}
             </Text>
             <SettingItem
-              label="Sürüm"
+              label={t("settings.version")}
               value="1.0.0"
             />
             <View className="h-px bg-border" />
             <SettingItem
-              label="Gizlilik Politikası"
+              label={t("settings.privacy")}
               onPress={() => router.push("/privacy-policy")}
               rightElement={
                 <Text className="text-sm text-primary font-medium">›</Text>
@@ -206,7 +206,7 @@ export default function SettingsScreen() {
             />
             <View className="h-px bg-border" />
             <SettingItem
-              label="Kullanım Şartları"
+              label={t("settings.terms")}
               onPress={() => router.push("/terms-of-service")}
               rightElement={
                 <Text className="text-sm text-primary font-medium">›</Text>
@@ -231,7 +231,7 @@ export default function SettingsScreen() {
               ]}
             >
               <Text className="text-foreground font-semibold text-base">
-                Çıkış Yap
+                {t("settings.logout")}
               </Text>
             </Pressable>
 
@@ -250,7 +250,7 @@ export default function SettingsScreen() {
               ]}
             >
               <Text className="text-error font-semibold text-base">
-                Hesabı Sil
+                {t("settings.deleteAccount")}
               </Text>
             </Pressable>
           </View>

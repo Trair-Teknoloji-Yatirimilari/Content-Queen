@@ -15,10 +15,12 @@ import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
 import { IMAGE_STYLES } from "@/constants/styles";
 import { Animated } from "react-native";
+import { useI18n } from "@/lib/i18n-context";
 
 export default function HomeScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { t } = useI18n();
   const [refreshing, setRefreshing] = useState(false);
 
   const creditsQuery = trpc.credits.getCredits.useQuery();
@@ -95,10 +97,10 @@ export default function HomeScreen() {
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View>
               <Text style={{ fontSize: 26, fontWeight: "800", color: "#fff" }}>
-                Content Queen
+                {t("home.title")}
               </Text>
               <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>
-                Kraliçe gibi parla ✨
+                {t("home.tagline")}
               </Text>
             </View>
             <Pressable
@@ -140,7 +142,7 @@ export default function HomeScreen() {
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View style={{ flex: 1, alignItems: "center" }}>
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                    Kalan Kredi
+                    {t("home.remainingCredits")}
                   </Text>
                   <Text style={{ fontSize: 32, fontWeight: "800", color: colors.primary, marginTop: 6 }}>
                     {remainingCredit}
@@ -149,7 +151,7 @@ export default function HomeScreen() {
                 <View style={{ height: 40, width: 1, backgroundColor: colors.border, marginTop: 4 }} />
                 <View style={{ flex: 1, alignItems: "center" }}>
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                    Plan
+                    {t("home.plan")}
                   </Text>
                   <View
                     style={{
@@ -174,7 +176,7 @@ export default function HomeScreen() {
                 <View style={{ height: 40, width: 1, backgroundColor: colors.border, marginTop: 4 }} />
                 <View style={{ flex: 1, alignItems: "center" }}>
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                    Oluşturulan
+                    {t("home.created")}
                   </Text>
                   <Text style={{ fontSize: 22, fontWeight: "700", color: colors.foreground, marginTop: 6 }}>
                     {recentImages.length}
@@ -207,10 +209,10 @@ export default function HomeScreen() {
             <Text style={{ fontSize: 18 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
             <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>
               {loraStatus === "ready"
-                ? "Yeni Görsel Oluştur"
+                ? t("home.createNew")
                 : loraStatus === "training" || loraStatus === "pending"
-                  ? "Eğitim Devam Ediyor..."
-                  : "AI Modelini Oluştur"}
+                  ? t("home.trainingInProgress")
+                  : t("home.createModel")}
             </Text>
           </Pressable>
         </View>
@@ -239,7 +241,7 @@ export default function HomeScreen() {
               {loraStatus === "ready" ? "✅" : loraStatus === "training" || loraStatus === "pending" ? "⏳" : "🧠"}
             </Text>
             <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>
-              AI Modelim
+              {t("home.aiModel")}
             </Text>
           </Pressable>
 
@@ -258,7 +260,7 @@ export default function HomeScreen() {
           >
             <Text style={{ fontSize: 24 }}>📸</Text>
             <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>
-              Referanslarım
+              {t("home.references")}
             </Text>
           </Pressable>
 
@@ -277,24 +279,24 @@ export default function HomeScreen() {
           >
             <Text style={{ fontSize: 24 }}>⚙️</Text>
             <Text style={{ fontSize: 12, fontWeight: "600", color: colors.foreground }}>
-              Ayarlar
+              {t("home.settings")}
             </Text>
           </Pressable>
         </View>
 
         {/* ── Style Slider ── */}
-        <StyleSlider colors={colors} onPress={handleCreateNew} />
+        <StyleSlider colors={colors} onPress={handleCreateNew} t={t} />
 
         {/* ── Recent Images ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
-              Son Görseller
+              {t("home.recentImages")}
             </Text>
             {recentImages.length > 6 && (
               <Pressable onPress={() => router.push("/gallery")}>
                 <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>
-                  Tümünü Gör
+                  {t("home.seeAll")}
                 </Text>
               </Pressable>
             )}
@@ -346,7 +348,7 @@ export default function HomeScreen() {
                     >
                       <ActivityIndicator size="small" color="#fff" />
                       <Text style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>
-                        İşleniyor
+                        {t("home.processing")}
                       </Text>
                     </View>
                   )}
@@ -363,7 +365,7 @@ export default function HomeScreen() {
                       }}
                     >
                       <Text style={{ fontSize: 10, color: "#fff", fontWeight: "600" }}>
-                        Başarısız
+                        {t("home.failed")}
                       </Text>
                     </View>
                   )}
@@ -377,10 +379,10 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
-              ✨ Showcase
+              {t("home.showcase")}
             </Text>
             <Text style={{ fontSize: 12, color: colors.muted }}>
-              Topluluk görselleri
+              {t("home.showcaseSub")}
             </Text>
           </View>
           {showcaseImages.length > 0 ? (
@@ -413,9 +415,9 @@ export default function HomeScreen() {
           ) : (
             <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 24, alignItems: "center", gap: 8 }}>
               <Text style={{ fontSize: 28 }}>🌟</Text>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>Henüz paylaşım yok</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{t("home.noShowcase")}</Text>
               <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", lineHeight: 18 }}>
-                Görsel oluştur ve showcase'e ekleyerek{"\n"}ilk paylaşan sen ol!
+                {t("home.noShowcaseDesc")}
               </Text>
             </View>
           )}
@@ -433,7 +435,7 @@ const CARD_WIDTH = 100;
 const CARD_GAP = 8;
 const TOTAL_WIDTH = (CARD_WIDTH + CARD_GAP) * IMAGE_STYLES.length;
 
-function StyleSlider({ colors, onPress }: { colors: ReturnType<typeof useColors>; onPress: () => void }) {
+function StyleSlider({ colors, onPress, t }: { colors: ReturnType<typeof useColors>; onPress: () => void; t: (key: string) => string }) {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -455,7 +457,7 @@ function StyleSlider({ colors, onPress }: { colors: ReturnType<typeof useColors>
   return (
     <View style={{ marginTop: 14, gap: 8 }}>
       <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, paddingHorizontal: 20 }}>
-        Hangi stilde parlamak istersin?
+        {t("home.styleQuestion")}
       </Text>
       <View style={{ overflow: "hidden", height: 85 }}>
         <Animated.View
