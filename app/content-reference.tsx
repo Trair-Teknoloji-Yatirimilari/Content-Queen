@@ -9,7 +9,6 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
-import { IMAGE_STYLES, type ImageStyle } from "@/constants/styles";
 import { useI18n } from "@/lib/i18n-context";
 
 export default function ContentReferenceScreen() {
@@ -18,7 +17,6 @@ export default function ContentReferenceScreen() {
   const { t } = useI18n();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>(IMAGE_STYLES[0]);
   const [isUploading, setIsUploading] = useState(false);
   const uploadMutation = trpc.referencePhotos.upload.useMutation();
   const creditsQuery = trpc.credits.getCredits.useQuery();
@@ -85,7 +83,6 @@ export default function ContentReferenceScreen() {
         params: {
           contentImageUri: result.photoUrl,
           autoStart: "true",
-          styleId: selectedStyle.id,
         },
       });
     } catch {
@@ -218,46 +215,6 @@ export default function ContentReferenceScreen() {
                   <Text style={{ fontSize: 12 }}>🔄</Text>
                   <Text style={{ fontSize: 12, color: "#fff", fontWeight: "600" }}>{t("contentRef.change")}</Text>
                 </Pressable>
-              </View>
-
-              {/* Style Selection */}
-              <View style={{ gap: 10 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
-                  {t("contentRef.selectStyle")}
-                </Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  {IMAGE_STYLES.map((style) => {
-                    const isSelected = selectedStyle.id === style.id;
-                    return (
-                      <Pressable
-                        key={style.id}
-                        onPress={() => {
-                          setSelectedStyle(style);
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        }}
-                        style={({ pressed }) => ({
-                          width: "31%",
-                          backgroundColor: isSelected ? "rgba(233,75,143,0.1)" : colors.surface,
-                          borderRadius: 14,
-                          padding: 12,
-                          alignItems: "center",
-                          gap: 4,
-                          borderWidth: isSelected ? 2 : 1,
-                          borderColor: isSelected ? colors.primary : colors.border,
-                          transform: [{ scale: pressed ? 0.95 : 1 }],
-                        })}
-                      >
-                        <Text style={{ fontSize: 22 }}>{style.emoji}</Text>
-                        <Text style={{ fontSize: 11, fontWeight: "700", color: isSelected ? colors.primary : colors.foreground }}>
-                          {style.name}
-                        </Text>
-                        <Text style={{ fontSize: 9, color: colors.muted, textAlign: "center" }} numberOfLines={1}>
-                          {style.description}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
               </View>
 
               {/* Generate Button */}
