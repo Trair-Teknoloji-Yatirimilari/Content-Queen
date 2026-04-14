@@ -98,3 +98,19 @@ export const referrals = mysqlTable("referrals", {
 
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
+
+/**
+ * Showcase — public gallery of user-shared images
+ */
+export const showcase = mysqlTable("showcase", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  generatedImageId: int("generatedImageId").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  style: varchar("style", { length: 255 }),
+  likes: int("likes").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Showcase = typeof showcase.$inferSelect;
+export type InsertShowcase = typeof showcase.$inferInsert;

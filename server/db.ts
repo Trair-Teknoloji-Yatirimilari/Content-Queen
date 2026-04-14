@@ -414,3 +414,47 @@ export async function getReferralStats(userId: number) {
     totalCreditsEarned,
   };
 }
+
+/**
+ * Showcase
+ */
+import { showcase } from "../drizzle/schema";
+import type { InsertShowcase } from "../drizzle/schema";
+import { desc } from "drizzle-orm";
+
+export async function addToShowcase(data: InsertShowcase) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(showcase).values(data);
+  return (result as any).insertId;
+}
+
+export async function getShowcaseImages(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(showcase).orderBy(desc(showcase.createdAt)).limit(limit);
+}
+
+export async function getShowcaseByStyle(style: string, limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(showcase).where(eq(showcase.style, style)).orderBy(desc(showcase.createdAt)).limit(limit);
+}
+
+export async function isImageInShowcase(generatedImageId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.select().from(showcase).where(eq(showcase.generatedImageId, generatedImageId)).limit(1);
+  return result.length > 0;
+}
+
+export async function removeFromShowcase(generatedImageId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(showcase).where(and(eq(showcase.generatedImageId, generatedImageId), eq(showcase.userId, userId)));
+}

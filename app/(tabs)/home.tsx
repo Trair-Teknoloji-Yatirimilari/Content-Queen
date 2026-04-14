@@ -13,6 +13,7 @@ import { useCallback, useState } from "react";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
+import { IMAGE_STYLES } from "@/constants/styles";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -22,10 +23,12 @@ export default function HomeScreen() {
   const creditsQuery = trpc.credits.getCredits.useQuery();
   const imagesQuery = trpc.generatedImages.list.useQuery();
   const trainingQuery = trpc.training.status.useQuery();
+  const showcaseQuery = trpc.showcase.list.useQuery({ limit: 9 });
 
   const credits = creditsQuery.data;
   const recentImages = imagesQuery.data ?? [];
   const loraStatus = trainingQuery.data?.loraStatus ?? "none";
+  const showcaseImages = showcaseQuery.data ?? [];
   const isLoading = creditsQuery.isLoading || imagesQuery.isLoading;
 
   const remainingCredit = credits
@@ -41,7 +44,7 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([creditsQuery.refetch(), imagesQuery.refetch(), trainingQuery.refetch()]);
+    await Promise.all([creditsQuery.refetch(), imagesQuery.refetch(), trainingQuery.refetch(), showcaseQuery.refetch()]);
     setRefreshing(false);
   }, [creditsQuery, imagesQuery, trainingQuery]);
 
@@ -270,49 +273,35 @@ export default function HomeScreen() {
           )}
 
           {!isLoading && recentImages.length === 0 && (
-            <View
-              style={{
-                backgroundColor: colors.surface,
-                borderRadius: 20,
-                paddingVertical: 48,
-                paddingHorizontal: 32,
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <View
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 36,
-                  backgroundColor: "rgba(233,75,143,0.1)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 32 }}>✨</Text>
+            <View style={{ gap: 16 }}>
+              {/* Stil Kartları */}
+              <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>
+                Hangi stilde parlamak istersin?
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                {IMAGE_STYLES.map((style) => (
+                  <Pressable
+                    key={style.id}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      handleCreateNew();
+                    }}
+                    style={({ pressed }) => ({
+                      width: "31%",
+                      backgroundColor: colors.surface,
+                      borderRadius: 14,
+                      padding: 14,
+                      alignItems: "center",
+                      gap: 6,
+                      transform: [{ scale: pressed ? 0.95 : 1 }],
+                    })}
+                  >
+                    <Text style={{ fontSize: 28 }}>{style.emoji}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>{style.name}</Text>
+                    <Text style={{ fontSize: 9, color: colors.muted, textAlign: "center" }} numberOfLines={1}>{style.description}</Text>
+                  </Pressable>
+                ))}
               </View>
-              <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground, textAlign: "center" }}>
-                Henüz Görsel Yok
-              </Text>
-              <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", lineHeight: 20 }}>
-                İlk görselini oluştur ve{"\n"}kraliçe gibi parlamaya başla
-              </Text>
-              <Pressable
-                onPress={handleCreateNew}
-                style={({ pressed }) => ({
-                  marginTop: 8,
-                  backgroundColor: pressed ? "#D93B7F" : colors.primary,
-                  paddingHorizontal: 28,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  opacity: pressed ? 0.9 : 1,
-                })}
-              >
-                <Text style={{ fontSize: 14, fontWeight: "600", color: "#fff" }}>
-                  Hadi Başlayalım
-                </Text>
-              </Pressable>
             </View>
           )}
 
@@ -409,6 +398,47 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
         </View>
+
+        {/* ── Showcase ── */}
+        {showcaseImages.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
+                ✨ Showcase
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.muted }}>
+                Topluluk görselleri
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+              {showcaseImages.map((item) => (
+                <View
+                  key={item.id}
+                  style={{
+                    width: "31%",
+                    aspectRatio: 1,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    backgroundColor: colors.surface,
+                  }}
+                >
+                  <Image
+                    source={{ uri: item.imageUrl }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                    transition={300}
+                  />
+                  {item.style && (
+                    <View style={{ position: "absolute", bottom: 4, left: 4, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ fontSize: 9, color: "#fff", fontWeight: "600" }}>{item.style}</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
       </ScrollView>
     </ScreenContainer>
   );

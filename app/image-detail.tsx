@@ -17,6 +17,7 @@ export default function ImageDetailScreen() {
 
   const imageQuery = trpc.generatedImages.getById.useQuery({ id: imageId }, { enabled: !!imageId });
   const deleteMutation = trpc.generatedImages.delete.useMutation();
+  const showcaseAddMutation = trpc.showcase.add.useMutation();
   const utils = trpc.useUtils();
   const image = imageQuery.data;
 
@@ -34,6 +35,22 @@ export default function ImageDetailScreen() {
     if (!image?.generatedImageUrl) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await shareImage(image.generatedImageUrl);
+  };
+
+  const handleShowcase = async () => {
+    if (!image) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await showcaseAddMutation.mutateAsync({ generatedImageId: imageId });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Paylaşıldı ✨", "Görselin showcase'e eklendi. Herkes görebilir!");
+    } catch (e: any) {
+      if (e.message?.includes("zaten")) {
+        Alert.alert("Bilgi", "Bu görsel zaten showcase'de.");
+      } else {
+        Alert.alert("Hata", "Showcase'e eklenemedi.");
+      }
+    }
   };
 
   const handleDelete = () => {
@@ -128,6 +145,28 @@ export default function ImageDetailScreen() {
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>📤 Paylaş</Text>
               </Pressable>
             </View>
+
+            {/* Showcase Button */}
+            {image.status === "completed" && (
+              <Pressable
+                onPress={handleShowcase}
+                disabled={showcaseAddMutation.isPending}
+                style={({ pressed }) => ({
+                  backgroundColor: colors.surface,
+                  paddingVertical: 14,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 8,
+                  borderWidth: 1,
+                  borderColor: "rgba(233,75,143,0.3)",
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.primary }}>✨ Showcase'e Ekle</Text>
+              </Pressable>
+            )}
 
             {/* Info Card */}
             <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 12 }}>

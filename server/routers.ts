@@ -476,6 +476,54 @@ export const appRouter = router({
       }),
   }),
 
+  showcase: router({
+    /** Showcase'deki görselleri listele (herkes görebilir) */
+    list: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).optional() }).optional())
+      .query(async ({ input }) => {
+        return db.getShowcaseImages(input?.limit ?? 20);
+      }),
+
+    /** Stil bazlı showcase */
+    byStyle: publicProcedure
+      .input(z.object({ style: z.string(), limit: z.number().min(1).max(20).optional() }))
+      .query(async ({ input }) => {
+        return db.getShowcaseByStyle(input.style, input.limit ?? 10);
+      }),
+
+    /** Görseli showcase'e ekle */
+    add: protectedProcedure
+      .input(z.object({ generatedImageId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const image = await db.getGeneratedImage(input.generatedImageId);
+        if (!image || image.userId !== ctx.user.id) {
+          throw new Error("Görsel bulunamadı");
+        }
+        if (image.status !== "completed") {
+          throw new Error("Görsel henüz tamamlanmadı");
+        }
+        const alreadyShared = await db.isImageInShowcase(input.generatedImageId);
+        if (alreadyShared) {
+          throw new Error("Bu görsel zaten showcase'de");
+        }
+        const id = await db.addToShowcase({
+          userId: ctx.user.id,
+          generatedImageId: input.generatedImageId,
+          imageUrl: image.generatedImageUrl,
+          style: image.style,
+        });
+        return { id, success: true };
+      }),
+
+    /** Görseli showcase'den kaldır */
+    remove: protectedProcedure
+      .input(z.object({ generatedImageId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.removeFromShowcase(input.generatedImageId, ctx.user.id);
+        return { success: true };
+      }),
+  }),
+
   referral: router({
     /** Kullanıcının referral kodunu al (yoksa oluştur) */
     getCode: protectedProcedure.query(async ({ ctx }) => {
