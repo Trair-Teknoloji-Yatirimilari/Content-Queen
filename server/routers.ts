@@ -540,10 +540,11 @@ export const appRouter = router({
   }),
 
   notifications: router({
-    registerFCMToken: protectedProcedure
+    registerPushToken: protectedProcedure
       .input(z.object({ token: z.string() }))
       .mutation(async ({ ctx, input }) => {
-        return notificationService.saveFCMToken(ctx.user.id, input.token);
+        await db.savePushToken(ctx.user.id, input.token);
+        return { success: true };
       }),
   }),
 });

@@ -458,3 +458,21 @@ export async function removeFromShowcase(generatedImageId: number, userId: numbe
 
   await db.delete(showcase).where(and(eq(showcase.generatedImageId, generatedImageId), eq(showcase.userId, userId)));
 }
+
+/**
+ * Push Token
+ */
+export async function savePushToken(userId: number, token: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.update(users).set({ pushToken: token }).where(eq(users.id, userId));
+}
+
+export async function getPushToken(userId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select({ pushToken: users.pushToken }).from(users).where(eq(users.id, userId)).limit(1);
+  return result[0]?.pushToken || null;
+}

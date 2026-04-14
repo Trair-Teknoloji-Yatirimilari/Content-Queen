@@ -6,7 +6,7 @@
  */
 import type { Express, Request, Response } from "express";
 import * as db from "./db";
-import { notificationService } from "./notification-service";
+import { notifyImageComplete, notifyImageFailed, notifyTrainingComplete, notifyTrainingFailed } from "./push-service";
 
 interface ReplicateWebhookBody {
   id: string;
@@ -47,21 +47,16 @@ export function registerWebhookRoutes(app: Express) {
           console.log("[Webhook] Image completed:", image.id, imageUrl.substring(0, 60));
 
           // Push notification
-          await notificationService.notifyImageGenerated(
-            image.userId,
-            image.id,
-            image.style || "Profesyonel",
-          );
+          const pushToken = await db.getPushToken(image.userId);
+          await notifyImageComplete(pushToken, image.userId, image.id, image.style || "Profesyonel");
         } else if (body.status === "failed" || body.status === "canceled") {
           await db.updateGeneratedImage(image.id, {
             status: "failed" as any,
           });
           console.log("[Webhook] Image failed:", image.id, body.error);
 
-          await notificationService.notifyImageFailed(
-            image.userId,
-            body.error || "Bilinmeyen hata",
-          );
+          const failToken = await db.getPushToken(image.userId);
+          await notifyImageFailed(failToken, image.userId);
         } else if (body.status === "processing") {
           await db.updateGeneratedImage(image.id, {
             status: "processing" as any,
@@ -96,11 +91,17 @@ export function registerWebhookRoutes(app: Express) {
               loraTrainedAt: new Date(),
             });
             console.log("[Webhook] Training completed for user:", user.id);
+
+            const trainToken = await db.getPushToken(user.id);
+            await notifyTrainingComplete(trainToken, user.id);
           } else if (body.status === "failed" || body.status === "canceled") {
             await db.updateUserLoRA(user.id, {
               loraStatus: "failed",
             });
             console.log("[Webhook] Training failed for user:", user.id, body.error);
+
+            const failTrainToken = await db.getPushToken(user.id);
+            await notifyTrainingFailed(failTrainToken, user.id);
           } else if (body.status === "processing") {
             await db.updateUserLoRA(user.id, {
               loraStatus: "training",

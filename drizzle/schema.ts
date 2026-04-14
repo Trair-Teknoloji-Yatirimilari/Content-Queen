@@ -24,6 +24,8 @@ export const users = mysqlTable("users", {
   /** Referral system */
   referralCode: varchar("referralCode", { length: 10 }).unique(),
   referredBy: int("referredBy"),
+  /** Expo Push Token for notifications */
+  pushToken: text("pushToken"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

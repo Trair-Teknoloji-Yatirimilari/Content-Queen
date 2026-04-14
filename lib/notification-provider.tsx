@@ -30,33 +30,26 @@ Notifications.setNotificationHandler({
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const registerFCMTokenMutation = trpc.notifications.registerFCMToken.useMutation();
+  const registerPushTokenMutation = trpc.notifications.registerPushToken.useMutation();
 
   useEffect(() => {
-    // FCM token'ını al ve kaydet
     registerPushNotifications();
 
-    // Bildirim alındığında listener
     const notificationSubscription = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log("Bildirim alındı:", notification);
       }
     );
 
-    // Bildirime tıklandığında listener
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         console.log("Bildirime tıklandı:", response);
-
         const data = response.notification.request.content.data;
 
-        // Bildirim türüne göre yönlendir
         if (data?.type === "image_generated" && data?.imageId) {
-          router.push({
-            pathname: "/(tabs)",
-          });
-        } else if (data?.type === "image_failed") {
-          router.push("/generate-image");
+          router.push({ pathname: "/(tabs)" as any });
+        } else if (data?.type === "training_ready") {
+          router.push("/training");
         }
       }
     );
@@ -65,28 +58,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       notificationSubscription.remove();
       responseSubscription.remove();
     };
-  }, [registerFCMTokenMutation, router]);
+  }, [registerPushTokenMutation, router]);
 
   const registerPushNotifications = async () => {
     try {
-      // Bildirim izni iste
       const { status } = await Notifications.requestPermissionsAsync();
-
       if (status !== "granted") {
         console.warn("Bildirim izni verilmedi");
         return;
       }
 
-      // Expo Push Token'ı al
       try {
         const token = await Notifications.getExpoPushTokenAsync();
         console.log("Expo Push Token:", token.data);
 
-        // Token'ı backend'e kaydet
         if (token.data) {
-          await registerFCMTokenMutation.mutateAsync({
-            token: token.data,
-          });
+          await registerPushTokenMutation.mutateAsync({ token: token.data });
         }
       } catch (tokenError) {
         console.warn("Push token alınamadı (web/emulator'de normal):", tokenError);
