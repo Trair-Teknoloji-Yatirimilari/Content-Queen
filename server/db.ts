@@ -513,3 +513,15 @@ export async function markAllRead(userId: number) {
   if (!db) return;
   await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.userId, userId));
 }
+
+export async function deleteNotification(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(notifications).where(and(eq(notifications.id, id), eq(notifications.userId, userId)));
+}
+
+export async function deleteAllNotifications(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(notifications).where(eq(notifications.userId, userId));
+}

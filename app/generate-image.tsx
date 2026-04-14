@@ -323,15 +323,26 @@ export default function GenerateImageScreen() {
         <ScreenHeader title="En İyisini Seç" showBack={false} />
         <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
           <View style={{ paddingHorizontal: 20, gap: 16 }}>
-            <View style={{ alignItems: "center", gap: 4, paddingTop: 8 }}>
+            <View style={{ alignItems: "center", gap: 8, paddingTop: 8 }}>
               <Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground }}>
                 {allDone ? "Hangisi daha güzel? 🤔" : `Görseller hazırlanıyor... (${completedCount}/2)`}
               </Text>
-              <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center" }}>
-                {allDone
-                  ? "2 farklı stil ile ürettik. Beğendiğini seç!"
-                  : "Her biri farklı ayarlarla üretiliyor"}
-              </Text>
+              {!allDone && (
+                <>
+                  <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", lineHeight: 20 }}>
+                    LoRA detaylı görsel hazırlama işlemi zaman alabilir.{"\n"}Daha iyi sonuç için çalışıyoruz ✨
+                  </Text>
+                  <LoRATimer colors={colors} />
+                  <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center" }}>
+                    İsterseniz ana sayfaya geçebilirsiniz,{"\n"}hazır olunca bildirim göndereceğiz.
+                  </Text>
+                </>
+              )}
+              {allDone && (
+                <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center" }}>
+                  2 farklı stil ile ürettik. Beğendiğini seç!
+                </Text>
+              )}
             </View>
 
             {variants.map((v, index) => {
@@ -619,5 +630,32 @@ export default function GenerateImageScreen() {
         </View>
       </ScrollView>
     </ScreenContainer>
+  );
+}
+
+
+function LoRATimer({ colors }: { colors: any }) {
+  const [elapsed, setElapsed] = React.useState(0);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setElapsed((p) => p + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+
+  return (
+    <View style={{
+      backgroundColor: colors.surface,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 20,
+      marginTop: 4,
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: "700", color: colors.primary, fontVariant: ["tabular-nums"] }}>
+        ⏱ {mins}:{secs.toString().padStart(2, "0")}
+      </Text>
+    </View>
   );
 }

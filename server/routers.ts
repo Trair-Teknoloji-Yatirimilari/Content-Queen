@@ -531,6 +531,13 @@ export const appRouter = router({
 
           await db.deductCredits(ctx.user.id, isQuickMode ? 1 : 5);
 
+          // Hızlı modda in-app bildirim oluştur (webhook'tan geçmiyor)
+          if (isQuickMode && result.status === "completed") {
+            const { notifyImageComplete } = await import("./push-service");
+            const pushToken = await db.getPushToken(ctx.user.id);
+            await notifyImageComplete(pushToken, ctx.user.id, imageIds[0], "Hızlı Oluştur");
+          }
+
           return {
             id: imageIds[0],
             jobId: result.jobId,
@@ -730,6 +737,18 @@ export const appRouter = router({
 
     markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
       await db.markAllRead(ctx.user.id);
+      return { success: true };
+    }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteNotification(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    deleteAll: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.deleteAllNotifications(ctx.user.id);
       return { success: true };
     }),
   }),

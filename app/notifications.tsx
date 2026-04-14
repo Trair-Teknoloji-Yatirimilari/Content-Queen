@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, Text, View, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { ScrollView, Text, View, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
 import { useColors } from "@/hooks/use-colors";
@@ -27,6 +27,8 @@ export default function NotificationsScreen() {
   const notifQuery = trpc.notifications.list.useQuery();
   const markReadMutation = trpc.notifications.markRead.useMutation();
   const markAllMutation = trpc.notifications.markAllRead.useMutation();
+  const deleteMutation = trpc.notifications.delete.useMutation();
+  const deleteAllMutation = trpc.notifications.deleteAll.useMutation();
   const utils = trpc.useUtils();
 
   const items = notifQuery.data ?? [];
@@ -65,6 +67,38 @@ export default function NotificationsScreen() {
     utils.notifications.unreadCount.invalidate();
   };
 
+  const handleDelete = (notif: typeof items[0]) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert("Bildirimi Sil", "Bu bildirimi silmek istiyor musun?", [
+      { text: "İptal", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          await deleteMutation.mutateAsync({ id: notif.id });
+          utils.notifications.list.invalidate();
+          utils.notifications.unreadCount.invalidate();
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteAll = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert("Tüm Bildirimleri Sil", "Tüm bildirimler silinecek. Emin misin?", [
+      { text: "İptal", style: "cancel" },
+      {
+        text: "Hepsini Sil",
+        style: "destructive",
+        onPress: async () => {
+          await deleteAllMutation.mutateAsync();
+          utils.notifications.list.invalidate();
+          utils.notifications.unreadCount.invalidate();
+        },
+      },
+    ]);
+  };
+
   const formatTime = (date: string | Date) => {
     const d = new Date(date);
     const now = new Date();
@@ -87,11 +121,18 @@ export default function NotificationsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Mark all read */}
-        {unreadCount > 0 && (
-          <Pressable onPress={handleMarkAll} style={{ alignItems: "flex-end", paddingHorizontal: 20, paddingVertical: 8 }}>
-            <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>Tümünü okundu işaretle</Text>
-          </Pressable>
+        {/* Actions */}
+        {items.length > 0 && (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 8 }}>
+            {unreadCount > 0 ? (
+              <Pressable onPress={handleMarkAll}>
+                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>Tümünü okundu işaretle</Text>
+              </Pressable>
+            ) : <View />}
+            <Pressable onPress={handleDeleteAll}>
+              <Text style={{ fontSize: 13, color: colors.error, fontWeight: "600" }}>Tümünü Sil</Text>
+            </Pressable>
+          </View>
         )}
 
         {notifQuery.isLoading && (
@@ -112,6 +153,7 @@ export default function NotificationsScreen() {
           <Pressable
             key={notif.id}
             onPress={() => handlePress(notif)}
+            onLongPress={() => handleDelete(notif)}
             style={({ pressed }) => ({
               flexDirection: "row",
               gap: 12,

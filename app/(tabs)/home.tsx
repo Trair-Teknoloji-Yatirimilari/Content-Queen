@@ -187,13 +187,39 @@ export default function HomeScreen() {
                     {t("home.created")}
                   </Text>
                   <Text style={{ fontSize: 22, fontWeight: "700", color: colors.foreground, marginTop: 6 }}>
-                    {recentImages.length}
+                    {recentImages.filter((img) => img.status === "completed").length}
                   </Text>
                 </View>
               </View>
             )}
           </Pressable>
         </View>
+
+        {/* ── Processing Banner ── */}
+        {!isLoading && recentImages.some((img) => img.status === "pending" || img.status === "processing") && (
+          <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
+            <View style={{
+              backgroundColor: "rgba(233,75,143,0.08)",
+              borderRadius: 14,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              borderWidth: 1,
+              borderColor: "rgba(233,75,143,0.15)",
+            }}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
+                  Görselleriniz hazırlanıyor...
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.muted }}>
+                  Tamamlandığında bildirim alacaksınız.
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* ── CTA Buttons ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 16 }}>

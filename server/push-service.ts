@@ -65,7 +65,7 @@ export async function notifyTrainingFailed(pushToken: string | null, userId: num
 
 export async function notifyImageComplete(pushToken: string | null, userId: number, imageId: number, style: string): Promise<void> {
   const title = "Görselin Hazır! ✨";
-  const body = `${style} stilinde görselin başarıyla oluşturuldu.`;
+  const body = "Görselin başarıyla oluşturuldu. Hemen kontrol et!";
 
   await db.createNotification({ userId, type: "image_generated", title, body, data: JSON.stringify({ type: "image_generated", imageId: String(imageId) }) });
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, Text, View, Pressable, Alert, ActivityIndicator } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { ScreenHeader } from "@/components/screen-header";
@@ -17,6 +17,8 @@ export default function ProfileScreen() {
   const imagesQuery = trpc.generatedImages.list.useQuery();
   const trainingQuery = trpc.training.status.useQuery();
   const photosQuery = trpc.training.listPhotos.useQuery();
+
+  const [showCreditHistory, setShowCreditHistory] = useState(false);
 
   const credits = creditsQuery.data;
   const images = imagesQuery.data ?? [];
@@ -94,7 +96,54 @@ export default function ProfileScreen() {
             <Row label="Toplam Kredi" value={`${credits?.totalCredits ?? 0}`} colors={colors} />
             <Row label="Kullanılan" value={`${credits?.usedCredits ?? 0}`} colors={colors} />
             <Row label="Kalan" value={`${remainingCredit}`} colors={colors} />
+            <Pressable
+              onPress={() => router.push("/pricing")}
+              style={({ pressed }) => ({
+                backgroundColor: colors.primary,
+                paddingVertical: 10, borderRadius: 10, alignItems: "center",
+                marginTop: 4, opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "600", color: "#fff" }}>Kredi Satın Al</Text>
+            </Pressable>
           </View>
+
+          {/* Kredi Kullanım Geçmişi */}
+          {images.length > 0 && (
+            <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 18, gap: 12 }}>
+              <Pressable
+                onPress={() => { setShowCreditHistory(!showCreditHistory); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+                style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>Kredi Kullanımı</Text>
+                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "600" }}>
+                  {showCreditHistory ? "Gizle ▲" : "Detayları Gör ▼"}
+                </Text>
+              </Pressable>
+              {showCreditHistory && (
+                <View style={{ gap: 8, marginTop: 4 }}>
+                  {images.filter((img) => img.creditsUsed > 0).slice(0, 10).map((img) => (
+                    <View key={img.id} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 4 }}>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: "500" }}>
+                          {(img.style || "Görsel").replace(/\s*\[.*\]/, "")}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: colors.muted }}>
+                          {new Date(img.createdAt).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 13, fontWeight: "700", color: colors.error }}>-{img.creditsUsed} kredi</Text>
+                    </View>
+                  ))}
+                  {images.filter((img) => img.creditsUsed > 0).length > 10 && (
+                    <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center" }}>
+                      ve {images.filter((img) => img.creditsUsed > 0).length - 10} işlem daha...
+                    </Text>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
 
           {/* AI Model */}
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 18, gap: 14 }}>
