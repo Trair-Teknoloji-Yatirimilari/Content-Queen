@@ -200,7 +200,7 @@ class ReplicateService {
           num_inference_steps: options?.steps ?? 28,
           guidance_scale: options?.guidance ?? 3.5,
           lora_scale: options?.loraScale ?? 1.0,
-          prompt_strength: 0.35,
+          prompt_strength: 0.45,
           output_format: "webp",
           output_quality: 95,
         },
