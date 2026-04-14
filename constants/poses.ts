@@ -47,6 +47,7 @@ export const POSE_CATEGORIES: PoseCategory[] = [
       { id: "rooftop-party", imageUrl: `${B}/rooftop-party.webp`, label: "Rooftop" },
       { id: "nightclub", imageUrl: `${B}/nightclub.webp`, label: "VIP Club" },
       { id: "red-carpet", imageUrl: `${B}/red-carpet.webp`, label: "Red Carpet" },
+      { id: "concert", imageUrl: `${B}/concert.webp`, label: "Festival" },
     ],
   },
   {
@@ -57,7 +58,19 @@ export const POSE_CATEGORIES: PoseCategory[] = [
       { id: "hotel", imageUrl: `${B}/hotel.webp`, label: "Hotel Suite" },
       { id: "luxury-car", imageUrl: `${B}/luxury-car.webp`, label: "Luxury Car" },
       { id: "yacht", imageUrl: `${B}/yacht.webp`, label: "Yacht" },
+      { id: "restaurant", imageUrl: `${B}/restaurant.webp`, label: "Fine Dining" },
+    ],
+  },
+  {
+    id: "lifestyle",
+    name: "Yaşam Tarzı",
+    emoji: "🌿",
+    poses: [
       { id: "beach", imageUrl: `${B}/beach.webp`, label: "Beach" },
+      { id: "garden", imageUrl: `${B}/garden.webp`, label: "Garden Party" },
+      { id: "spa", imageUrl: `${B}/spa.webp`, label: "Spa & Wellness" },
+      { id: "gym", imageUrl: `${B}/gym.webp`, label: "Fitness" },
+      { id: "ski", imageUrl: `${B}/ski.webp`, label: "Ski Resort" },
       { id: "business", imageUrl: `${B}/business.webp`, label: "Business" },
     ],
   },

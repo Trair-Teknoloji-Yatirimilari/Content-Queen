@@ -9,13 +9,11 @@ import {
 import { ScreenContainer } from "@/components/screen-container";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState } from "react";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
-import { IMAGE_STYLES } from "@/constants/styles";
 import { POSE_CATEGORIES } from "@/constants/poses";
-import { Animated } from "react-native";
 import { useI18n } from "@/lib/i18n-context";
 
 export default function HomeScreen() {
@@ -298,9 +296,6 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* ── Style Slider ── */}
-        <StyleSlider colors={colors} onPress={handleCreateNew} t={t} />
-
         {/* ── Recent Images ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -480,70 +475,3 @@ export default function HomeScreen() {
   );
 }
 
-
-// ─── Auto-scrolling Style Slider ───
-
-const CARD_WIDTH = 100;
-const CARD_GAP = 8;
-const TOTAL_WIDTH = (CARD_WIDTH + CARD_GAP) * IMAGE_STYLES.length;
-
-function StyleSlider({ colors, onPress, t }: { colors: ReturnType<typeof useColors>; onPress: () => void; t: (key: string) => string }) {
-  const scrollX = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.timing(scrollX, {
-        toValue: -TOTAL_WIDTH,
-        duration: TOTAL_WIDTH * 50,
-        useNativeDriver: true,
-        isInteraction: false,
-      }),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, []);
-
-  // Duplicate styles for seamless loop
-  const items = [...IMAGE_STYLES, ...IMAGE_STYLES];
-
-  return (
-    <View style={{ marginTop: 14, gap: 8 }}>
-      <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, paddingHorizontal: 20 }}>
-        {t("home.styleQuestion")}
-      </Text>
-      <View style={{ overflow: "hidden", height: 85 }}>
-        <Animated.View
-          style={{
-            flexDirection: "row",
-            gap: CARD_GAP,
-            transform: [{ translateX: scrollX }],
-          }}
-        >
-          {items.map((style, i) => (
-            <Pressable
-              key={`${style.id}-${i}`}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onPress();
-              }}
-              style={({ pressed }) => ({
-                width: CARD_WIDTH,
-                backgroundColor: colors.surface,
-                borderRadius: 12,
-                padding: 10,
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 3,
-                transform: [{ scale: pressed ? 0.95 : 1 }],
-              })}
-            >
-              <Text style={{ fontSize: 24 }}>{style.emoji}</Text>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.foreground }}>{style.name}</Text>
-              <Text style={{ fontSize: 9, color: colors.muted, textAlign: "center" }} numberOfLines={1}>{style.description}</Text>
-            </Pressable>
-          ))}
-        </Animated.View>
-      </View>
-    </View>
-  );
-}
