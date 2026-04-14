@@ -425,60 +425,125 @@ export const appRouter = router({
           faceImageUrl: z.string(),
           prompt: z.string(),
           style: z.string(),
+          mode: z.enum(["auto", "quick", "lora"]).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         try {
           // Kredi kontrolü
           const credits = await db.getUserCredits(ctx.user.id);
-          if (!credits || credits.totalCredits - credits.usedCredits < 1) {
+          const requestMode = input.mode || "auto";
+          const requiredCredits = requestMode === "lora" ? 5 : 1;
+          if (!credits || credits.totalCredits - credits.usedCredits < requiredCredits) {
             throw new Error("Yeterli kredi yok");
           }
 
           // LoRA modeli hazır mı kontrol et
           const user = await db.getUserById(ctx.user.id);
           let result;
+          let isQuickMode = false;
 
-          if (user?.loraStatus === "ready" && user.loraModelVersion) {
-            // LoRA + ControlNet ile üret (kişiye özel)
+          const hasLoRA = user?.loraStatus === "ready" && user.loraModelVersion;
+
+          if (requestMode === "lora" && hasLoRA) {
             result = await replicateService.generateWithLoRA(
-              user.loraModelVersion,
+              user!.loraModelVersion!,
               input.contentImageUrl,
               input.prompt,
-              { loraWeightsUrl: user.loraModelUrl || undefined },
+              { loraWeightsUrl: user!.loraModelUrl || undefined },
+            );
+          } else if (requestMode === "quick" || !hasLoRA) {
+            isQuickMode = true;
+            // Kullanıcının yüz fotoğrafını al
+            const facePhotos = await db.getUserReferencePhotos(ctx.user.id, "face");
+            const trainingPhotos = await db.getTrainingPhotos(ctx.user.id);
+            const facePhoto = facePhotos[0] || trainingPhotos[0];
+            if (!facePhoto) {
+              throw new Error("Yüz fotoğrafı bulunamadı. Lütfen önce selfie yükleyin.");
+            }
+            result = await replicateService.generateQuick(
+              input.contentImageUrl,
+              facePhoto.photoUrl,
             );
           } else {
-            // Standart Flux ile üret (LoRA hazır değil)
-            result = await replicateService.generateStandard(
-              input.prompt,
-              input.contentImageUrl,
-            );
+            if (hasLoRA) {
+              result = await replicateService.generateWithLoRA(
+                user!.loraModelVersion!,
+                input.contentImageUrl,
+                input.prompt,
+                { loraWeightsUrl: user!.loraModelUrl || undefined },
+              );
+            } else {
+              isQuickMode = true;
+              const facePhotos2 = await db.getUserReferencePhotos(ctx.user.id, "face");
+              const trainingPhotos2 = await db.getTrainingPhotos(ctx.user.id);
+              const facePhoto2 = facePhotos2[0] || trainingPhotos2[0];
+              if (!facePhoto2) {
+                throw new Error("Yüz fotoğrafı bulunamadı.");
+              }
+              result = await replicateService.generateQuick(
+                input.contentImageUrl,
+                facePhoto2.photoUrl,
+              );
+            }
           }
 
           if (result.status === "failed") {
             throw new Error(result.error || "Görsel oluşturulamadı");
           }
 
-          // Veritabanına kaydet
-          const imageId = await db.createGeneratedImage({
-            userId: ctx.user.id,
-            contentImageUrl: input.contentImageUrl,
-            faceImageUrl: input.faceImageUrl,
-            generatedImageUrl: result.imageUrl || "pending",
-            prompt: input.prompt,
-            style: input.style,
-            replicateJobId: result.jobId,
-            status: "pending" as any,
-            creditsUsed: 1,
-          });
+          // Varyant job ID'lerini al (sadece LoRA modunda var)
+          const variantJobs = isQuickMode ? [] : ((result as any)._variantJobs || []);
 
-          // Kredi düş
-          await db.deductCredits(ctx.user.id, 1);
+          const imageIds: number[] = [];
+          if (variantJobs.length > 0) {
+            // LoRA modu — varyasyonlar
+            for (let index = 0; index < variantJobs.length; index++) {
+              const vJob = variantJobs[index];
+              const imgId = await db.createGeneratedImage({
+                userId: ctx.user.id,
+                contentImageUrl: input.contentImageUrl,
+                faceImageUrl: input.faceImageUrl,
+                generatedImageUrl: "pending",
+                prompt: input.prompt,
+                style: `${input.style} [${vJob.variant}]`,
+                replicateJobId: vJob.jobId,
+                status: "pending" as any,
+                creditsUsed: index === 0 ? 5 : 0,
+              });
+              imageIds.push(imgId);
+            }
+          } else {
+            // Hızlı mod — senkron, direkt completed
+            const imgId = await db.createGeneratedImage({
+              userId: ctx.user.id,
+              contentImageUrl: input.contentImageUrl,
+              faceImageUrl: input.faceImageUrl,
+              generatedImageUrl: result.imageUrl || "pending",
+              prompt: input.prompt,
+              style: isQuickMode ? "Hızlı Oluştur" : input.style,
+              replicateJobId: result.jobId,
+              status: (isQuickMode && result.status === "completed" ? "completed" : "pending") as any,
+              creditsUsed: 1,
+            });
+            imageIds.push(imgId);
+          }
+
+          await db.deductCredits(ctx.user.id, isQuickMode ? 1 : 5);
 
           return {
-            id: imageId,
+            id: imageIds[0],
             jobId: result.jobId,
+            variantJobIds: variantJobs.map((v: any) => v.jobId),
+            variants: variantJobs.map((v: any) => ({
+              jobId: v.jobId,
+              variant: v.variant,
+              loraScale: v.loraScale,
+              promptStrength: v.promptStrength,
+            })),
             status: result.status,
+            imageUrl: result.imageUrl,
+            isQuickMode,
             usedLoRA: !!(user?.loraStatus === "ready" && user.loraModelVersion),
           };
         } catch (error) {
@@ -490,33 +555,64 @@ export const appRouter = router({
     checkStatus: protectedProcedure
       .input(z.object({ jobId: z.string() }))
       .query(async ({ ctx, input }) => {
+        // Önce DB'ye bak — webhook zaten güncellemiş olabilir
+        const image = await db.getGeneratedImageByReplicateJobId(input.jobId);
+        if (image && (image.status === "completed" || image.status === "failed")) {
+          return {
+            jobId: input.jobId,
+            status: image.status,
+            imageUrl: image.generatedImageUrl,
+            imageUrls: image.generatedImageUrl ? [image.generatedImageUrl] : [],
+            error: image.status === "failed" ? "Görsel oluşturulamadı" : undefined,
+          };
+        }
+
+        // DB'de henüz tamamlanmamışsa Replicate'ten kontrol et
         const result = await replicateService.checkJobStatus(input.jobId);
 
-        // Veritabanını güncelle
-        const image = await db.getGeneratedImageByReplicateJobId(input.jobId);
         if (image && result.status !== image.status) {
+          let finalImageUrl = result.imageUrl || image.generatedImageUrl;
+
+          // LoRA görseli tamamlandıysa face swap uygula
+          if (result.status === "completed" && result.imageUrl) {
+            try {
+              // Kullanıcının en iyi yüz fotoğrafını al (training fotoğraflarından ilki)
+              const trainingPhotos = await db.getTrainingPhotos(ctx.user.id);
+              const facePhotos = await db.getUserReferencePhotos(ctx.user.id, "face");
+              const facePhoto = facePhotos[0] || trainingPhotos[0];
+
+              if (facePhoto) {
+                console.log("[FaceSwap] Uygulanıyor, image:", image.id);
+                const swapResult = await replicateService.faceSwap(result.imageUrl, facePhoto.photoUrl);
+                if (swapResult.imageUrl) {
+                  finalImageUrl = swapResult.imageUrl;
+                  console.log("[FaceSwap] Başarılı:", image.id);
+                }
+              }
+            } catch (e) {
+              console.error("[FaceSwap] Hata, orijinal görsel kullanılacak:", e);
+            }
+          }
+
           const dbStatus = result.status === "completed" ? "completed"
             : result.status === "failed" ? "failed"
             : result.status === "processing" ? "processing"
             : "pending";
           await db.updateGeneratedImage(image.id, {
             status: dbStatus as any,
-            generatedImageUrl: result.imageUrl || image.generatedImageUrl,
+            generatedImageUrl: finalImageUrl,
           });
 
-          // İşlem tamamlandığında bildirim gönder
           if (result.status === "completed") {
-            await notificationService.notifyImageGenerated(
-              ctx.user.id,
-              image.id,
-              image.style || "Profesyonel"
-            );
+            // Bildirim webhook handler'dan gönderiliyor, burada tekrar gönderme
           } else if (result.status === "failed") {
-            await notificationService.notifyImageFailed(
-              ctx.user.id,
-              result.error || "Bilinmeyen hata"
-            );
+            // Bildirim webhook handler'dan gönderiliyor
           }
+
+          return {
+            ...result,
+            imageUrl: finalImageUrl,
+          };
         }
 
         return result;

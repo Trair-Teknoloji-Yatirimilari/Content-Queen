@@ -8,6 +8,8 @@ import { useI18n, type Language } from "@/lib/i18n-context";
 import { useAuth } from "@/lib/auth-context";
 import { trpc } from "@/lib/trpc";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useThemeContext } from "@/lib/theme-provider";
+import { PALETTE_LABELS, type ColorScheme, type ThemePalette } from "@/constants/theme";
 
 interface SettingItemProps {
   label: string;
@@ -46,6 +48,8 @@ export default function SettingsScreen() {
   const { signOut, user } = useAuth();
   const deleteAccountMutation = trpc.auth.deleteAccount.useMutation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { colorScheme, setColorScheme, palette, setPalette } = useThemeContext();
+  const [themeMode, setThemeMode] = useState<"auto" | "light" | "dark">("auto");
 
   useEffect(() => {
     loadSettings();
@@ -55,6 +59,8 @@ export default function SettingsScreen() {
     try {
       const notif = await AsyncStorage.getItem("content_queen_notifications");
       if (notif !== null) setNotificationsEnabled(notif === "true");
+      const theme = await AsyncStorage.getItem("content_queen_theme");
+      if (theme) setThemeMode(theme as "auto" | "light" | "dark");
     } catch (error) {
       console.error("Ayarlar yükleme hatası:", error);
     }
@@ -72,19 +78,61 @@ export default function SettingsScreen() {
       t("splash.selectLanguage"),
       "Dili değiştirmek istediğinizden emin misiniz?",
       [
+        { text: "İptal", style: "cancel" },
+        { text: "Türkçe", onPress: () => setLanguage("tr") },
+        { text: "English", onPress: () => setLanguage("en") },
+      ]
+    );
+  };
+
+  const handleThemeChange = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert(
+      "Tema Seçin",
+      undefined,
+      [
         {
-          text: "İptal",
-          onPress: () => {},
-          style: "cancel",
+          text: "Otomatik (Sistem)",
+          onPress: async () => {
+            setThemeMode("auto");
+            await AsyncStorage.setItem("content_queen_theme", "auto");
+            const { Appearance } = require("react-native");
+            const sys = Appearance.getColorScheme() || "light";
+            setColorScheme(sys);
+          },
         },
         {
-          text: "Türkçe",
-          onPress: () => setLanguage("tr"),
+          text: "☀️ Açık",
+          onPress: async () => {
+            setThemeMode("light");
+            await AsyncStorage.setItem("content_queen_theme", "light");
+            setColorScheme("light");
+          },
         },
         {
-          text: "English",
-          onPress: () => setLanguage("en"),
+          text: "🌙 Koyu",
+          onPress: async () => {
+            setThemeMode("dark");
+            await AsyncStorage.setItem("content_queen_theme", "dark");
+            setColorScheme("dark");
+          },
         },
+        { text: "İptal", style: "cancel" },
+      ]
+    );
+  };
+
+  const handlePaletteChange = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert(
+      "Renk Paleti",
+      undefined,
+      [
+        { text: "💖 Klasik Pembe", onPress: () => setPalette("classic") },
+        { text: "👑 Gold", onPress: () => setPalette("rosegold") },
+        { text: "🍇 Lavanta", onPress: () => setPalette("lavender") },
+        { text: "🍑 Şeftali", onPress: () => setPalette("peach") },
+        { text: "İptal", style: "cancel" },
       ]
     );
   };
@@ -151,6 +199,30 @@ export default function SettingsScreen() {
               label={t("settings.languageLabel")}
               value={language === "tr" ? "Türkçe" : "English"}
               onPress={handleLanguageChange}
+              rightElement={
+                <Text className="text-sm text-primary font-medium">›</Text>
+              }
+            />
+          </View>
+
+          {/* Tema Ayarları */}
+          <View className="bg-surface rounded-lg border border-border overflow-hidden">
+            <Text className="text-sm font-semibold text-foreground px-4 pt-4 pb-2">
+              Görünüm
+            </Text>
+            <SettingItem
+              label="Renk Paleti"
+              value={palette === "classic" ? "💖 Klasik Pembe" : palette === "rosegold" ? "👑 Gold" : palette === "lavender" ? "🍇 Lavanta" : "🍑 Şeftali"}
+              onPress={handlePaletteChange}
+              rightElement={
+                <Text className="text-sm text-primary font-medium">›</Text>
+              }
+            />
+            <View className="h-px bg-border" />
+            <SettingItem
+              label="Tema"
+              value={themeMode === "auto" ? "Otomatik (Sistem)" : themeMode === "light" ? "☀️ Açık" : "🌙 Koyu"}
+              onPress={handleThemeChange}
               rightElement={
                 <Text className="text-sm text-primary font-medium">›</Text>
               }

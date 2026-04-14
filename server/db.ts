@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -201,7 +201,8 @@ export async function getUserGeneratedImages(userId: number) {
   return db
     .select()
     .from(generatedImages)
-    .where(eq(generatedImages.userId, userId));
+    .where(eq(generatedImages.userId, userId))
+    .orderBy(desc(generatedImages.createdAt));
 }
 
 export async function updateGeneratedImage(
@@ -420,7 +421,6 @@ export async function getReferralStats(userId: number) {
  */
 import { showcase } from "../drizzle/schema";
 import type { InsertShowcase } from "../drizzle/schema";
-import { desc } from "drizzle-orm";
 
 export async function addToShowcase(data: InsertShowcase) {
   const db = await getDb();

@@ -25,9 +25,54 @@ const FALLBACK_CREDITS = [
 ];
 
 const FALLBACK_SUBS = [
-  { id: "sub_basic", name: "Basic", price: "$4.99", period: "/ay", credits: "12 kredi/ay", features: ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"] },
-  { id: "sub_pro", name: "Pro", price: "$9.99", period: "/ay", credits: "35 kredi/ay", popular: true, features: ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"] },
-  { id: "sub_premium", name: "Premium", price: "$19.99", period: "/ay", credits: "100 kredi/ay", features: ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"] },
+  {
+    id: "sub_basic",
+    name: "Basic",
+    price: "$4.99",
+    period: "/ay",
+    credits: "12 kredi/ay",
+    features: [
+      "Ayda 12 hızlı görsel oluşturma",
+      "Face Swap ile yüz benzerliği",
+      "CodeFormer ile yüz netleştirme",
+      "2x yüksek çözünürlük",
+      "Galeriye kaydetme ve paylaşma",
+    ],
+  },
+  {
+    id: "sub_pro",
+    name: "Pro",
+    price: "$9.99",
+    period: "/ay",
+    credits: "35 kredi/ay",
+    popular: true,
+    features: [
+      "Ayda 35 görsel oluşturma",
+      "⚡ Hızlı Oluştur (1 kredi)",
+      "🧠 LoRA ile Yap (5 kredi)",
+      "Kişiye özel AI model eğitimi",
+      "Face Swap + CodeFormer pipeline",
+      "Instagram Stories direkt paylaşım",
+      "Öncelikli işlem sırası",
+    ],
+  },
+  {
+    id: "sub_premium",
+    name: "Premium",
+    price: "$19.99",
+    period: "/ay",
+    credits: "100 kredi/ay",
+    features: [
+      "Ayda 100 görsel oluşturma",
+      "⚡ Hızlı Oluştur (1 kredi)",
+      "🧠 LoRA ile Yap (5 kredi)",
+      "Kişiye özel AI model eğitimi",
+      "Face Swap + CodeFormer pipeline",
+      "Instagram Stories direkt paylaşım",
+      "Öncelikli işlem sırası",
+      "E-posta ile öncelikli destek",
+    ],
+  },
 ];
 
 export default function PricingScreen() {
@@ -154,7 +199,7 @@ export default function PricingScreen() {
                 onPress={() => { setTab(tabKey); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
                 style={{
                   flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center",
-                  backgroundColor: tab === tabKey ? "#fff" : "transparent",
+                  backgroundColor: tab === tabKey ? colors.background : "transparent",
                   shadowColor: tab === tabKey ? "#000" : "transparent",
                   shadowOffset: { width: 0, height: 1 }, shadowOpacity: tab === tabKey ? 0.1 : 0, shadowRadius: 3,
                 }}
@@ -215,7 +260,7 @@ export default function PricingScreen() {
                     {purchasing === item.id ? (
                       <ActivityIndicator color={colors.primary} />
                     ) : (
-                      <View style={{ backgroundColor: item.popular ? colors.primary : "#fff", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: item.popular ? 0 : 1, borderColor: colors.border }}>
+                      <View style={{ backgroundColor: item.popular ? colors.primary : colors.surface, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: item.popular ? 0 : 1, borderColor: colors.border }}>
                         <Text style={{ fontSize: 16, fontWeight: "700", color: item.popular ? "#fff" : colors.foreground }}>{item.price}</Text>
                       </View>
                     )}
@@ -223,7 +268,7 @@ export default function PricingScreen() {
                 </Pressable>
               ))}
               <Text style={{ fontSize: 11, color: colors.muted, textAlign: "center", lineHeight: 16, marginTop: 4 }}>
-                Krediler süresiz geçerlidir. Her görsel oluşturma 1 kredi harcar.{"\n"}
+                Krediler süresiz geçerlidir. Hızlı oluşturma 1 kredi, LoRA ile oluşturma 5 kredi harcar.{"\n"}
                 Ödeme, satın alma onaylandığında Apple ID hesabınızdan tahsil edilir.
               </Text>
             </View>
@@ -240,22 +285,61 @@ export default function PricingScreen() {
                 credits: p.product.identifier === "sub_basic" ? "12 kredi/ay" : p.product.identifier === "sub_pro" ? "35 kredi/ay" : "100 kredi/ay",
                 popular: p.product.identifier === "sub_pro",
                 features: p.product.identifier === "sub_basic"
-                  ? ["Ayda 12 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Yüksek çözünürlük görseller", "Galeriye kaydetme ve paylaşma"]
+                  ? [
+                      "Ayda 12 hızlı görsel oluşturma",
+                      "Face Swap ile yüz benzerliği",
+                      "CodeFormer ile yüz netleştirme",
+                      "2x yüksek çözünürlük",
+                      "Galeriye kaydetme ve paylaşma",
+                    ]
                   : p.product.identifier === "sub_pro"
-                    ? ["Ayda 35 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma"]
-                    : ["Ayda 100 görsel oluşturma", "Kişiye özel AI model eğitimi", "6 farklı görsel stili", "Instagram Stories direkt paylaşım", "Öncelikli işlem sırası", "Galeriye kaydetme ve paylaşma", "E-posta ile öncelikli destek"],
+                    ? [
+                        "Ayda 35 görsel oluşturma",
+                        "⚡ Hızlı Oluştur (1 kredi)",
+                        "🧠 LoRA ile Yap (5 kredi)",
+                        "Kişiye özel AI model eğitimi",
+                        "Face Swap + CodeFormer pipeline",
+                        "Instagram Stories direkt paylaşım",
+                        "Öncelikli işlem sırası",
+                      ]
+                    : [
+                        "Ayda 100 görsel oluşturma",
+                        "⚡ Hızlı Oluştur (1 kredi)",
+                        "🧠 LoRA ile Yap (5 kredi)",
+                        "Kişiye özel AI model eğitimi",
+                        "Face Swap + CodeFormer pipeline",
+                        "Instagram Stories direkt paylaşım",
+                        "Öncelikli işlem sırası",
+                        "E-posta ile öncelikli destek",
+                      ],
                 pkg: p,
-              }))).map((plan: any) => (
+              }))).map((plan: any) => {
+                const currentTier = creditsQuery.data?.subscriptionTier ?? "free";
+                const planTier = plan.id === "sub_basic" ? "pro" : plan.id === "sub_pro" ? "pro" : "premium";
+                const isCurrentPlan = (plan.id === "sub_basic" && currentTier === "pro") ||
+                  (plan.id === "sub_pro" && currentTier === "pro") ||
+                  (plan.id === "sub_premium" && currentTier === "premium");
+
+                return (
                 <Pressable
                   key={plan.id}
-                  onPress={() => plan.pkg ? handlePurchase(plan.pkg) : Alert.alert("Yakında", "Abonelik yakında aktif olacak.")}
+                  onPress={() => {
+                    if (isCurrentPlan) return;
+                    plan.pkg ? handlePurchase(plan.pkg) : Alert.alert("Yakında", "Abonelik yakında aktif olacak.");
+                  }}
+                  disabled={isCurrentPlan}
                   style={({ pressed }) => ({
                     backgroundColor: colors.surface, borderRadius: 16, padding: 20,
                     borderWidth: plan.popular ? 2 : 1, borderColor: plan.popular ? colors.primary : colors.border,
-                    opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }], gap: 14,
+                    opacity: isCurrentPlan ? 0.7 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !isCurrentPlan ? 0.98 : 1 }], gap: 14,
                   })}
                 >
-                  {plan.popular && (
+                  {isCurrentPlan && (
+                    <View style={{ position: "absolute", top: -10, left: 16, backgroundColor: colors.success, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 }}>
+                      <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>Mevcut Plan</Text>
+                    </View>
+                  )}
+                  {plan.popular && !isCurrentPlan && (
                     <View style={{ position: "absolute", top: -10, right: 16, backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 }}>
                       <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>{t("pricing.recommended")}</Text>
                     </View>
@@ -278,11 +362,14 @@ export default function PricingScreen() {
                       </View>
                     ))}
                   </View>
-                  <View style={{ backgroundColor: plan.popular ? colors.primary : "#fff", paddingVertical: 12, borderRadius: 12, alignItems: "center", borderWidth: plan.popular ? 0 : 1, borderColor: colors.border }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: plan.popular ? "#fff" : colors.foreground }}>{t("pricing.subscribe")}</Text>
+                  <View style={{ backgroundColor: isCurrentPlan ? colors.border : plan.popular ? colors.primary : colors.surface, paddingVertical: 12, borderRadius: 12, alignItems: "center", borderWidth: (plan.popular || isCurrentPlan) ? 0 : 1, borderColor: colors.border }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: isCurrentPlan ? colors.muted : plan.popular ? "#fff" : colors.foreground }}>
+                      {isCurrentPlan ? "Aktif Plan ✓" : t("pricing.subscribe")}
+                    </Text>
                   </View>
                 </Pressable>
-              ))}
+              );
+              })}
 
               <Text style={{ fontSize: 11, color: colors.muted, textAlign: "center", lineHeight: 16, marginTop: 4 }}>
                 Abonelikler otomatik yenilenir. İstediğiniz zaman iptal edebilirsiniz.

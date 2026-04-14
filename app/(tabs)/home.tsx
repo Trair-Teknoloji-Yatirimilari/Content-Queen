@@ -53,11 +53,7 @@ export default function HomeScreen() {
 
   const handleCreateNew = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (loraStatus === "ready") {
-      router.push("/content-reference");
-    } else {
-      router.push("/training");
-    }
+    router.push("/content-reference?mode=quick" as any);
   };
 
   const handleManageReferences = () => {
@@ -199,34 +195,81 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* ── CTA Button ── */}
+        {/* ── CTA Buttons ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
-          <Pressable
-            onPress={handleCreateNew}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? "#D93B7F" : colors.primary,
-              paddingVertical: 14,
-              borderRadius: 14,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 8,
-              transform: [{ scale: pressed ? 0.97 : 1 }],
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.25,
-              shadowRadius: 8,
-            })}
-          >
-            <Text style={{ fontSize: 18 }}>{loraStatus === "ready" ? "✦" : "🧠"}</Text>
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>
-              {loraStatus === "ready"
-                ? t("home.createNew")
-                : loraStatus === "training" || loraStatus === "pending"
-                  ? t("home.trainingInProgress")
-                  : t("home.createModel")}
-            </Text>
-          </Pressable>
+          {loraStatus === "ready" ? (
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/content-reference?mode=quick" as any);
+                }}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  backgroundColor: pressed ? "#D93B7F" : colors.primary,
+                  paddingVertical: 14,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  gap: 4,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                })}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={{ fontSize: 16 }}>⚡</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>Hızlı Oluştur</Text>
+                </View>
+                <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>~1 dk · 1 kredi</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/content-reference?mode=lora" as any);
+                }}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  backgroundColor: pressed ? colors.border : colors.surface,
+                  paddingVertical: 14,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  gap: 4,
+                  borderWidth: 1,
+                  borderColor: colors.primary,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={{ fontSize: 16 }}>🧠</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: colors.primary }}>LoRA ile Yap</Text>
+                </View>
+                <Text style={{ fontSize: 11, color: colors.muted }}>~10 dk · 5 kredi</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              onPress={handleCreateNew}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? "#D93B7F" : colors.primary,
+                paddingVertical: 14,
+                borderRadius: 14,
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
+                transform: [{ scale: pressed ? 0.97 : 1 }],
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+              })}
+            >
+              <Text style={{ fontSize: 18 }}>⚡</Text>
+              <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>Görsel Oluştur</Text>
+            </Pressable>
+          )}
         </View>
 
         {/* ── Quick Actions ── */}

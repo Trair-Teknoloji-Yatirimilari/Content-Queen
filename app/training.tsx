@@ -208,7 +208,7 @@ export default function TrainingScreen() {
                 {t("training.updateModel")}
               </Text>
             </Pressable>
-            <Pressable onPress={() => router.replace("/(tabs)")}>
+            <Pressable onPress={() => router.navigate("/(tabs)/home" as any)}>
               <Text style={{ fontSize: 14, color: colors.muted }}>{t("training.goHome")}</Text>
             </Pressable>
           </View>
@@ -619,7 +619,7 @@ function TrainingProgressScreen({ loraStatus, photoCount, colors, onCancel, t, r
           </Text>
 
           <Pressable
-            onPress={() => router.replace("/(tabs)/home")}
+            onPress={() => router.navigate("/(tabs)/home" as any)}
             style={({ pressed }) => ({
               backgroundColor: colors.surface,
               paddingVertical: 12,

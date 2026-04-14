@@ -26,9 +26,9 @@ export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const slides = [
-    { emoji: "📸", title: t("onboarding.slide1.title"), subtitle: t("onboarding.slide1.subtitle"), bgColor: "rgba(233,75,143,0.08)" },
-    { emoji: "✨", title: t("onboarding.slide2.title"), subtitle: t("onboarding.slide2.subtitle"), bgColor: "rgba(52,199,89,0.08)" },
-    { emoji: "👑", title: t("onboarding.slide3.title"), subtitle: t("onboarding.slide3.subtitle"), bgColor: "rgba(255,149,0,0.08)" },
+    { emoji: "⚡", title: "Hızlı Görsel Oluştur", subtitle: "Beğendiğin pozu seç, selfie yükle.\nAI saniyeler içinde seni o pozda oluşturur.", bgColor: "rgba(233,75,143,0.08)" },
+    { emoji: "🧠", title: "LoRA ile Kişiselleştir", subtitle: "AI modelini eğit, daha kişisel\nve profesyonel görseller üret.", bgColor: "rgba(52,199,89,0.08)" },
+    { emoji: "📱", title: "Paylaş ve Parla", subtitle: "Görselleri kaydet, Instagram'da paylaş.\nSosyal medyada fark yarat.", bgColor: "rgba(255,149,0,0.08)" },
   ];
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -56,7 +56,7 @@ export default function OnboardingScreen() {
     router.replace("/login");
   };
 
-  const renderSlide = ({ item }: { item: OnboardingSlide }) => (
+  const renderSlide = ({ item }: { item: typeof slides[0] }) => (
     <View
       style={{
         width: SCREEN_WIDTH,

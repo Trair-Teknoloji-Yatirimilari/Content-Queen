@@ -6,7 +6,22 @@ export interface JobResult {
   jobId: string;
   status: "pending" | "processing" | "completed" | "failed";
   imageUrl?: string;
+  imageUrls?: string[];
   error?: string;
+}
+
+/** Çoklu varyasyon sonucu */
+export interface MultiJobResult {
+  jobs: {
+    jobId: string;
+    status: string;
+    imageUrl?: string;
+    imageUrls?: string[];
+    variant: string;
+    loraScale: number;
+    promptStrength: number;
+  }[];
+  status: "pending" | "processing" | "completed" | "failed";
 }
 
 export interface TrainingResult {
@@ -77,14 +92,14 @@ class ReplicateService {
           input: {
             input_images: zipUrl,
             trigger_word: "TOK",
-            steps: 1500,
+            steps: 800,
             lora_rank: 32,
             optimizer: "adamw8bit",
             batch_size: 1,
             resolution: "512,768,1024",
             autocaption: true,
-            autocaption_prefix: "a photo of TOK,",
-            learning_rate: 0.0003,
+            autocaption_prefix: "a photo of TOK person,",
+            learning_rate: 0.0004,
           },
           webhook: WEBHOOK_URL,
           webhook_events_filter: ["completed"],
@@ -161,12 +176,8 @@ class ReplicateService {
   // ═══════════════════════════════════════════
 
   /**
-   * Kişiye özel LoRA modeli ile görsel üret.
-   * Referans fotoğraftaki poz ve kompozisyonu korur.
-   *
-   * @param loraModelVersion - Train edilmiş LoRA model version ID
-   * @param referenceImageUrl - Referans fotoğraf (poz/ortam kaynağı)
-   * @param prompt - Ek prompt açıklaması
+   * Kişiye özel LoRA modeli ile 3 farklı varyasyonda görsel üret.
+   * Her varyasyon farklı lora_scale, prompt_strength ve prompt ile çalışır.
    */
   async generateWithLoRA(
     loraModelVersion: string,
@@ -183,38 +194,75 @@ class ReplicateService {
   ): Promise<JobResult> {
     const client = this.getClient();
 
+    // 2 varyasyon profili — net + dengeli
+    const variants = [
+      {
+        name: "net",
+        loraScale: 1.15,
+        promptStrength: 0.40,
+        prompt: `a photo of TOK person, ${prompt}, sharp focus, natural skin texture, detailed face, 8k uhd, professional photography, DSLR`,
+        steps: 35,
+        guidance: 4.5,
+      },
+      {
+        name: "dengeli",
+        loraScale: 1.1,
+        promptStrength: 0.45,
+        prompt: `a photo of TOK person, ${prompt}, natural lighting, professional photography`,
+        steps: 32,
+        guidance: 4.0,
+      },
+    ];
+
     try {
-      console.log("[Generate] LoRA ile görsel üretimi:", {
+      console.log("[Generate] 2 varyasyonlu LoRA üretimi başlatılıyor:", {
         loraModelVersion: loraModelVersion.substring(0, 50) + "...",
         prompt: prompt.substring(0, 50) + "...",
-        hasWeightsUrl: !!options?.loraWeightsUrl,
       });
 
-      // LoRA model version ile direkt prediction oluştur
-      const prediction = await client.predictions.create({
-        version: loraModelVersion,
-        input: {
-          prompt: `a photo of TOK, ${prompt}`,
-          image: referenceImageUrl,
-          num_outputs: 1,
-          num_inference_steps: options?.steps ?? 28,
-          guidance_scale: options?.guidance ?? 3.5,
-          lora_scale: options?.loraScale ?? 1.0,
-          prompt_strength: 0.5,
-          output_format: "webp",
-          output_quality: 95,
-        },
-        webhook: WEBHOOK_URL,
-        webhook_events_filter: ["completed"],
-      });
+      // 3 prediction'ı paralel başlat
+      const predictions = await Promise.all(
+        variants.map(async (v) => {
+          const prediction = await client.predictions.create({
+            version: loraModelVersion,
+            input: {
+              prompt: v.prompt,
+              image: referenceImageUrl,
+              num_outputs: 1,
+              num_inference_steps: options?.steps ?? v.steps,
+              guidance_scale: options?.guidance ?? v.guidance,
+              lora_scale: options?.loraScale ?? v.loraScale,
+              prompt_strength: v.promptStrength,
+              output_format: "webp",
+              output_quality: 95,
+            },
+            webhook: WEBHOOK_URL,
+            webhook_events_filter: ["completed"],
+          });
+          console.log(`[Generate] Varyasyon "${v.name}" oluşturuldu:`, prediction.id);
+          return { prediction, variant: v.name, loraScale: v.loraScale, promptStrength: v.promptStrength };
+        }),
+      );
 
-      console.log("[Generate] Prediction oluşturuldu:", prediction.id, prediction.status);
+      // İlk prediction'ı ana jobId olarak kullan, diğerlerini metadata olarak ekle
+      const primary = predictions[0];
+      const allJobIds = predictions.map((p) => p.prediction.id);
+
+      console.log("[Generate] 2 varyasyon başlatıldı:", allJobIds);
 
       return {
-        jobId: prediction.id,
-        status: this.mapJobStatus(prediction.status),
-        imageUrl: this.extractImageUrl(prediction.output),
-      };
+        jobId: primary.prediction.id,
+        status: this.mapJobStatus(primary.prediction.status),
+        imageUrl: this.extractImageUrl(primary.prediction.output),
+        imageUrls: [],
+        // Diğer job ID'leri metadata olarak ekliyoruz
+        _variantJobs: predictions.map((p) => ({
+          jobId: p.prediction.id,
+          variant: p.variant,
+          loraScale: p.loraScale,
+          promptStrength: p.promptStrength,
+        })),
+      } as any;
     } catch (error: any) {
       console.error("[Generate] LoRA hatası:", error?.message);
 
@@ -234,6 +282,123 @@ class ReplicateService {
         };
       }
     }
+  }
+
+  // ═══════════════════════════════════════════
+  // AŞAMA 3: Face Swap
+  // ═══════════════════════════════════════════
+
+  /**
+   * Üretilen görseldeki yüzü kullanıcının gerçek yüzüyle değiştir.
+   * codeplugtech/face-swap modeli kullanır.
+   *
+   * @param targetImageUrl - LoRA ile üretilen görsel (hedef)
+   * @param faceImageUrl - Kullanıcının yüz fotoğrafı (kaynak)
+   */
+  async faceSwap(
+    targetImageUrl: string,
+    faceImageUrl: string,
+  ): Promise<JobResult> {
+    const client = this.getClient();
+
+    try {
+      console.log("[FaceSwap] Başlatılıyor:", {
+        target: targetImageUrl.substring(0, 60) + "...",
+        face: faceImageUrl.substring(0, 60) + "...",
+      });
+
+      const prediction = await client.predictions.create({
+        version: "278a81e7ebb22db98bcba54de985d22cc1abeead2754eb1f2af717247be69b34",
+        input: {
+          input_image: targetImageUrl,
+          swap_image: faceImageUrl,
+        },
+      });
+
+      const result = await client.wait(prediction);
+      console.log("[FaceSwap] Tamamlandı:", result.id, result.status);
+      console.log("[FaceSwap] Output:", JSON.stringify(result.output)?.substring(0, 200));
+
+      return {
+        jobId: result.id,
+        status: this.mapJobStatus(result.status),
+        imageUrl: this.extractImageUrl(result.output),
+      };
+    } catch (error: any) {
+      console.error("[FaceSwap] Hata:", error?.message);
+      return {
+        jobId: "",
+        status: "completed",
+        imageUrl: targetImageUrl,
+        error: "Face swap uygulanamadı, orijinal görsel kullanıldı",
+      };
+    }
+  }
+
+  /**
+   * CodeFormer ile yüz restorasyonu + 2x upscale.
+   * Face swap sonrası yüz detaylarını netleştirir, kimliği korur.
+   * codeformer_fidelity: 0.9 = yüze çok sadık, minimal değişiklik.
+   */
+  async faceRestore(imageUrl: string): Promise<JobResult> {
+    const client = this.getClient();
+
+    try {
+      console.log("[FaceRestore] CodeFormer başlatılıyor:", imageUrl.substring(0, 60) + "...");
+
+      const prediction = await client.predictions.create({
+        version: "78f2bab438ab0ffc85a68cdfd316a2ecd3994b5dd26aa6b3d203357b45e5eb1b",
+        input: {
+          image: imageUrl,
+          upscale: 2,
+          face_upsample: true,
+          background_enhance: true,
+          codeformer_fidelity: 0.95,
+        },
+      });
+
+      const result = await client.wait(prediction);
+      console.log("[FaceRestore] Tamamlandı:", result.id, result.status);
+
+      return {
+        jobId: result.id,
+        status: this.mapJobStatus(result.status),
+        imageUrl: this.extractImageUrl(result.output),
+      };
+    } catch (error: any) {
+      console.error("[FaceRestore] Hata:", error?.message);
+      return {
+        jobId: "",
+        status: "completed",
+        imageUrl,
+        error: "Face restore uygulanamadı, mevcut görsel kullanıldı",
+      };
+    }
+  }
+
+  /**
+   * Tam post-processing pipeline: Face Swap → Face Restore
+   * Hata durumunda her adım graceful fallback yapar.
+   */
+  async postProcess(
+    loraImageUrl: string,
+    facePhotoUrl: string,
+  ): Promise<string> {
+    let currentUrl = loraImageUrl;
+
+    // Adım 1: CodeFormer — önce LoRA çıktısını upscale + netleştir
+    const restoreResult = await this.faceRestore(currentUrl);
+    if (restoreResult.imageUrl) {
+      currentUrl = restoreResult.imageUrl;
+    }
+
+    // Adım 2: Face Swap — yüksek çözünürlüklü görsel üzerinde tek face swap
+    const swapResult = await this.faceSwap(currentUrl, facePhotoUrl);
+    if (swapResult.imageUrl) {
+      currentUrl = swapResult.imageUrl;
+    }
+
+    return currentUrl;
   }
 
   /**
@@ -276,6 +441,45 @@ class ReplicateService {
     }
   }
 
+  /**
+   * Hızlı üretim — Flux yok, direkt Face Swap + CodeFormer.
+   * Referans pozdaki yüzü kullanıcının yüzüyle değiştirir.
+   * Senkron çalışır, ~10-15sn.
+   */
+  async generateQuick(
+    referenceImageUrl: string,
+    facePhotoUrl: string,
+  ): Promise<JobResult> {
+    try {
+      console.log("[QuickGenerate] Hızlı üretim başlatılıyor (face swap only)");
+
+      // Adım 1: Face Swap (~5-10sn)
+      const swapResult = await this.faceSwap(referenceImageUrl, facePhotoUrl);
+      console.log("[QuickGenerate] FaceSwap sonucu:", swapResult.status, "imageUrl:", swapResult.imageUrl?.substring(0, 60));
+      
+      const swapUrl = swapResult.imageUrl || referenceImageUrl;
+
+      // Adım 2: CodeFormer (~5-10sn)
+      const restoreResult = await this.faceRestore(swapUrl);
+      const finalUrl = restoreResult.imageUrl || swapUrl;
+
+      console.log("[QuickGenerate] Tamamlandı:", finalUrl.substring(0, 60));
+
+      return {
+        jobId: `quick-${Date.now()}`,
+        status: "completed",
+        imageUrl: finalUrl,
+      };
+    } catch (error: any) {
+      console.error("[QuickGenerate] Hata:", error?.message);
+      return {
+        jobId: "",
+        status: "failed",
+        error: error instanceof Error ? error.message : "Görsel üretilemedi",
+      };
+    }
+  }
+
   // ═══════════════════════════════════════════
   // Ortak Yardımcılar
   // ═══════════════════════════════════════════
@@ -293,6 +497,7 @@ class ReplicateService {
         jobId: prediction.id,
         status: this.mapJobStatus(prediction.status),
         imageUrl: this.extractImageUrl(prediction.output),
+        imageUrls: this.extractAllImageUrls(prediction.output),
         error: prediction.error as string | undefined,
       };
     } catch (error) {
@@ -313,6 +518,16 @@ class ReplicateService {
       return output;
     }
     return undefined;
+  }
+
+  private extractAllImageUrls(output: unknown): string[] {
+    if (Array.isArray(output)) {
+      return output.filter((item): item is string => typeof item === "string");
+    }
+    if (typeof output === "string") {
+      return [output];
+    }
+    return [];
   }
 
   private mapJobStatus(status: string): JobResult["status"] {

@@ -57,9 +57,8 @@ export default function KVKKScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       await AsyncStorage.setItem("content_queen_kvkk_accepted", "true");
       await AsyncStorage.setItem("content_queen_kvkk_date", new Date().toISOString());
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/home" as any);
     } catch (error) {
-      Alert.alert(t("common.error"), "KVKK kaydedilirken hata oluştu");
       console.error("KVKK kaydetme hatası:", error);
     } finally {
       setIsLoading(false);

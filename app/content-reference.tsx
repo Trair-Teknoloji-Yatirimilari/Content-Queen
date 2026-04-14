@@ -6,7 +6,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
 import { useI18n } from "@/lib/i18n-context";
@@ -15,6 +15,8 @@ export default function ContentReferenceScreen() {
   const router = useRouter();
   const colors = useColors();
   const { t } = useI18n();
+  const params = useLocalSearchParams();
+  const mode = (params.mode as string) || "auto";
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -78,13 +80,26 @@ export default function ContentReferenceScreen() {
         photoType: "content",
         fileName: `content-${Date.now()}.jpg`,
       });
-      router.push({
-        pathname: "/generate-image",
-        params: {
-          contentImageUri: result.photoUrl,
-          autoStart: "true",
-        },
-      });
+      if (mode === "quick") {
+        // Hızlı mod: referans → selfie → görsel oluştur
+        router.push({
+          pathname: "/select-selfie",
+          params: {
+            mode: "quick",
+            contentImageUri: result.photoUrl,
+          },
+        } as any);
+      } else {
+        // LoRA mod: referans → direkt görsel oluştur
+        router.push({
+          pathname: "/generate-image",
+          params: {
+            contentImageUri: result.photoUrl,
+            autoStart: "true",
+            mode,
+          },
+        });
+      }
     } catch {
       Alert.alert("Hata", "Fotoğraf yüklenirken hata oluştu. Tekrar deneyin.");
     } finally {
@@ -243,8 +258,10 @@ export default function ContentReferenceScreen() {
                   </>
                 ) : (
                   <>
-                    <Text style={{ fontSize: 20 }}>✦</Text>
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{t("contentRef.generate")}</Text>
+                    <Text style={{ fontSize: 20 }}>{mode === "quick" ? "🤳" : "✦"}</Text>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
+                      {mode === "quick" ? "Selfie Yükle" : t("contentRef.generate")}
+                    </Text>
                   </>
                 )}
               </Pressable>

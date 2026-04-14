@@ -3,32 +3,34 @@ import { Platform } from "react-native";
 import themeConfig from "@/theme.config";
 
 export type ColorScheme = "light" | "dark";
+export type ThemePalette = "classic" | "rosegold" | "lavender" | "peach";
 
 export const ThemeColors = themeConfig.themeColors;
 
-type ThemeColorTokens = typeof ThemeColors;
-type ThemeColorName = keyof ThemeColorTokens;
-type SchemePalette = Record<ColorScheme, Record<ThemeColorName, string>>;
-type SchemePaletteItem = SchemePalette[ColorScheme];
+type ColorTokenName = "primary" | "background" | "surface" | "foreground" | "muted" | "border" | "success" | "warning" | "error";
 
-function buildSchemePalette(colors: ThemeColorTokens): SchemePalette {
-  const palette: SchemePalette = {
-    light: {} as SchemePalette["light"],
-    dark: {} as SchemePalette["dark"],
-  };
+type SchemeColorMap = Record<ColorTokenName, string>;
 
-  (Object.keys(colors) as ThemeColorName[]).forEach((name) => {
-    const swatch = colors[name];
-    palette.light[name] = swatch.light;
-    palette.dark[name] = swatch.dark;
-  });
-
-  return palette;
+function buildSchemeColors(palette: ThemePalette, scheme: ColorScheme): SchemeColorMap {
+  const paletteColors = ThemeColors[palette];
+  const result = {} as SchemeColorMap;
+  for (const key of Object.keys(paletteColors) as ColorTokenName[]) {
+    result[key] = paletteColors[key][scheme];
+  }
+  return result;
 }
 
-export const SchemeColors = buildSchemePalette(ThemeColors);
+export const SchemeColors: Record<string, SchemeColorMap> = {
+  light: buildSchemeColors("classic", "light"),
+  dark: buildSchemeColors("classic", "dark"),
+};
 
-type RuntimePalette = SchemePaletteItem & {
+// Build for all palette + scheme combos
+export function getSchemeColors(palette: ThemePalette, scheme: ColorScheme): SchemeColorMap {
+  return buildSchemeColors(palette, scheme);
+}
+
+type RuntimePalette = SchemeColorMap & {
   text: string;
   background: string;
   tint: string;
@@ -38,8 +40,7 @@ type RuntimePalette = SchemePaletteItem & {
   border: string;
 };
 
-function buildRuntimePalette(scheme: ColorScheme): RuntimePalette {
-  const base = SchemeColors[scheme];
+function buildRuntimePalette(base: SchemeColorMap): RuntimePalette {
   return {
     ...base,
     text: base.foreground,
@@ -53,21 +54,28 @@ function buildRuntimePalette(scheme: ColorScheme): RuntimePalette {
 }
 
 export const Colors = {
-  light: buildRuntimePalette("light"),
-  dark: buildRuntimePalette("dark"),
+  light: buildRuntimePalette(SchemeColors.light),
+  dark: buildRuntimePalette(SchemeColors.dark),
 } satisfies Record<ColorScheme, RuntimePalette>;
 
-export type ThemeColorPalette = (typeof Colors)[ColorScheme];
+export function getColors(palette: ThemePalette, scheme: ColorScheme): RuntimePalette {
+  return buildRuntimePalette(getSchemeColors(palette, scheme));
+}
+
+export type ThemeColorPalette = RuntimePalette;
+
+export const PALETTE_LABELS: Record<ThemePalette, string> = {
+  classic: "Klasik Pembe",
+  rosegold: "Gold",
+  lavender: "Lavanta",
+  peach: "Şeftali",
+};
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: "ui-monospace",
   },
   default: {

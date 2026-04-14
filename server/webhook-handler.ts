@@ -7,6 +7,7 @@
 import type { Express, Request, Response } from "express";
 import * as db from "./db";
 import { notifyImageComplete, notifyImageFailed, notifyTrainingComplete, notifyTrainingFailed } from "./push-service";
+import { replicateService } from "./replicate-service";
 
 interface ReplicateWebhookBody {
   id: string;
@@ -48,23 +49,47 @@ export function registerWebhookRoutes(app: Express) {
         const imageUrl = extractImageUrl(body.output);
 
         if (body.status === "succeeded" && imageUrl) {
+          // Post-processing pipeline: Face Swap → Face Restore
+          let finalImageUrl = imageUrl;
+          try {
+            const trainingPhotos = await db.getTrainingPhotos(image.userId);
+            const facePhotos = await db.getUserReferencePhotos(image.userId, "face");
+            const facePhoto = facePhotos[0] || trainingPhotos[0];
+
+            if (facePhoto) {
+              console.log("[Webhook] PostProcess başlatılıyor, image:", image.id);
+              finalImageUrl = await replicateService.postProcess(imageUrl, facePhoto.photoUrl);
+              console.log("[Webhook] PostProcess tamamlandı:", image.id);
+            }
+          } catch (e) {
+            console.error("[Webhook] PostProcess hata, orijinal kullanılacak:", e);
+          }
+
           await db.updateGeneratedImage(image.id, {
             status: "completed" as any,
-            generatedImageUrl: imageUrl,
+            generatedImageUrl: finalImageUrl,
           });
-          console.log("[Webhook] Image completed:", image.id, imageUrl.substring(0, 60));
+          console.log("[Webhook] Image completed:", image.id, finalImageUrl.substring(0, 60));
 
-          // Push notification
-          const pushToken = await db.getPushToken(image.userId);
-          await notifyImageComplete(pushToken, image.userId, image.id, image.style || "Profesyonel");
+          // Push notification — sadece varyasyon grubunun ilki için gönder
+          const isVariant = image.style?.includes("[");
+          const isFirstVariant = !isVariant || image.style?.includes("[net]");
+          if (isFirstVariant) {
+            const pushToken = await db.getPushToken(image.userId);
+            await notifyImageComplete(pushToken, image.userId, image.id, (image.style || "Profesyonel").replace(/\s*\[.*\]/, ""));
+          }
         } else if (body.status === "failed" || body.status === "canceled") {
           await db.updateGeneratedImage(image.id, {
             status: "failed" as any,
           });
           console.log("[Webhook] Image failed:", image.id, body.error);
 
-          const failToken = await db.getPushToken(image.userId);
-          await notifyImageFailed(failToken, image.userId);
+          const isFailedVariant = image.style?.includes("[");
+          const isFirstFailedVariant = !isFailedVariant || image.style?.includes("[net]");
+          if (isFirstFailedVariant) {
+            const failToken = await db.getPushToken(image.userId);
+            await notifyImageFailed(failToken, image.userId);
+          }
         } else if (body.status === "processing") {
           await db.updateGeneratedImage(image.id, {
             status: "processing" as any,

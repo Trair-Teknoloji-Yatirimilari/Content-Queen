@@ -77,7 +77,7 @@ export default function ReferencePhotosScreen() {
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/(tabs)");
+    router.navigate("/(tabs)/home" as any);
   };
 
   return (

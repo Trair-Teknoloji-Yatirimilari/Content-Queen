@@ -1,13 +1,22 @@
+type ColorSwatch = { light: string; dark: string };
+
+type PaletteColors = {
+  primary: ColorSwatch;
+  background: ColorSwatch;
+  surface: ColorSwatch;
+  foreground: ColorSwatch;
+  muted: ColorSwatch;
+  border: ColorSwatch;
+  success: ColorSwatch;
+  warning: ColorSwatch;
+  error: ColorSwatch;
+};
+
 export const themeColors: {
-  primary: { light: string; dark: string };
-  background: { light: string; dark: string };
-  surface: { light: string; dark: string };
-  foreground: { light: string; dark: string };
-  muted: { light: string; dark: string };
-  border: { light: string; dark: string };
-  success: { light: string; dark: string };
-  warning: { light: string; dark: string };
-  error: { light: string; dark: string };
+  classic: PaletteColors;
+  rosegold: PaletteColors;
+  lavender: PaletteColors;
+  peach: PaletteColors;
 };
 
 declare const themeConfig: {
