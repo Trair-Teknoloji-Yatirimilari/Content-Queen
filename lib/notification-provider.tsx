@@ -47,7 +47,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const data = response.notification.request.content.data;
 
         if (data?.type === "image_generated" && data?.imageId) {
-          router.push({ pathname: "/(tabs)" as any });
+          router.push(`/image-detail?id=${data.imageId}` as any);
         } else if (data?.type === "training_ready") {
           router.push("/training");
         }
