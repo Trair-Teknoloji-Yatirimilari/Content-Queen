@@ -297,92 +297,55 @@ export default function HomeScreen() {
         </View>
 
         {/* ── Recent Images ── */}
-        <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
-              {t("home.recentImages")}
-            </Text>
-            {recentImages.length > 6 && (
+        {/* ── Recent Images — Horizontal Slider ── */}
+        {!isLoading && recentImages.length > 0 && (
+          <View style={{ marginTop: 20 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, marginBottom: 10 }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
+                {t("home.recentImages")}
+              </Text>
               <Pressable onPress={() => router.push("/gallery")}>
                 <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>
                   {t("home.seeAll")}
                 </Text>
               </Pressable>
-            )}
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 20 }}>
+              <View style={{ flexDirection: "row", gap: 10, paddingRight: 20 }}>
+                {recentImages.slice(0, 10).map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => handleImagePress(item.id)}
+                    style={({ pressed }) => ({
+                      width: 110,
+                      height: 110,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      transform: [{ scale: pressed ? 0.95 : 1 }],
+                    })}
+                  >
+                    <Image
+                      source={{ uri: item.generatedImageUrl }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={300}
+                    />
+                    {(item.status === "pending" || item.status === "processing") && (
+                      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", alignItems: "center" }}>
+                        <ActivityIndicator size="small" color="#fff" />
+                      </View>
+                    )}
+                    {item.status === "failed" && (
+                      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "rgba(255,59,48,0.85)", paddingVertical: 3, alignItems: "center" }}>
+                        <Text style={{ fontSize: 9, color: "#fff", fontWeight: "600" }}>{t("home.failed")}</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-
-          {isLoading && (
-            <View style={{ paddingVertical: 40, alignItems: "center" }}>
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-          )}
-
-          {!isLoading && recentImages.length === 0 && (
-            <View />
-          )}
-
-          {!isLoading && recentImages.length > 0 && (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-              {recentImages.slice(0, 6).map((item) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => handleImagePress(item.id)}
-                  style={({ pressed }) => ({
-                    width: "31%",
-                    aspectRatio: 1,
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    transform: [{ scale: pressed ? 0.95 : 1 }],
-                  })}
-                >
-                  <Image
-                    source={{ uri: item.generatedImageUrl }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    transition={300}
-                  />
-                  {(item.status === "pending" || item.status === "processing") && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: "rgba(0,0,0,0.45)",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        borderRadius: 14,
-                      }}
-                    >
-                      <ActivityIndicator size="small" color="#fff" />
-                      <Text style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>
-                        {t("home.processing")}
-                      </Text>
-                    </View>
-                  )}
-                  {item.status === "failed" && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        backgroundColor: "rgba(255,59,48,0.85)",
-                        paddingVertical: 4,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: "#fff", fontWeight: "600" }}>
-                        {t("home.failed")}
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
+        )}
 
         {/* ── Showcase — Hazır Pozlar + Topluluk ── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
