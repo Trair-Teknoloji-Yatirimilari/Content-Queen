@@ -1,6 +1,6 @@
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -33,42 +33,22 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const { isSignedIn, isLoading } = useAuth();
-  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const router = useRouter();
 
+  // Auth state değiştiğinde yönlendir
   useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
-
-  const checkOnboardingStatus = async () => {
-    try {
-      // Version-aware onboarding: yeni versiyon yüklendiğinde onboarding'i sıfırla
-      const ONBOARDING_VERSION = "1.0.0";
-      const doneVersion = await AsyncStorage.getItem("cq_onboarding_version");
-      const done = await AsyncStorage.getItem("cq_onboarding_done");
-      
-      if (done === "true" && doneVersion === ONBOARDING_VERSION) {
-        setOnboardingDone(true);
-      } else {
-        setOnboardingDone(false);
-      }
-    } catch (error) {
-      setOnboardingDone(false);
+    if (isLoading) return;
+    if (isSignedIn) {
+      router.replace("/(tabs)/home" as any);
     }
-  };
-
-  if (onboardingDone === null || isLoading) {
-    return null;
-  }
+  }, [isSignedIn, isLoading]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {!onboardingDone ? (
-        <Stack.Screen name="onboarding" />
-      ) : !isSignedIn ? (
-        <Stack.Screen name="login" />
-      ) : (
-        <Stack.Screen name="(tabs)" />
-      )}
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="login" />
       <Stack.Screen name="reference-photos" />
       <Stack.Screen name="content-reference" />
       <Stack.Screen name="select-reference" />
@@ -78,8 +58,10 @@ function RootLayoutNav() {
       <Stack.Screen name="image-detail" />
       <Stack.Screen name="pricing" />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="settings" />
       <Stack.Screen name="privacy-policy" />
       <Stack.Screen name="terms-of-service" />
+      <Stack.Screen name="kvkk" />
       <Stack.Screen name="oauth/callback" />
     </Stack>
   );

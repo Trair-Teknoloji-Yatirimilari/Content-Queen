@@ -120,7 +120,7 @@ export default function LoginScreen() {
       if (result.success && result.sessionToken && result.user) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         await setSession(result.sessionToken, result.user);
-        router.replace("/(tabs)");
+        // Layout useEffect handles navigation based on isSignedIn
       } else {
         setError(result.error || "Doğrulama başarısız");
         setOtp(["", "", "", "", "", ""]);
