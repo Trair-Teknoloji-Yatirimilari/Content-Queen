@@ -194,13 +194,13 @@ class ReplicateService {
       const prediction = await client.predictions.create({
         version: loraModelVersion,
         input: {
-          prompt: `a photo of TOK person, ${prompt}`,
+          prompt: `a photo of TOK, ${prompt}`,
           image: referenceImageUrl,
           num_outputs: 1,
           num_inference_steps: options?.steps ?? 28,
           guidance_scale: options?.guidance ?? 3.5,
-          lora_scale: options?.loraScale ?? 0.9,
-          prompt_strength: 0.6,
+          lora_scale: options?.loraScale ?? 1.0,
+          prompt_strength: 0.5,
           output_format: "webp",
           output_quality: 95,
         },
