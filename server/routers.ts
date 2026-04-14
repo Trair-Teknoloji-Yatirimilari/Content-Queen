@@ -198,7 +198,6 @@ export const appRouter = router({
       }
 
       // Zaten training varsa engelle
-      const user = await db.getUserById(ctx.user.id);
       if (user?.loraStatus === "training" || user?.loraStatus === "pending") {
         throw new Error("Zaten devam eden bir eğitim var");
       }
@@ -237,8 +236,7 @@ export const appRouter = router({
       });
 
       // Training sayacını artır
-      const currentUser = await db.getUserById(ctx.user.id);
-      const newCount = (currentUser?.loraTrainCount ?? 0) + 1;
+      const newCount = (user?.loraTrainCount ?? 0) + 1;
       const dbConn = await db.getDb();
       if (dbConn) {
         const { eq } = await import("drizzle-orm");
