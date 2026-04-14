@@ -57,9 +57,6 @@ async function startServer() {
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-  // Rate limiting
-  app.use("/api/trpc", apiRateLimit);
-
   registerOAuthRoutes(app);
   registerWebhookRoutes(app);
   registerRevenueCatWebhook(app);
