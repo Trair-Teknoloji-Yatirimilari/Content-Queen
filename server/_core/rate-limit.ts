@@ -50,6 +50,6 @@ export function rateLimit(options: { windowMs: number; max: number; keyPrefix?: 
 }
 
 // Preset rate limiters
-export const otpRateLimit = rateLimit({ windowMs: 60 * 1000, max: 3, keyPrefix: "otp" }); // 3 OTP per minute
-export const apiRateLimit = rateLimit({ windowMs: 60 * 1000, max: 60, keyPrefix: "api" }); // 60 req per minute
-export const uploadRateLimit = rateLimit({ windowMs: 60 * 1000, max: 10, keyPrefix: "upload" }); // 10 uploads per minute
+export const otpRateLimit = rateLimit({ windowMs: 60 * 1000, max: 5, keyPrefix: "otp" }); // 5 OTP per minute
+export const apiRateLimit = rateLimit({ windowMs: 60 * 1000, max: 300, keyPrefix: "api" }); // 300 req per minute
+export const uploadRateLimit = rateLimit({ windowMs: 60 * 1000, max: 20, keyPrefix: "upload" }); // 20 uploads per minute
