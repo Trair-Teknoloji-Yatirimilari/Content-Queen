@@ -371,6 +371,17 @@ export const appRouter = router({
           // Base64'ı buffer'a çevir
           const buffer = Buffer.from(input.base64, "base64");
 
+          // Boyut kontrolü — max 10MB
+          if (buffer.length > 10 * 1024 * 1024) {
+            throw new Error("Fotoğraf boyutu 10MB'dan büyük olamaz");
+          }
+
+          // Kullanıcı başına fotoğraf limiti — max 50
+          const existingPhotos = await db.getUserReferencePhotos(ctx.user.id);
+          if (existingPhotos.length >= 50) {
+            throw new Error("Maksimum 50 fotoğraf yükleyebilirsiniz");
+          }
+
           // S3'e yükle
           const fileKey = `${ctx.user.id}/reference-photos/${input.photoType}-${Date.now()}.jpg`;
           const { url } = await storagePut(fileKey, buffer, "image/jpeg");
