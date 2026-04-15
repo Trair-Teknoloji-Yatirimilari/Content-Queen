@@ -90,3 +90,32 @@ export async function storageDelete(relKey: string): Promise<void> {
     console.error("[Storage] Silme hatası:", error);
   }
 }
+
+
+/**
+ * Harici URL'den görseli indirip Supabase'e kalıcı olarak kaydet.
+ * Replicate gibi geçici URL'leri kalıcı hale getirir.
+ */
+export async function persistImageFromUrl(
+  externalUrl: string,
+  userId: number,
+  prefix: string = "generated",
+): Promise<string> {
+  try {
+    const res = await fetch(externalUrl);
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const ext = externalUrl.includes(".webp") ? "webp" : externalUrl.includes(".png") ? "png" : "jpg";
+    const key = `${userId}/${prefix}/${Date.now()}.${ext}`;
+    const contentType = ext === "webp" ? "image/webp" : ext === "png" ? "image/png" : "image/jpeg";
+
+    const { url } = await storagePut(key, buffer, contentType);
+    console.log("[Storage] Görsel kalıcı kaydedildi:", url.substring(0, 60));
+    return url;
+  } catch (error) {
+    console.error("[Storage] Görsel kaydetme hatası:", error);
+    // Hata durumunda orijinal URL'yi döndür
+    return externalUrl;
+  }
+}

@@ -8,6 +8,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "./db";
 import { notifyImageComplete, notifyImageFailed, notifyTrainingComplete, notifyTrainingFailed } from "./push-service";
 import { replicateService } from "./replicate-service";
+import { persistImageFromUrl } from "./storage";
 
 interface ReplicateWebhookBody {
   id: string;
@@ -70,6 +71,14 @@ export function registerWebhookRoutes(app: Express) {
             generatedImageUrl: finalImageUrl,
           });
           console.log("[Webhook] Image completed:", image.id, finalImageUrl.substring(0, 60));
+
+          // Görseli Supabase'e kalıcı kaydet (Replicate URL'leri geçici)
+          persistImageFromUrl(finalImageUrl, image.userId, "generated").then(async (permanentUrl) => {
+            if (permanentUrl !== finalImageUrl) {
+              await db.updateGeneratedImage(image.id, { generatedImageUrl: permanentUrl } as any);
+              console.log("[Webhook] Görsel kalıcı URL güncellendi:", image.id);
+            }
+          }).catch(() => {});
 
           // Push notification — sadece varyasyon grubunun ilki için gönder
           const isVariant = image.style?.includes("[");

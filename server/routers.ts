@@ -536,6 +536,16 @@ export const appRouter = router({
             const { notifyImageComplete } = await import("./push-service");
             const pushToken = await db.getPushToken(ctx.user.id);
             await notifyImageComplete(pushToken, ctx.user.id, imageIds[0], "Hızlı Oluştur");
+
+            // Görseli Supabase'e kalıcı kaydet
+            if (result.imageUrl) {
+              const { persistImageFromUrl } = await import("./storage");
+              persistImageFromUrl(result.imageUrl, ctx.user.id, "generated").then(async (permanentUrl) => {
+                if (permanentUrl !== result.imageUrl) {
+                  await db.updateGeneratedImage(imageIds[0], { generatedImageUrl: permanentUrl } as any);
+                }
+              }).catch(() => {});
+            }
           }
 
           return {

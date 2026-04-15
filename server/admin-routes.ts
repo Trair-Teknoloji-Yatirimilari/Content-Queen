@@ -325,14 +325,14 @@ input:focus,select:focus,textarea:focus{border-color:#E94B8F}
 .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
 .btn-block{width:100%;display:block}
 
-.app{display:none;min-height:100vh}
+.app{display:none;min-height:100vh;width:100%;max-width:100vw}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#111;border-right:1px solid #1e1e1e;padding:20px 0;overflow-y:auto;z-index:10}
 .sidebar .logo{padding:0 20px 20px;font-size:18px;font-weight:800;border-bottom:1px solid #1e1e1e;margin-bottom:12px}
 .sidebar .logo span{color:#E94B8F}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;color:#888;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
 .nav-item:hover{color:#e0e0e0;background:#1a1a1a}
 .nav-item.active{color:#E94B8F;background:rgba(233,75,143,0.08);border-right:3px solid #E94B8F}
-.main{margin-left:220px;padding:24px}
+.main{margin-left:220px;padding:24px;min-height:100vh;width:calc(100vw - 220px)}
 
 .page{display:none}.page.active{display:block}
 .page-title{font-size:20px;font-weight:700;margin-bottom:20px}
@@ -379,9 +379,11 @@ tr:hover{background:#1a1a1a}
 .modal h3{font-size:17px;margin-bottom:16px}
 .modal-actions{display:flex;gap:8px;margin-top:16px}
 
-.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .img-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #222}
 .img-grid img:hover{border-color:#E94B8F}
+.img-grid img[src=""]{display:none}
+.img-broken{display:none}
 
 .toast{position:fixed;bottom:24px;right:24px;background:#34C759;color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px;z-index:300;display:none}
 .toast.error{background:#FF3B30}
@@ -662,7 +664,7 @@ async function loadImages(){
   const imgs=await api('/api/admin/images');if(!imgs)return;
   document.getElementById('imagesGrid').innerHTML=imgs.map(img=>{
     if(!img.generatedImageUrl||img.generatedImageUrl==='pending')return '';
-    return '<img src="'+img.generatedImageUrl+'" title="ID:'+img.id+' User:'+img.userId+' '+img.style+'" onclick="window.open(this.src)">';
+    return '<img src="'+img.generatedImageUrl+'" title="ID:'+img.id+' User:'+img.userId+' '+img.style+'" onclick="window.open(this.src)" onerror="this.style.display=\\'none\\'">';
   }).join('');
 }
 
