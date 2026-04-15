@@ -464,6 +464,7 @@ export const appRouter = router({
             result = await replicateService.generateQuick(
               input.contentImageUrl,
               facePhoto.photoUrl,
+              ctx.user.id,
             );
           } else {
             if (hasLoRA) {
@@ -484,6 +485,7 @@ export const appRouter = router({
               result = await replicateService.generateQuick(
                 input.contentImageUrl,
                 facePhoto2.photoUrl,
+                ctx.user.id,
               );
             }
           }

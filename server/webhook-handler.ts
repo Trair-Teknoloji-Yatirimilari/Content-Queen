@@ -59,7 +59,7 @@ export function registerWebhookRoutes(app: Express) {
 
             if (facePhoto) {
               console.log("[Webhook] PostProcess başlatılıyor, image:", image.id);
-              finalImageUrl = await replicateService.postProcess(imageUrl, facePhoto.photoUrl);
+              finalImageUrl = await replicateService.postProcess(imageUrl, facePhoto.photoUrl, image.userId);
               console.log("[Webhook] PostProcess tamamlandı:", image.id);
             }
           } catch (e) {

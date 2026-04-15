@@ -377,28 +377,53 @@ class ReplicateService {
   }
 
   /**
-   * Tam post-processing pipeline: Face Swap → Face Restore
-   * Hata durumunda her adım graceful fallback yapar.
+   * Tam post-processing pipeline: Padding → Face Swap → Remove Padding → CodeFormer
+   * Orijinal görsel boyutunu korur, hiçbir şey kesilmez.
    */
   async postProcess(
     loraImageUrl: string,
     facePhotoUrl: string,
+    userId?: number,
   ): Promise<string> {
-    let currentUrl = loraImageUrl;
+    try {
+      const { padToSquare, removePadding, uploadBuffer } = await import("./image-processing");
 
-    // Adım 1: CodeFormer — önce LoRA çıktısını upscale + netleştir
-    const restoreResult = await this.faceRestore(currentUrl);
-    if (restoreResult.imageUrl) {
-      currentUrl = restoreResult.imageUrl;
+      // Adım 1: Orijinal görseli kare padding ile genişlet
+      console.log("[PostProcess] Padding uygulanıyor...");
+      const padResult = await padToSquare(loraImageUrl);
+      const paddedUrl = await uploadBuffer(padResult.buffer, userId || 0, "temp");
+      console.log("[PostProcess] Padded:", padResult.original.width, "x", padResult.original.height, "→", padResult.padded.width, "x", padResult.padded.height);
+
+      // Adım 2: Face Swap (kare görsel üzerinde — kesme yok)
+      const swapResult = await this.faceSwap(paddedUrl, facePhotoUrl);
+      if (!swapResult.imageUrl) {
+        console.log("[PostProcess] Face swap başarısız, orijinal kullanılacak");
+        return loraImageUrl;
+      }
+
+      // Adım 3: Padding'i kaldır — orijinal boyuta dön
+      console.log("[PostProcess] Padding kaldırılıyor...");
+      const croppedBuffer = await removePadding(
+        swapResult.imageUrl,
+        padResult.original,
+        padResult.paddingTop,
+        padResult.paddingLeft,
+      );
+      const croppedUrl = await uploadBuffer(croppedBuffer, userId || 0, "temp");
+
+      // Adım 4: CodeFormer — yüz netleştirme + upscale
+      const restoreResult = await this.faceRestore(croppedUrl);
+      return restoreResult.imageUrl || croppedUrl;
+    } catch (error: any) {
+      console.error("[PostProcess] Pipeline hatası:", error?.message);
+      // Fallback: eski basit pipeline
+      let currentUrl = loraImageUrl;
+      const restoreResult = await this.faceRestore(currentUrl);
+      if (restoreResult.imageUrl) currentUrl = restoreResult.imageUrl;
+      const swapResult = await this.faceSwap(currentUrl, facePhotoUrl);
+      if (swapResult.imageUrl) currentUrl = swapResult.imageUrl;
+      return currentUrl;
     }
-
-    // Adım 2: Face Swap — yüksek çözünürlüklü görsel üzerinde tek face swap
-    const swapResult = await this.faceSwap(currentUrl, facePhotoUrl);
-    if (swapResult.imageUrl) {
-      currentUrl = swapResult.imageUrl;
-    }
-
-    return currentUrl;
   }
 
   /**
@@ -449,19 +474,38 @@ class ReplicateService {
   async generateQuick(
     referenceImageUrl: string,
     facePhotoUrl: string,
+    userId?: number,
   ): Promise<JobResult> {
     try {
-      console.log("[QuickGenerate] Hızlı üretim başlatılıyor (face swap only)");
+      console.log("[QuickGenerate] Hızlı üretim başlatılıyor (padding + face swap)");
 
-      // Adım 1: Face Swap (~5-10sn)
-      const swapResult = await this.faceSwap(referenceImageUrl, facePhotoUrl);
-      console.log("[QuickGenerate] FaceSwap sonucu:", swapResult.status, "imageUrl:", swapResult.imageUrl?.substring(0, 60));
-      
-      const swapUrl = swapResult.imageUrl || referenceImageUrl;
+      const { padToSquare, removePadding, uploadBuffer } = await import("./image-processing");
 
-      // Adım 2: CodeFormer (~5-10sn)
-      const restoreResult = await this.faceRestore(swapUrl);
-      const finalUrl = restoreResult.imageUrl || swapUrl;
+      // Adım 1: Referans görseli kare padding ile genişlet
+      const padResult = await padToSquare(referenceImageUrl);
+      const paddedUrl = await uploadBuffer(padResult.buffer, userId || 0, "temp");
+      console.log("[QuickGenerate] Padded:", padResult.original.width, "x", padResult.original.height);
+
+      // Adım 2: Face Swap (kare görsel — kesme yok)
+      const swapResult = await this.faceSwap(paddedUrl, facePhotoUrl);
+      console.log("[QuickGenerate] FaceSwap sonucu:", swapResult.status);
+
+      if (!swapResult.imageUrl) {
+        return { jobId: "", status: "failed", error: "Face swap başarısız" };
+      }
+
+      // Adım 3: Padding kaldır — orijinal boyuta dön
+      const croppedBuffer = await removePadding(
+        swapResult.imageUrl,
+        padResult.original,
+        padResult.paddingTop,
+        padResult.paddingLeft,
+      );
+      const croppedUrl = await uploadBuffer(croppedBuffer, userId || 0, "temp");
+
+      // Adım 4: CodeFormer
+      const restoreResult = await this.faceRestore(croppedUrl);
+      const finalUrl = restoreResult.imageUrl || croppedUrl;
 
       console.log("[QuickGenerate] Tamamlandı:", finalUrl.substring(0, 60));
 
