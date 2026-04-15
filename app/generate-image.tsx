@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ScrollView, Text, View, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Image } from "expo-image";
 import { ScreenContainer } from "@/components/screen-container";
@@ -12,6 +12,7 @@ import { hasActiveSubscription } from "@/lib/purchases";
 import { getStyleById } from "@/constants/styles";
 import { useI18n } from "@/lib/i18n-context";
 import { getSessionToken } from "@/lib/_core/auth";
+import * as Notifications from "expo-notifications";
 
 type ScreenState = "preview" | "generating" | "selecting" | "success" | "error";
 
@@ -274,6 +275,53 @@ export default function GenerateImageScreen() {
   React.useEffect(() => {
     return () => stopAllPolling();
   }, []);
+
+  // Push bildirim geldiğinde animasyonu sonlandır
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
+      const data = notification.request.content.data;
+      if (data?.type === "image_generated" && data?.imageId) {
+        // Görsel tamamlandı — DB'den güncel URL'yi al
+        try {
+          const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL || "";
+          const res = await fetch(
+            `${apiBase}/api/trpc/generatedImages.getById?input=${encodeURIComponent(JSON.stringify({ json: { id: Number(data.imageId) } }))}`,
+            {
+              credentials: "include",
+              headers: { Authorization: `Bearer ${await getSessionToken()}` },
+            },
+          );
+          const json = await res.json();
+          const img = json?.result?.data?.json;
+
+          if (img?.generatedImageUrl && img.status === "completed") {
+            stopAllPolling();
+            generatingRef.current = false;
+
+            if (state === "selecting") {
+              // LoRA modu — varyantları güncelle
+              setVariants((prev) => prev.map((v) => {
+                if (v.jobId && img.replicateJobId && v.jobId === img.replicateJobId) {
+                  return { ...v, status: "completed", imageUrl: img.generatedImageUrl };
+                }
+                return v;
+              }));
+            } else if (state === "generating") {
+              // Hızlı mod veya tek görsel — direkt success
+              setGeneratedImage(img.generatedImageUrl);
+              setProgress(100);
+              setState("success");
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          }
+        } catch (e) {
+          console.log("[Generate] Bildirim sonrası görsel alınamadı:", e);
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [state]);
 
   const handleSaveToGallery = async () => {
     if (!generatedImage) return;

@@ -9,11 +9,10 @@ import {
 import { ScreenContainer } from "@/components/screen-container";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
 import { trpc } from "@/lib/trpc";
 import { useColors } from "@/hooks/use-colors";
-import { POSE_CATEGORIES } from "@/constants/poses";
 import { useI18n } from "@/lib/i18n-context";
 
 export default function HomeScreen() {
@@ -27,12 +26,32 @@ export default function HomeScreen() {
   const trainingQuery = trpc.training.status.useQuery();
   const showcaseQuery = trpc.showcase.list.useQuery({ limit: 9 });
   const unreadQuery = trpc.notifications.unreadCount.useQuery();
+  const posesQuery = trpc.poses.all.useQuery();
 
   const credits = creditsQuery.data;
   const recentImages = imagesQuery.data ?? [];
   const loraStatus = trainingQuery.data?.loraStatus ?? "none";
   const showcaseImages = showcaseQuery.data ?? [];
+  const poseCategories = posesQuery.data ?? [];
   const isLoading = creditsQuery.isLoading || imagesQuery.isLoading;
+
+  // Pending görseller varken otomatik polling
+  const hasPending = recentImages.some((img) => img.status === "pending" || img.status === "processing");
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (hasPending && !pollingRef.current) {
+      pollingRef.current = setInterval(() => {
+        imagesQuery.refetch();
+      }, 5000);
+    } else if (!hasPending && pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [hasPending]);
 
   const remainingCredit = credits
     ? credits.totalCredits - credits.usedCredits
@@ -47,7 +66,7 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([creditsQuery.refetch(), imagesQuery.refetch(), trainingQuery.refetch(), showcaseQuery.refetch()]);
+    await Promise.all([creditsQuery.refetch(), imagesQuery.refetch(), trainingQuery.refetch(), showcaseQuery.refetch(), posesQuery.refetch()]);
     setRefreshing(false);
   }, [creditsQuery, imagesQuery, trainingQuery]);
 
@@ -198,16 +217,27 @@ export default function HomeScreen() {
         {/* ── Processing Banner ── */}
         {!isLoading && recentImages.some((img) => img.status === "pending" || img.status === "processing") && (
           <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
-            <View style={{
-              backgroundColor: "rgba(233,75,143,0.08)",
-              borderRadius: 14,
-              padding: 14,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              borderWidth: 1,
-              borderColor: "rgba(233,75,143,0.15)",
-            }}>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                const pendingImg = recentImages.find((img) => img.status === "pending" || img.status === "processing");
+                if (pendingImg?.replicateJobId) {
+                  router.push({ pathname: "/generate-image" as any, params: { contentImageUri: pendingImg.contentImageUrl, mode: "lora", autoStart: "false" } });
+                } else {
+                  router.push("/gallery");
+                }
+              }}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? "rgba(233,75,143,0.12)" : "rgba(233,75,143,0.08)",
+                borderRadius: 14,
+                padding: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                borderWidth: 1,
+                borderColor: "rgba(233,75,143,0.15)",
+              })}
+            >
               <ActivityIndicator size="small" color={colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
@@ -217,7 +247,8 @@ export default function HomeScreen() {
                   Tamamlandığında bildirim alacaksınız.
                 </Text>
               </View>
-            </View>
+              <Text style={{ fontSize: 14, color: colors.primary }}>›</Text>
+            </Pressable>
           </View>
         )}
 
@@ -428,12 +459,12 @@ export default function HomeScreen() {
           </View>
 
           {/* Hazır Poz Kategorileri */}
-          {POSE_CATEGORIES.map((cat) => (
+          {poseCategories.map((cat) => (
             <View key={cat.id} style={{ marginBottom: 16 }}>
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push({ pathname: "/pose-category" as any, params: { id: cat.id } });
+                  router.push({ pathname: "/pose-category" as any, params: { id: String(cat.id) } });
                 }}
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}
               >
@@ -444,7 +475,7 @@ export default function HomeScreen() {
               </Pressable>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, paddingHorizontal: 20 }}>
                 <View style={{ flexDirection: "row", gap: 10 }}>
-                  {cat.poses.map((pose) => (
+                  {(cat.poses || []).map((pose: any) => (
                     <Pressable
                       key={pose.id}
                       onPress={() => {

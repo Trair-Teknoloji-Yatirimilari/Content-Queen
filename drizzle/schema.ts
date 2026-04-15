@@ -136,3 +136,36 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+
+/**
+ * Pose template categories — admin tarafından yönetilir
+ */
+export const poseCategories = mysqlTable("poseCategories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  emoji: varchar("emoji", { length: 10 }).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PoseCategory = typeof poseCategories.$inferSelect;
+export type InsertPoseCategory = typeof poseCategories.$inferInsert;
+
+/**
+ * Pose templates — hazır poz fotoğrafları
+ */
+export const poseTemplates = mysqlTable("poseTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("categoryId").notNull(),
+  label: varchar("label", { length: 100 }).notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: int("isActive").default(1).notNull(),
+  usageCount: int("usageCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PoseTemplate = typeof poseTemplates.$inferSelect;
+export type InsertPoseTemplate = typeof poseTemplates.$inferInsert;

@@ -695,6 +695,30 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Pose Templates ───
+  poses: router({
+    categories: publicProcedure.query(async () => {
+      return db.getPoseCategories();
+    }),
+
+    byCategory: publicProcedure
+      .input(z.object({ categoryId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPoseTemplates(input.categoryId);
+      }),
+
+    all: publicProcedure.query(async () => {
+      const categories = await db.getPoseCategories();
+      const result = await Promise.all(
+        categories.map(async (cat) => ({
+          ...cat,
+          poses: await db.getPoseTemplates(cat.id),
+        }))
+      );
+      return result;
+    }),
+  }),
+
   referral: router({
     /** Kullanıcının referral kodunu al (yoksa oluştur) */
     getCode: protectedProcedure.query(async ({ ctx }) => {

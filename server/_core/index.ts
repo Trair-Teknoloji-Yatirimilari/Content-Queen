@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerWebhookRoutes } from "../webhook-handler";
 import { registerRevenueCatWebhook } from "../revenuecat-webhook";
+import { registerAdminRoutes } from "../admin-routes";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { apiRateLimit } from "./rate-limit";
@@ -60,6 +61,7 @@ async function startServer() {
   registerOAuthRoutes(app);
   registerWebhookRoutes(app);
   registerRevenueCatWebhook(app);
+  registerAdminRoutes(app);
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });

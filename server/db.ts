@@ -525,3 +525,57 @@ export async function deleteAllNotifications(userId: number) {
   if (!db) return;
   await db.delete(notifications).where(eq(notifications.userId, userId));
 }
+
+
+// ─── Pose Templates ───
+import { poseCategories, poseTemplates } from "../drizzle/schema";
+import type { InsertPoseCategory, InsertPoseTemplate } from "../drizzle/schema";
+
+export async function getPoseCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(poseCategories).where(eq(poseCategories.isActive, 1)).orderBy(poseCategories.sortOrder);
+}
+
+export async function getPoseTemplates(categoryId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (categoryId) {
+    return db.select().from(poseTemplates).where(and(eq(poseTemplates.categoryId, categoryId), eq(poseTemplates.isActive, 1))).orderBy(poseTemplates.sortOrder);
+  }
+  return db.select().from(poseTemplates).where(eq(poseTemplates.isActive, 1)).orderBy(poseTemplates.sortOrder);
+}
+
+export async function createPoseCategory(data: InsertPoseCategory) {
+  const db = await getDb();
+  if (!db) return 0;
+  const [result] = await db.insert(poseCategories).values(data);
+  return result.insertId;
+}
+
+export async function createPoseTemplate(data: InsertPoseTemplate) {
+  const db = await getDb();
+  if (!db) return 0;
+  const [result] = await db.insert(poseTemplates).values(data);
+  return result.insertId;
+}
+
+export async function deletePoseCategory(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(poseTemplates).where(eq(poseTemplates.categoryId, id));
+  await db.delete(poseCategories).where(eq(poseCategories.id, id));
+}
+
+export async function deletePoseTemplate(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(poseTemplates).where(eq(poseTemplates.id, id));
+}
+
+export async function incrementPoseUsage(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  const { sql } = await import("drizzle-orm");
+  await db.update(poseTemplates).set({ usageCount: sql`${poseTemplates.usageCount} + 1` }).where(eq(poseTemplates.id, id));
+}

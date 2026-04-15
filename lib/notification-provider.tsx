@@ -31,6 +31,7 @@ Notifications.setNotificationHandler({
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const registerPushTokenMutation = trpc.notifications.registerPushToken.useMutation();
+  const utils = trpc.useUtils();
 
   useEffect(() => {
     registerPushNotifications();
@@ -38,6 +39,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const notificationSubscription = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log("Bildirim alındı:", notification);
+        // Görsel veya kredi bildirimi geldiğinde listeleri yenile
+        const data = notification.request.content.data;
+        if (data?.type === "image_generated" || data?.type === "image_failed") {
+          utils.generatedImages.list.invalidate();
+        }
+        if (data?.type === "credits_added") {
+          utils.credits.getCredits.invalidate();
+        }
+        utils.notifications.list.invalidate();
+        utils.notifications.unreadCount.invalidate();
       }
     );
 
