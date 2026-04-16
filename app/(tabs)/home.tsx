@@ -101,20 +101,22 @@ export default function HomeScreen() {
         {/* ── Header ── */}
         <View
           style={{
-            backgroundColor: colors.primary,
+            backgroundColor: colors.background,
             paddingHorizontal: 24,
             paddingTop: 8,
             paddingBottom: 48,
             borderBottomLeftRadius: 28,
             borderBottomRightRadius: 28,
+            borderBottomWidth: 0.5,
+            borderBottomColor: colors.border,
           }}
         >
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View>
-              <Text style={{ fontSize: 26, fontWeight: "800", color: "#fff" }}>
+              <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground }}>
                 {t("home.title")}
               </Text>
-              <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>
+              <Text style={{ fontSize: 13, color: colors.muted, marginTop: 2 }}>
                 {t("home.tagline")}
               </Text>
             </View>
@@ -124,13 +126,13 @@ export default function HomeScreen() {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: "rgba(255,255,255,0.2)",
+                backgroundColor: colors.surface,
                 justifyContent: "center",
                 alignItems: "center",
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Text style={{ fontSize: 18, color: "#fff" }}>🔔</Text>
+              <Text style={{ fontSize: 18 }}>🔔</Text>
               {(unreadQuery.data?.count ?? 0) > 0 && (
                 <View style={{
                   position: "absolute", top: 2, right: 2,
@@ -171,7 +173,7 @@ export default function HomeScreen() {
                   <Text style={{ fontSize: 11, color: colors.muted, letterSpacing: 0.5, textTransform: "uppercase" }}>
                     {t("home.remainingCredits")}
                   </Text>
-                  <Text style={{ fontSize: 32, fontWeight: "800", color: colors.primary, marginTop: 6 }}>
+                  <Text style={{ fontSize: 32, fontWeight: "800", color: colors.foreground, marginTop: 6 }}>
                     {remainingCredit}
                   </Text>
                 </View>
@@ -228,14 +230,14 @@ export default function HomeScreen() {
                 }
               }}
               style={({ pressed }) => ({
-                backgroundColor: pressed ? "rgba(233,75,143,0.12)" : "rgba(233,75,143,0.08)",
+                backgroundColor: pressed ? colors.border : colors.surface,
                 borderRadius: 14,
                 padding: 14,
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
                 borderWidth: 1,
-                borderColor: "rgba(233,75,143,0.15)",
+                borderColor: colors.border,
               })}
             >
               <ActivityIndicator size="small" color={colors.primary} />
@@ -263,15 +265,15 @@ export default function HomeScreen() {
                 }}
                 style={({ pressed }) => ({
                   flex: 1,
-                  backgroundColor: pressed ? "#D93B7F" : colors.primary,
+                  backgroundColor: pressed ? "#0066DD" : colors.primary,
                   paddingVertical: 14,
                   borderRadius: 14,
                   alignItems: "center",
                   gap: 4,
                   transform: [{ scale: pressed ? 0.97 : 1 }],
-                  shadowColor: colors.primary,
+                  shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
+                  shadowOpacity: 0.15,
                   shadowRadius: 8,
                 })}
               >
@@ -294,13 +296,13 @@ export default function HomeScreen() {
                   alignItems: "center",
                   gap: 4,
                   borderWidth: 1,
-                  borderColor: colors.primary,
+                  borderColor: colors.border,
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 })}
               >
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                   <Text style={{ fontSize: 16 }}>🧠</Text>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: colors.primary }}>LoRA ile Yap</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>LoRA ile Yap</Text>
                 </View>
                 <Text style={{ fontSize: 11, color: colors.muted }}>~10 dk · 5 kredi</Text>
               </Pressable>
@@ -309,7 +311,7 @@ export default function HomeScreen() {
             <Pressable
               onPress={handleCreateNew}
               style={({ pressed }) => ({
-                backgroundColor: pressed ? "#D93B7F" : colors.primary,
+                backgroundColor: pressed ? "#0066DD" : colors.primary,
                 paddingVertical: 14,
                 borderRadius: 14,
                 alignItems: "center",
@@ -317,9 +319,9 @@ export default function HomeScreen() {
                 justifyContent: "center",
                 gap: 8,
                 transform: [{ scale: pressed ? 0.97 : 1 }],
-                shadowColor: colors.primary,
+                shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.25,
+                shadowOpacity: 0.15,
                 shadowRadius: 8,
               })}
             >
@@ -405,7 +407,7 @@ export default function HomeScreen() {
                 {t("home.recentImages")}
               </Text>
               <Pressable onPress={() => router.push("/gallery")}>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
                   {t("home.seeAll")}
                 </Text>
               </Pressable>
@@ -471,7 +473,7 @@ export default function HomeScreen() {
                 <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
                   {cat.emoji} {cat.name}
                 </Text>
-                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "600" }}>Tümü ›</Text>
+                <Text style={{ fontSize: 12, color: colors.foreground, fontWeight: "600" }}>Tümü ›</Text>
               </Pressable>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, paddingHorizontal: 20 }}>
                 <View style={{ flexDirection: "row", gap: 10 }}>
