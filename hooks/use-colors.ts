@@ -14,6 +14,6 @@ export function useColors(colorSchemeOverride?: ColorScheme): ThemeColorPalette 
     return getColors(palette, scheme);
   } catch {
     // Fallback if not inside ThemeProvider
-    return getColors("classic", scheme);
+    return getColors("apple", scheme);
   }
 }

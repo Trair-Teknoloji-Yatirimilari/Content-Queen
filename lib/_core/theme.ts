@@ -21,8 +21,8 @@ function buildSchemeColors(palette: ThemePalette, scheme: ColorScheme): SchemeCo
 }
 
 export const SchemeColors: Record<string, SchemeColorMap> = {
-  light: buildSchemeColors("classic", "light"),
-  dark: buildSchemeColors("classic", "dark"),
+  light: buildSchemeColors("apple", "light"),
+  dark: buildSchemeColors("apple", "dark"),
 };
 
 // Build for all palette + scheme combos
@@ -66,7 +66,7 @@ export type ThemeColorPalette = RuntimePalette;
 
 export const PALETTE_LABELS: Record<ThemePalette, string> = {
   classic: "Klasik Pembe",
-  apple: "Apple Store",
+  apple: "Profesyonel",
   rosegold: "Gold",
   lavender: "Lavanta",
   peach: "Şeftali",

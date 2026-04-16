@@ -16,8 +16,8 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useSystemColorScheme() ?? "light";
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
-  const [palette, setPaletteState] = useState<ThemePalette>("classic");
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>("light");
+  const [palette, setPaletteState] = useState<ThemePalette>("apple");
 
   // Load saved palette on mount
   useEffect(() => {
