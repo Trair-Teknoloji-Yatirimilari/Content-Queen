@@ -11,6 +11,17 @@ const themeColors = {
     warning: { light: '#FF9500', dark: '#FF9500' },
     error: { light: '#FF3B30', dark: '#FF3B30' },
   },
+  apple: {
+    primary: { light: '#007AFF', dark: '#0A84FF' },
+    background: { light: '#FFFFFF', dark: '#000000' },
+    surface: { light: '#F2F2F7', dark: '#1C1C1E' },
+    foreground: { light: '#1C1C1E', dark: '#F2F2F7' },
+    muted: { light: '#8E8E93', dark: '#8E8E93' },
+    border: { light: '#D1D1D6', dark: '#38383A' },
+    success: { light: '#34C759', dark: '#30D158' },
+    warning: { light: '#FF9500', dark: '#FF9F0A' },
+    error: { light: '#FF3B30', dark: '#FF453A' },
+  },
   rosegold: {
     primary: { light: '#B8860B', dark: '#C49A1A' },
     background: { light: '#FFF8F0', dark: '#1A1610' },

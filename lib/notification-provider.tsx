@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { trpc } from "./trpc";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/lib/auth-context";
 
 // Bildirim handler'ı yapılandır
 Notifications.setNotificationHandler({
@@ -30,16 +31,26 @@ Notifications.setNotificationHandler({
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const registerPushTokenMutation = trpc.notifications.registerPushToken.useMutation();
   const utils = trpc.useUtils();
+  const hasRegisteredToken = useRef(false);
 
+  // Push token kaydını sadece kullanıcı giriş yaptığında yap
   useEffect(() => {
-    registerPushNotifications();
+    if (isSignedIn && !hasRegisteredToken.current) {
+      registerPushNotifications();
+    }
+    if (!isSignedIn) {
+      hasRegisteredToken.current = false;
+    }
+  }, [isSignedIn]);
 
+  // Bildirim listener'ları her zaman aktif olsun
+  useEffect(() => {
     const notificationSubscription = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log("Bildirim alındı:", notification);
-        // Görsel veya kredi bildirimi geldiğinde listeleri yenile
         const data = notification.request.content.data;
         if (data?.type === "image_generated" || data?.type === "image_failed") {
           utils.generatedImages.list.invalidate();
@@ -69,7 +80,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       notificationSubscription.remove();
       responseSubscription.remove();
     };
-  }, [registerPushTokenMutation, router]);
+  }, [router]);
 
   const registerPushNotifications = async () => {
     try {
@@ -85,6 +96,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         if (token.data) {
           await registerPushTokenMutation.mutateAsync({ token: token.data });
+          hasRegisteredToken.current = true;
         }
       } catch (tokenError) {
         console.warn("Push token alınamadı (web/emulator'de normal):", tokenError);

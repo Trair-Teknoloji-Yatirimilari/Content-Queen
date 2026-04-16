@@ -14,6 +14,7 @@ type PaletteColors = {
 
 export const themeColors: {
   classic: PaletteColors;
+  apple: PaletteColors;
   rosegold: PaletteColors;
   lavender: PaletteColors;
   peach: PaletteColors;

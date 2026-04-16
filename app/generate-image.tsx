@@ -272,6 +272,24 @@ export default function GenerateImageScreen() {
     }
   }, [autoStart, hasStarted, contentImageUri]);
 
+  // Tüm varyantlar tamamlandığında otomatik home'a yönlendir
+  useEffect(() => {
+    if (state !== "selecting" || variants.length === 0) return;
+    const allDone = variants.every((v) => v.status === "completed" || v.status === "failed");
+    const hasCompleted = variants.some((v) => v.status === "completed");
+    if (allDone && hasCompleted) {
+      stopAllPolling();
+      generatingRef.current = false;
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Kısa bir gecikme ile home'a yönlendir
+      const timeout = setTimeout(() => {
+        router.navigate("/(tabs)/home" as any);
+      }, 800);
+      return () => clearTimeout(timeout);
+    }
+  }, [variants, state]);
+
+  // Cleanup polling on unmount
   React.useEffect(() => {
     return () => stopAllPolling();
   }, []);
@@ -300,18 +318,28 @@ export default function GenerateImageScreen() {
 
             if (state === "selecting") {
               // LoRA modu — varyantları güncelle
-              setVariants((prev) => prev.map((v) => {
-                if (v.jobId && img.replicateJobId && v.jobId === img.replicateJobId) {
-                  return { ...v, status: "completed", imageUrl: img.generatedImageUrl };
+              setVariants((prev) => {
+                const updated = prev.map((v) => {
+                  if (v.jobId && img.replicateJobId && v.jobId === img.replicateJobId) {
+                    return { ...v, status: "completed" as const, imageUrl: img.generatedImageUrl };
+                  }
+                  return v;
+                });
+                // Eğer tüm varyantlar tamamlandıysa veya en az biri tamamlandıysa
+                // push bildirim geldi demek ki görseller hazır — home'a yönlendir
+                const completedVariants = updated.filter((v) => v.status === "completed");
+                if (completedVariants.length > 0) {
+                  setTimeout(() => {
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    router.navigate("/(tabs)/home" as any);
+                  }, 500);
                 }
-                return v;
-              }));
+                return updated;
+              });
             } else if (state === "generating") {
-              // Hızlı mod veya tek görsel — direkt success
-              setGeneratedImage(img.generatedImageUrl);
-              setProgress(100);
-              setState("success");
+              // Hızlı mod veya tek görsel — direkt home'a yönlendir
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.navigate("/(tabs)/home" as any);
             }
           }
         } catch (e) {

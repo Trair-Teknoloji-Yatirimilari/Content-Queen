@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import themeConfig from "@/theme.config";
 
 export type ColorScheme = "light" | "dark";
-export type ThemePalette = "classic" | "rosegold" | "lavender" | "peach";
+export type ThemePalette = "classic" | "apple" | "rosegold" | "lavender" | "peach";
 
 export const ThemeColors = themeConfig.themeColors;
 
@@ -66,6 +66,7 @@ export type ThemeColorPalette = RuntimePalette;
 
 export const PALETTE_LABELS: Record<ThemePalette, string> = {
   classic: "Klasik Pembe",
+  apple: "Apple Store",
   rosegold: "Gold",
   lavender: "Lavanta",
   peach: "Şeftali",

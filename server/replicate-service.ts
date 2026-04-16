@@ -92,13 +92,13 @@ class ReplicateService {
           input: {
             input_images: zipUrl,
             trigger_word: "TOK",
-            steps: 800,
-            lora_rank: 32,
+            steps: 1200,
+            lora_rank: 16,
             optimizer: "adamw8bit",
             batch_size: 1,
             resolution: "512,768,1024",
             autocaption: true,
-            autocaption_prefix: "a photo of TOK person,",
+            autocaption_prefix: "a photo of TOK,",
             learning_rate: 0.0004,
           },
           webhook: WEBHOOK_URL,
@@ -198,19 +198,19 @@ class ReplicateService {
     const variants = [
       {
         name: "net",
-        loraScale: 1.15,
-        promptStrength: 0.40,
-        prompt: `a photo of TOK person, ${prompt}, sharp focus, natural skin texture, detailed face, 8k uhd, professional photography, DSLR`,
-        steps: 35,
-        guidance: 4.5,
+        loraScale: 0.85,
+        promptStrength: 0.65,
+        prompt: `a photo of TOK, ${prompt}, sharp focus, natural skin texture, detailed face, 8k uhd, professional photography, DSLR`,
+        steps: 30,
+        guidance: 3.5,
       },
       {
         name: "dengeli",
-        loraScale: 1.1,
-        promptStrength: 0.45,
-        prompt: `a photo of TOK person, ${prompt}, natural lighting, professional photography`,
-        steps: 32,
-        guidance: 4.0,
+        loraScale: 0.75,
+        promptStrength: 0.55,
+        prompt: `a photo of TOK, ${prompt}, natural lighting, professional photography, high quality`,
+        steps: 28,
+        guidance: 3.0,
       },
     ];
 
@@ -270,7 +270,7 @@ class ReplicateService {
       console.log("[Generate] Fallback: Standart Flux deneniyor...");
       try {
         return await this.generateStandard(
-          `a photo of TOK person, ${prompt}`,
+          `a photo of TOK, ${prompt}`,
           referenceImageUrl,
         );
       } catch (fallbackError: any) {

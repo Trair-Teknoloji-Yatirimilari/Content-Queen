@@ -129,6 +129,7 @@ export default function SettingsScreen() {
       undefined,
       [
         { text: "💖 Klasik Pembe", onPress: () => setPalette("classic") },
+        { text: "🍎 Apple Store", onPress: () => setPalette("apple") },
         { text: "👑 Gold", onPress: () => setPalette("rosegold") },
         { text: "🍇 Lavanta", onPress: () => setPalette("lavender") },
         { text: "🍑 Şeftali", onPress: () => setPalette("peach") },
@@ -212,7 +213,7 @@ export default function SettingsScreen() {
             </Text>
             <SettingItem
               label="Renk Paleti"
-              value={palette === "classic" ? "💖 Klasik Pembe" : palette === "rosegold" ? "👑 Gold" : palette === "lavender" ? "🍇 Lavanta" : "🍑 Şeftali"}
+              value={palette === "classic" ? "💖 Klasik Pembe" : palette === "apple" ? "🍎 Apple Store" : palette === "rosegold" ? "👑 Gold" : palette === "lavender" ? "🍇 Lavanta" : "🍑 Şeftali"}
               onPress={handlePaletteChange}
               rightElement={
                 <Text className="text-sm text-primary font-medium">›</Text>

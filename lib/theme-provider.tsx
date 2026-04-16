@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Load saved palette on mount
   useEffect(() => {
     AsyncStorage.getItem("content_queen_palette").then((saved) => {
-      if (saved === "classic" || saved === "rosegold" || saved === "lavender" || saved === "peach") {
+      if (saved === "classic" || saved === "apple" || saved === "rosegold" || saved === "lavender" || saved === "peach") {
         setPaletteState(saved);
       }
     });
