@@ -57,8 +57,13 @@ export default function ContentReferenceScreen() {
   const handleGenerate = async () => {
     if (!imageBase64) return;
 
-    // Kredi kontrolü
-    if (remainingCredit < 1) {
+    // Kredi kontrolü - önce fresh data çek
+    await creditsQuery.refetch();
+    const freshRemainingCredit = creditsQuery.data
+      ? creditsQuery.data.totalCredits - creditsQuery.data.usedCredits
+      : 0;
+
+    if (freshRemainingCredit < 1) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
         t("contentRef.noCredits"),
