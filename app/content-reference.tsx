@@ -57,24 +57,24 @@ export default function ContentReferenceScreen() {
   const handleGenerate = async () => {
     if (!imageBase64) return;
 
-    // Kredi kontrolü - önce fresh data çek
-    await creditsQuery.refetch();
-    const freshRemainingCredit = creditsQuery.data
-      ? creditsQuery.data.totalCredits - creditsQuery.data.usedCredits
-      : 0;
+    // Kredi kontrolünü kaldırdık - sunucu tarafında kontrol ediliyor
+    // await creditsQuery.refetch();
+    // const freshRemainingCredit = creditsQuery.data
+    //   ? creditsQuery.data.totalCredits - creditsQuery.data.usedCredits
+    //   : 0;
 
-    if (freshRemainingCredit < 1) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(
-        t("contentRef.noCredits"),
-        t("contentRef.noCreditsDesc"),
-        [
-          { text: t("common.cancel"), style: "cancel" },
-          { text: t("contentRef.buyCredits"), onPress: () => router.push("/pricing") },
-        ],
-      );
-      return;
-    }
+    // if (freshRemainingCredit < 1) {
+    //   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    //   Alert.alert(
+    //     t("contentRef.noCredits"),
+    //     t("contentRef.noCreditsDesc"),
+    //     [
+    //       { text: t("common.cancel"), style: "cancel" },
+    //       { text: t("contentRef.buyCredits"), onPress: () => router.push("/pricing") },
+    //     ],
+    //   );
+    //   return;
+    // }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsUploading(true);
