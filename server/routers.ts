@@ -434,8 +434,16 @@ export const appRouter = router({
           const credits = await db.getUserCredits(ctx.user.id);
           const requestMode = input.mode || "auto";
           const requiredCredits = requestMode === "lora" ? 5 : 1;
-          if (!credits || credits.totalCredits - credits.usedCredits < requiredCredits) {
-            throw new Error("Yeterli kredi yok");
+          
+          console.log("[Generate] User:", ctx.user.id, "Credits:", credits, "Required:", requiredCredits);
+          
+          if (!credits) {
+            throw new Error("Kredi bilgisi bulunamadı. Lütfen destek ekibiyle iletişime geçin.");
+          }
+          
+          const availableCredits = credits.totalCredits - credits.usedCredits;
+          if (availableCredits < requiredCredits) {
+            throw new Error(`Yeterli kredi yok. Mevcut: ${availableCredits}, Gerekli: ${requiredCredits}`);
           }
 
           // LoRA modeli hazır mı kontrol et
